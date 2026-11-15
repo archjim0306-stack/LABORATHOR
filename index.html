@@ -398,6 +398,18 @@ textarea.code{width:100%;font:15px/1.5 var(--mono);background:#1E1E2E;color:#E5E
 .en-card .row{justify-content:center}.en-w{font-size:24px;font-weight:700;margin:4px 0 8px}
 .en-es{font-size:18px;font-weight:600;color:var(--brand);margin:8px 0 4px}.en-ex{font-style:italic;color:var(--muted)}
 .en-back[hidden]{display:none}
+.mis>div{min-width:0}.mis .calc{max-width:100%}
+.mis-mods{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 10px}
+.mis-mods button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:8px 10px;min-height:64px;cursor:pointer;text-align:left}
+.mis-mods button b{font-size:16px}.mis-mods button span{font-size:12px;color:var(--muted);line-height:1.2}.mis-mods button small{font-size:12px;font-weight:700;color:var(--ok)}
+.mis-mods button[aria-selected="true"]{border-color:var(--brand);box-shadow:inset 0 -3px 0 var(--accent)}
+.mis.next{background:var(--panel);border:1px solid var(--brand);border-radius:10px;padding:14px 12px;margin:8px 0 14px}
+details.lvl{border-top:1px solid var(--line)}details.lvl>summary{display:flex;justify-content:space-between;align-items:center;padding:12px 0;min-height:48px;font-weight:700;cursor:pointer}
+details.lvl>summary small{color:var(--muted);font-weight:600}
+.qe-vals{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px}
+.qe-vals input{height:34px;border:1px solid var(--g-fline);border-radius:2px;background:var(--g-field);color:var(--g-ink);padding:0 6px;font:16px var(--sans);width:100%}
+.qg-t{font:10px var(--sans);fill:var(--g-muted)}.qg-cl{stroke:#C8322D;stroke-width:1.2}.qg-c{stroke:var(--g-muted);stroke-dasharray:4 3}.qg-sp{stroke:#C8322D;stroke-width:1;stroke-dasharray:6 3;opacity:.6}
+.qg-ln{stroke:#0A6ED1;stroke-width:1.8}.qg-pt{fill:#0A6ED1}.qg-bad{fill:#C8322D}
 </style>
 </head>
 <body>
@@ -418,7 +430,7 @@ textarea.code{width:100%;font:15px/1.5 var(--mono);background:#1E1E2E;color:#E5E
   <section id="v-lss-exam" hidden><h2>Examen de Lean Six Sigma</h2><div id="lss-exam"></div></section>
   <section id="v-mis">
     <h2>Misiones</h2>
-    <p class="lead">Casos de planta en orden, del maestro de materiales al cierre técnico. Cada misión se valida sola cuando el sistema queda en el estado correcto.</p>
+    <p class="lead">300 casos de planta en tres módulos: PP producción, MM materiales y compras, y QM calidad. Cada misión trae su explicación y se valida sola cuando el sistema queda en el estado correcto.</p>
     <div class="meter" aria-hidden="true"><i id="mis-meter"></i></div>
     <div class="mis-list" id="mis-list"></div>
   </section>
@@ -649,11 +661,11 @@ function fiPost(lines,ref,type){
   const e={doc,type:co?'CO':'FI',date:todayISO(),ref,lines};S.sim.fi.unshift(e);if(IMP)IMP[co?'co':'fi'].push(e);return doc;}
 function valCheck(m,p){const mt=S.sim.materials[m];const pp=mt&&mt.plants[p];if(!pp)return `Material ${m} no existe en centro ${p}`;if(!pp.views.includes('ACC'))return `Material ${m} sin vista Contabilidad en centro ${p}: el movimiento no se puede valorar. Amplíelo con MM01`;return null;}
 function postMove(mvt,m,p,sl,q,order,x={}){
-  const mt=S.sim.materials[m],pp=mt.plants[p];const before=stockPlant(m,p);
+  const mt=S.sim.materials[m],pp=mt.plants[p];const before=totalStock(m,p);
   const price=Number(pp.price)||0;const inv=invAcc(pp);const o=order?findOrder(order):null;const um=mt.um;
   let val=round2(q*price);const L=[];let note='';
   const doc=String(S.sim.nextDoc++);
-  const add=(s2,sign)=>{const k=key(m,p,s2);S.sim.stock[k]=round((S.sim.stock[k]||0)+sign*q);S.sim.docs.unshift({doc,mvt,mat:m,plant:p,sloc:s2,qty:q,sign,order:order||'',ref:x.ref||(order?'Orden '+order:''),cc:x.cc||'',date:todayISO(),value:val});};
+  const add=(s2,sign,st)=>{const k=key(m,p,s2);const mp=st==='Q'?S.sim.qstock:S.sim.stock;mp[k]=round((mp[k]||0)+sign*q);S.sim.docs.unshift({doc,mvt,mat:m,plant:p,sloc:s2,qty:q,sign,order:order||'',ref:x.ref||(order?'Orden '+order:''),cc:x.cc||'',date:todayISO(),value:val,stype:st});};
   if(mvt==='311'){add(sl,-1);add(x.sloc2,1);note=`Traspaso de ${fmtN(q)} ${um} de ${m} del almacén ${sl} al ${x.sloc2}. No genera documento contable: dentro del mismo centro el valor del inventario no cambia.`;}
   else if(['501','561','701'].includes(mvt)){
     const tv=x.value!=null?round2(x.value):val;
@@ -671,7 +683,7 @@ function postMove(mvt,m,p,sl,q,order,x={}){
     L.push(s>0?{acct:inv,d:val}:{acct:inv,h:val});L.push(s>0?{acct:'580100',obj:ob,h:val}:{acct:'580100',obj:ob,d:val});
     if(o)o.costs.gr=round2(o.costs.gr+s*val);
     note=s>0?`Entraron ${fmtN(q)} ${um} de ${m} al almacén ${sl} valorados a ${fmtM(price)} (${pp.priceCtrl==='S'?'precio estándar':'precio medio'}): el inventario sube ${fmtM(val)} y la orden ${order} recibe un crédito por el mismo importe.`:`Se anuló la entrada de ${fmtN(q)} ${um} de ${m}: el inventario baja ${fmtM(val)} y se revierte el crédito de la orden ${order}.`;
-    add(sl,s);
+    const toQ=s>0&&qmOf(m,p)==='04';add(sl,s,toQ?'Q':undefined);if(toQ){note+=' Como el material tiene inspección 04, el producto entra a stock en control de calidad.';}
   }else{
     const acc=mvt==='201'?'510100':mvt==='551'?'520100':'530100';L.push({acct:acc,obj:x.cc||'',d:val});L.push({acct:inv,h:val});
     note=mvt==='201'?`Consumo de ${fmtN(q)} ${um} de ${m} al centro de costo ${x.cc}: el inventario baja ${fmtM(val)} y se registra como gasto del período; no pasa por ninguna orden.`:mvt==='551'?`Desguace de ${fmtN(q)} ${um} de ${m}: el inventario baja ${fmtM(val)} y se reconoce como pérdida en el centro de costo ${x.cc}.`:`Faltante de ${fmtN(q)} ${um} de ${m}: el inventario baja ${fmtM(val)} y se registra como pérdida en Diferencias de inventario.`;
@@ -679,7 +691,8 @@ function postMove(mvt,m,p,sl,q,order,x={}){
   }
   const fiNo=L.length?fiPost(L,'Doc. mat. '+doc):null;
   for(const d of S.sim.docs){if(d.doc!==doc)break;d.fi=fiNo;d.value=val;}
-  if(IMP){IMP.mdocs.push({doc,mvt,mat:m,plant:p,sloc:mvt==='311'?sl+' a '+x.sloc2:sl,qty:q,sign:mvt==='311'?0:mvSign(mvt),before,after:stockPlant(m,p),value:val});if(note)IMP.notes.push(note.trim());}
+  if(IMP){IMP.mdocs.push({doc,mvt,mat:m,plant:p,sloc:mvt==='311'?sl+' a '+x.sloc2:sl,qty:q,sign:mvt==='311'?0:mvSign(mvt),before,after:totalStock(m,p),value:val});if(note)IMP.notes.push(note.trim());}
+  if((mvt==='101')&&order&&qmOf(m,p)==='04')createLot('04',m,p,sl,q,{order,ref:'Orden '+order});
   return doc;
 }
 function postAct(o,op,mins){
@@ -864,7 +877,7 @@ function txMB5B(pre={}){
     if(!mt)return msg('E',`El material ${m||'(vacío)'} no existe`);
     if(!mt.plants[p])return msg('E',`Material ${m} no existe en centro ${p}`);
     if(!from||!to||to<from)return msg('E','Revise el intervalo de fechas');
-    const docs=S.sim.docs.filter(d=>d.mat===m&&d.plant===p&&(!sl||d.sloc===sl));
+    const docs=S.sim.docs.filter(d=>d.mat===m&&d.plant===p&&(!sl||d.sloc===sl)&&!d.stype);
     const now=sl?stockAt(m,p,sl):stockPlant(m,p);
     const after=docs.filter(d=>d.date>to).reduce((a,d)=>a+dSign(d)*d.qty,0);
     const inR=docs.filter(d=>d.date>=from&&d.date<=to).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.doc<b.doc?-1:1);
@@ -894,7 +907,7 @@ function bomTx(mode){
       if(mode==='CS01'&&ex)return msg('E',`Ya existe una lista de materiales para ${m} en centro ${p}. Utilice CS02`);
       if(mode!=='CS01'&&!ex)return msg('E',`No existe lista de materiales para ${m} en centro ${p}`);
       clearMsg();
-      const ro=mode==='CS03';let items=ex?ex.items.map(i=>({...i})):[{pos:'0010',comp:'',qty:''}];
+      if(mode==='CS03'){evt('CS03',k);persist();}const ro=mode==='CS03';let items=ex?ex.items.map(i=>({...i})):[{pos:'0010',comp:'',qty:''}];
       const wrap=h('div');
       const renum=()=>items.forEach((it,i)=>{it.pos=String((i+1)*10).padStart(4,'0');});
       function draw(){
@@ -970,7 +983,7 @@ function rtTx(mode){
       if(mode==='CA01'&&ex)return msg('E',`Ya existe una hoja de ruta para ${m} en centro ${p}. Utilice CA02`);
       if(mode!=='CA01'&&!ex)return msg('E',`No existe hoja de ruta para ${m} en centro ${p}`);
       clearMsg();
-      const ro=mode==='CA03';const wcs=Object.entries(S.sim.wcs[p]).map(([c,v])=>[c,v.d]);
+      if(mode==='CA03'){evt('CA03',k);persist();}const ro=mode==='CA03';const wcs=Object.entries(S.sim.wcs[p]).map(([c,v])=>[c,v.d]);
       let ops=ex?ex.ops.map(o=>({...o})):[{op:'0010',wc:'',key:'PP01',desc:'',setup:'',mach:''}];
       const wrap=h('div');
       const renum=()=>ops.forEach((o,i)=>{o.op=String((i+1)*10).padStart(4,'0');});
@@ -1124,7 +1137,7 @@ function orderTx(mode){
   return function(pre={}){
     initScreen(mode,T,[fld('Orden','f-ord',{val:pre.order||'',dl:'dl-ord',num:true})],()=>{
       const id=V('f-ord'),o=findOrder(id);if(!o)return msg('E',`La orden ${id||'(vacía)'} no existe`);
-      clearMsg();orderScreen(mode,o);
+      clearMsg();evt(mode,o.id);persist();orderScreen(mode,o);
     });
   };
 }
@@ -1268,9 +1281,9 @@ const MIGO_HELP={'501':'Entrada sin pedido de compra. El inventario sube contra 
   '311':'Traspaso entre almacenes del mismo centro. Cambia la ubicación del stock pero no su valor.',
   '701':'Ajuste por sobrante detectado en un inventario físico.','702':'Ajuste por faltante detectado en un inventario físico.'};
 function txMIGO(pre={}){
-  initScreen('MIGO','Movimiento de mercancías',[fld('Operación y clase de movimiento','g-act',{list:[['101','Entrada de mercancías: orden'],['102','Anular entrada por orden'],['261','Salida de mercancías: orden'],['262','Devolución de orden'],...MIGO_GEN],val:pre.mvt||'101'}),fld('Orden (solo 101, 102, 261, 262)','g-ord',{val:pre.order||'',dl:'dl-ord',num:true})],go,'Las clases 101, 102, 261 y 262 se contabilizan contra una orden de fabricación. Las demás no necesitan orden.');
+  initScreen('MIGO','Movimiento de mercancías',[fld('Operación y clase de movimiento','g-act',{list:[['P101','Entrada de mercancías: pedido (101)'],['P122','Devolución a proveedor (122)'],['101','Entrada de mercancías: orden'],['102','Anular entrada por orden'],['261','Salida de mercancías: orden'],['262','Devolución de orden'],...MIGO_GEN,['B344','Libre utilización a bloqueado (344)'],['B343','Bloqueado a libre utilización (343)'],['B555','Desguace desde stock bloqueado (555)']],val:pre.mvt||'101'}),fld('Orden o pedido de referencia','g-ord',{val:pre.order||'',dl:'dl-ord',num:true})],go,'Pedido: entrada (101) y devolución (122) contra un pedido de compras. Orden: 101, 102, 261 y 262 contra una orden de fabricación. Las demás clases no necesitan referencia.');
   function go(){
-    const mv=V('g-act');if(!MIGO_ORD.includes(mv))return general(mv);
+    const mv=V('g-act');if(MIGO_X[mv]){if(MIGO_X[mv].gen)return migoStock(mv,pre);return MIGO_X[mv].run(V('g-ord'));}if(!MIGO_ORD.includes(mv))return general(mv);
     const id=V('g-ord'),o=findOrder(id);
     if(!o)return msg('E',`La orden ${id||'(vacía)'} no existe`);
     if(!has(o,'REL'))return msg('E',`La orden ${id} no está liberada; no admite movimientos de mercancías`);
@@ -1411,7 +1424,7 @@ function txCR01(pre={}){
       })]);
   }
 }
-function txZIMP(){
+function txZIMP(){evt('ZIMP','x');persist();
   const log=S.sim.implLog;
   frame('ZIMP','Bitácora de implicaciones (laboratorio)',[log.length?table(['Fecha','Operación','Docs. material','Docs. contables'],log.map(I=>[fmtD(I.date),lnk(I.title,()=>{curTx='ZIMP';showImpl(I,()=>txZIMP());}),String(I.mdocs.length),String(I.fi.length+I.co.length)]),{title:'Últimas 40 contabilizaciones'}):h('p',{class:'empty'},'Todavía no hay contabilizaciones. Haz un movimiento en MIGO o una notificación en CO11N.')],[]);
 }
@@ -1475,13 +1488,14 @@ function txCOHV(pre={}){
         const o=findOrder(id);
         if(kind==='rel'){
           if(!has(o,'CRTD')){out.push(['W',`${id}: no está abierta, se omite`]);continue;}
-          const r=release(o,false);out.push([r.type,`${id}: ${r.text}`]);if(r.type==='S')evt('REL',id);
+          const r=release(o,false);out.push([r.type,`${id}: ${r.text}`]);if(r.type==='S'){evt('REL',id);evt('COHVREL',id);}
         }else{
           if(has(o,'TECO')){out.push(['W',`${id}: ya tiene cierre técnico`]);continue;}
           if(!has(o,'REL')){out.push(['E',`${id}: la orden no está liberada`]);continue;}
           addS(o,'TECO');evt('TECO',id);out.push([o.gr<o.qty?'W':'S',`${id}: cierre técnico${o.gr<o.qty?' con entrega incompleta':''}`]);
         }
       }
+      if(out.filter(x=>x[0]!=='E'&&/cierre técnico/.test(x[1])&&!/ya tiene/.test(x[1])).length>=3)evt('COHVTECO3','x');
       persist();list(p,m,st,out);
       const errs=out.filter(x=>x[0]!=='S').length;
       msg(errs?'W':'S',`Procesamiento masivo terminado: ${out.length} órdenes${errs?`, ${errs} con avisos`:''}`);
@@ -1666,6 +1680,1014 @@ function renderMissions(){
   }));
 }
 
+
+/* =================== SAP ampliado: Compras, inventario físico, MRP y QM =================== */
+Object.assign(GL,{'211000':'Cuenta puente EM/RF (GR/IR)','201000':'Proveedores nacionales','118000':'IVA acreditable','540300':'Revaluación de inventario'});
+Object.assign(MV_TXT,{'122':'Devolución a proveedor','321':'Calidad a libre','350':'Calidad a bloqueado','553':'Desguace desde calidad','343':'Bloqueado a libre','344':'Libre a bloqueado','555':'Desguace desde bloqueado'});
+L.purGrp=[['P01','Compras materia prima'],['P02','Compras empaque'],['P03','Compras indirectos']];
+L.qmType=[['01','01 EM de pedido'],['04','04 EM de producción'],['89','89 Manual'],['NO','Sin inspección automática']];
+VIEWS.PUR={n:'Compras',f:[['purGrp','Grupo de compras'],['plt','Plazo de entrega previsto (días)','num']]};
+VIEWS.QM={n:'Gestión de calidad',f:[['qmType','Tipo de inspección']]};
+VIEW_ORDER.push('PUR','QM');
+const PAYT={'0015':'15 días','0030':'30 días','0045':'45 días','0060':'60 días'};
+const DEFS=[['D01','Dimensión fuera de tolerancia'],['D02','Dureza fuera de especificación'],['D03','Daño superficial o de aspecto'],['D04','Empaque dañado'],['D05','Composición o viscosidad fuera de especificación'],['D06','Humedad fuera de rango'],['D07','Torque de extracción insuficiente']];
+const CAUSES6=[['C01','Máquina'],['C02','Método'],['C03','Material'],['C04','Mano de obra'],['C05','Medición'],['C06','Medio ambiente']];
+const QN_T={Q1:'Q1 Reclamación de cliente',Q2:'Q2 Reclamación a proveedor',Q3:'Q3 Notificación interna'};
+const QN_ST={OSNO:'Abierta',NOPR:'En proceso',NOCO:'Cerrada'};
+const UD_T={A:'A Aceptado',R:'R Rechazado',AD:'AD Aceptado con desviación'};
+const LOT_O={'01':'01 EM de pedido','04':'04 EM de producción','89':'89 Manual'};
+const round4=n=>Math.round(n*10000)/10000;
+
+function ensureX(s){
+  s.qstock=s.qstock||{};s.bstock=s.bstock||{};s.vendors=s.vendors||{};s.inforec=s.inforec||{};s.pos=s.pos||[];s.invs=s.invs||[];s.preqs=s.preqs||[];s.plo=s.plo||[];s.pirs=s.pirs||[];s.pi=s.pi||[];s.lots=s.lots||[];s.qnots=s.qnots||[];s.mics=s.mics||{};s.plans=s.plans||{};
+  const nx={nextPO:4500000101,nextInv:5105600101,nextPR:10000001,nextPlo:50001,nextPI:100000001,nextLot:10000000101,nextQN:200000101,nextVen:100007};for(const[k,v] of Object.entries(nx))if(!s[k])s[k]=v;
+  if(s.xv)return;
+  const M=s.materials;
+  const setV=(pp,v,vals)=>{if(!pp.views.includes(v))pp.views.push(v);Object.assign(pp,vals);pp.views.sort((a,b)=>VIEW_ORDER.indexOf(a)-VIEW_ORDER.indexOf(b));};
+  const addMat=(id,desc,type,um,group,plants)=>{if(!M[id])M[id]={desc,type,um,group,plants:{}};for(const[p,d] of Object.entries(plants))if(!M[id].plants[p])M[id].plants[p]=d;};
+  const mk=(p,vc,price,proc,sloc,views,extra)=>{const o=pd(p,vc,price,proc,sloc,views);if(extra)for(const[v,vals] of Object.entries(extra))setV(o,v,vals);return o;};
+  const P1={purGrp:'P01',plt:7};
+  addMat('R-3006','Adhesivo epóxico estructural','ROH','KG','PLAST',{'1000':mk('1000','3000',120,'F','0001',RAW,{PUR:P1,QM:{qmType:'01'}})});
+  addMat('R-3007','Pintura electrostática negra','ROH','KG','PLAST',{'1000':mk('1000','3000',85,'F','0001',RAW,{PUR:P1})});
+  addMat('R-3008','Remache de acero 6 mm','ROH','PZA','COMP-MET',{'1000':mk('1000','3000',0.35,'F','0001',RAW,{PUR:P1}),'2000':mk('2000','3000',0.35,'F','0001',RAW,{PUR:P1})});
+  addMat('R-3009','Bolsa de polietileno individual','ROH','PZA','EMPAQUE',{'1000':mk('1000','3000',0.6,'F','0001',RAW)});
+  addMat('R-3010','Alambre de acero para resorte','ROH','KG','COMP-MET',{'2000':mk('2000','3000',34,'F','0001',RAW,{PUR:P1})});
+  addMat('H-2005','Mango de madera de nogal','HALB','PZA','HERR-MANO',{'1000':mk('1000','7900',22,'F','0001',RAW,{PUR:P1,QM:{qmType:'01'}})});
+  addMat('M-1003','Martillo de bola 24 oz','FERT','PZA','HERR-MANO',{'1000':mk('1000','7920',110,'E','0002',ALLV,{QM:{qmType:'04'}})});
+  for(const[id,x] of Object.entries(M)){if(id==='R-3009')continue;for(const pp of Object.values(x.plants))if((pp.procType==='F'||pp.procType==='X')&&!pp.views.includes('PUR'))setV(pp,'PUR',{...P1});}
+  for(const[id,p] of [['R-3001','1000'],['H-2002','1000']]){const pp=M[id]&&M[id].plants[p];if(pp&&!pp.views.includes('QM'))setV(pp,'QM',{qmType:'01'});}
+  const bom=items=>({usage:'1',base:1,items:items.map(([c,q],i)=>({pos:String((i+1)*10).padStart(4,'0'),comp:c,qty:q}))});
+  if(!s.boms['M-1003|1000'])s.boms['M-1003|1000']=bom([['H-2001',1],['H-2005',1],['R-3003',1],['R-3004',1]]);
+  if(!s.routings['M-1003|1000'])s.routings['M-1003|1000']={ops:[['ENS-01','Ensamble de cabeza y mango de madera',15,0.7],['CAL-01','Inspección de dureza y torque',5,0.25],['EMP-01','Etiquetado y empaque',5,0.25]].map(([wc,d,st,mc],i)=>({op:String((i+1)*10).padStart(4,'0'),wc,key:'PP01',desc:d,setup:st,mach:mc}))};
+  const V0={'100001':['Aceros del Norte, S.A. de C.V.','ANO950314KJ2','Monterrey','30 días'],'100002':['Plásticos del Bajío, S.A. de C.V.','PBA020719M45','León','30 días'],'100003':['Empaques y Cartón MX, S.A. de C.V.','ECM110502TT8','Tlalnepantla','15 días'],
+    '100004':['Adhesivos y Recubrimientos Industriales, S.A. de C.V.','ARI080923QW1','Toluca','30 días'],'100005':['Maderas Finas de Durango, S.A. de C.V.','MFD991130HP3','Durango','45 días'],'100006':['Tornillería Industrial del Centro, S.A. de C.V.','TIC070615LR6','Querétaro','30 días']};
+  for(const[id,[name,rfc,city,pay]] of Object.entries(V0))if(!s.vendors[id])s.vendors[id]={name,rfc,city,pay};
+  const IR=[['100001','R-3001','1000',27.5,7],['100001','R-3010','2000',33,10],['100001','H-2003','1000',40,10],['100001','H-2003','2000',40,10],['100002','H-2002','1000',17.5,10],['100002','R-3005','1000',5.8,7],['100002','R-3005','2000',5.8,7],
+    ['100003','R-3004','1000',3.4,5],['100003','R-3004','2000',3.4,5],['100003','R-3003','1000',0.75,5],['100003','R-3003','2000',0.75,5],['100004','R-3006','1000',118,5],['100004','R-3007','1000',82,5],['100005','H-2005','1000',21,15],['100006','R-3008','1000',0.34,7],['100006','R-3008','2000',0.34,7]];
+  for(const[v,m,p,pr,lt] of IR){const k=key(v,m,p);if(!s.inforec[k])s.inforec[k]={price:pr,lt};}
+  const MIC={'DIAM-OJO':['Diámetro del ojo',true,'mm',24.85,25.15],'DUREZA':['Dureza de la cara',true,'HRC',45,55],'LONG-MANGO':['Longitud del mango',true,'mm',328,332],'TORQUE':['Torque de extracción de la cabeza',true,'N·m',40,null],
+    'COMP-C':['Contenido de carbono',true,'%',0.43,0.5],'VISCOS':['Viscosidad',true,'cP',9000,12000],'HUMEDAD':['Humedad de la madera',true,'%',8,12],'ASPECTO':['Aspecto visual',false],'EMPAQUE':['Integridad del empaque',false]};
+  for(const[c,[d,q,unit,lo,hi]] of Object.entries(MIC))if(!s.mics[c])s.mics[c]=q?{d,q:true,unit,lo,hi}:{d,q:false};
+  const PL={'R-3001|1000':[['COMP-C',1],['DUREZA',3]],'H-2002|1000':[['LONG-MANGO',5],['ASPECTO',5]],'M-1003|1000':[['DIAM-OJO',5],['TORQUE',3],['ASPECTO',5]],'R-3006|1000':[['VISCOS',2]]};
+  for(const[k,ch] of Object.entries(PL))if(!s.plans[k])s.plans[k]={chars:ch.map(([mic,n])=>({mic,n}))};
+  const ST={'R-3006|1000|0001':50,'R-3007|1000|0001':200,'R-3008|1000|0001':10000,'R-3008|2000|0001':8000,'R-3010|2000|0001':500,'H-2005|1000|0001':300,'M-1003|1000|0002':40};
+  const by={};let tot=0;
+  for(const[k,q] of Object.entries(ST)){if(s.stock[k]!=null)continue;s.stock[k]=q;const[m,p]=k.split('|');const pp=M[m].plants[p];const val=round2(q*pp.price);const a=invAcc(pp);by[a]=round2((by[a]||0)+val);tot+=val;}
+  if(tot){const lines=Object.entries(by).map(([a,v])=>({acct:a,obj:'',d:v,h:0}));lines.push({acct:'399999',obj:'',d:0,h:round2(tot)});s.fi.unshift({doc:String(s.nextFi++),type:'FI',date:todayISO(),ref:'Saldos iniciales (ampliación MM y QM)',lines});}
+  s.xv=1;
+}
+const ppOf=(m,p)=>{const x=S.sim.materials[m];return x&&x.plants[p];};
+const hasView=(m,p,v)=>{const pp=ppOf(m,p);return!!pp&&pp.views.includes(v);};
+function qmOf(m,p){const pp=ppOf(m,p);return pp&&pp.views.includes('QM')?pp.qmType:'NO';}
+const qAt=(m,p,sl)=>S.sim.qstock[key(m,p,sl)]||0,bAt=(m,p,sl)=>S.sim.bstock[key(m,p,sl)]||0;
+function sumMap(mp,m,p){let t=0;for(const[k,v] of Object.entries(mp)){const[a,b]=k.split('|');if(a===m&&b===p)t+=v;}return round(t);}
+function totalStock(m,p){return round(sumMap(S.sim.stock,m,p)+sumMap(S.sim.qstock||{},m,p)+sumMap(S.sim.bstock||{},m,p));}
+const newDocNo=()=>String(S.sim.nextDoc++);
+function mvLine(doc,mvt,m,p,sl,q,sign,st,ref,val,extra){
+  const mp=st==='Q'?S.sim.qstock:st==='B'?S.sim.bstock:S.sim.stock;const k=key(m,p,sl);mp[k]=round((mp[k]||0)+sign*q);
+  S.sim.docs.unshift(Object.assign({doc,mvt,mat:m,plant:p,sloc:sl,qty:q,sign,order:'',ref:ref||'',cc:'',date:todayISO(),value:val,stype:st},extra||{}));
+}
+function linkFI(doc,fi){for(const d of S.sim.docs){if(d.doc===doc)d.fi=fi;}}
+function implMv(doc,mvt,m,p,sl,q,sign,val,before,note){if(!IMP)return;IMP.mdocs.push({doc,mvt,mat:m,plant:p,sloc:sl,qty:q,sign,before,after:totalStock(m,p),value:val});if(note)IMP.notes.push(note);}
+const venName=v=>(S.sim.vendors[v]||{}).name||v;
+const fVen=val=>fld('Proveedor','f-ven',{val:val||'',dl:'dl-ven',num:true});
+const findPO=id=>S.sim.pos.find(x=>x.id===String(id));
+const findLot=id=>S.sim.lots.find(x=>x.id===String(id));
+const findQN=id=>S.sim.qnots.find(x=>x.id===String(id));
+const lotOpen=l=>round(l.qty-((l.posted||{}).free||0)-((l.posted||{}).block||0)-((l.posted||{}).scrap||0)-((l.posted||{}).ret||0));
+function createLot(origin,m,p,sl,q,x){
+  const id=String(S.sim.nextLot++).padStart(12,'0');const plan=S.sim.plans[key(m,p)];
+  const lot=Object.assign({id,origin,mat:m,plant:p,sloc:sl,qty:q,date:todayISO(),status:['LIB'],results:null,ud:null,posted:{free:0,block:0,scrap:0,ret:0}},x||{});
+  S.sim.lots.push(lot);
+  if(IMP)IMP.notes.push(`Se creó el lote de inspección ${id} (origen ${LOT_O[origin]}) por ${fmtN(q)} ${S.sim.materials[m].um}${origin==='89'?'':': el stock queda en control de calidad hasta la decisión de empleo (QA11)'}. ${plan?'El lote toma el plan de inspección del material.':'El material no tiene plan de inspección: podrás decidir sin resultados.'}`);
+  return lot;
+}
+function grPO(po,it,q,sl){
+  const m=it.mat,p=po.plant,pp=ppOf(m,p),mt=S.sim.materials[m];const before=totalStock(m,p);const toQ=qmOf(m,p)==='01';const inv=invAcc(pp);
+  const poVal=round2(q*it.price);let invVal;let note='';
+  if(pp.priceCtrl==='V'){const tq=Math.max(before,0);const np=tq+q>0?round4((tq*pp.price+poVal)/(tq+q)):pp.price;if(np!==pp.price)note=` El precio medio variable cambia de ${fmtM(pp.price)} a ${fmtM(np)}.`;pp.price=np;invVal=poVal;}
+  else{invVal=round2(q*pp.price);}
+  const L=[{acct:inv,d:invVal},{acct:'211000',obj:'Pedido '+po.id,h:poVal}];const diff=round2(poVal-invVal);if(diff)L.push(diff>0?{acct:'540100',d:diff}:{acct:'540100',h:-diff});
+  const doc=newDocNo();mvLine(doc,'101',m,p,sl,q,1,toQ?'Q':undefined,'Pedido '+po.id,invVal,{po:po.id,pos:it.pos});
+  linkFI(doc,fiPost(L,'Doc. mat. '+doc));it.gr=round(it.gr+q);it.grTot=round((it.grTot||0)+q);
+  implMv(doc,'101',m,p,sl,q,1,invVal,before,`Entraron ${fmtN(q)} ${mt.um} de ${m} por el pedido ${po.id}. El inventario sube ${fmtM(invVal)} y la cuenta puente EM/RF (211000) queda con ${fmtM(poVal)} a favor del proveedor hasta que llegue la factura.${diff?` Con precio estándar, la diferencia de ${fmtM(diff)} contra el precio del pedido va a Diferencias de precio.`:''}${note}${toQ?' El material tiene inspección 01: entra a stock en control de calidad.':''}`);
+  if(toQ)createLot('01',m,p,sl,q,{po:po.id,pos:it.pos,vendor:po.vendor,ref:'Pedido '+po.id});
+  return doc;
+}
+function retPO(po,it,q,sl,st){
+  const m=it.mat,p=po.plant,pp=ppOf(m,p),mt=S.sim.materials[m];const before=totalStock(m,p);const inv=invAcc(pp);
+  const poVal=round2(q*it.price),invVal=round2(q*pp.price);const L=[{acct:'211000',obj:'Pedido '+po.id,d:poVal},{acct:inv,h:invVal}];const diff=round2(invVal-poVal);if(diff)L.push(diff>0?{acct:'540100',d:diff}:{acct:'540100',h:-diff});
+  const doc=newDocNo();mvLine(doc,'122',m,p,sl,q,-1,st,'Pedido '+po.id,invVal,{po:po.id,pos:it.pos});linkFI(doc,fiPost(L,'Doc. mat. '+doc));
+  it.gr=round(it.gr-q);it.ret=round((it.ret||0)+q);
+  implMv(doc,'122',m,p,sl,q,-1,invVal,before,`Se devolvieron ${fmtN(q)} ${mt.um} de ${m} a ${venName(po.vendor)}. Sale el inventario y se revierte la cuenta puente EM/RF: el proveedor no podrá facturar esa cantidad.`);
+  return doc;
+}
+function stockMove(mvt,m,p,sl,q,ref,extra){
+  const pp=ppOf(m,p),mt=S.sim.materials[m];const before=totalStock(m,p);const val=round2(q*pp.price);const doc=newDocNo();const ex=extra||{};let note='',fi=null;
+  if(mvt==='321'){mvLine(doc,mvt,m,p,sl,q,-1,'Q',ref,val,ex);mvLine(doc,mvt,m,p,sl,q,1,undefined,ref,val,ex);note=`${fmtN(q)} ${mt.um} de ${m} pasan de control de calidad a libre utilización. No hay asiento contable: el valor no cambia, solo el tipo de stock.`;}
+  else if(mvt==='350'){mvLine(doc,mvt,m,p,sl,q,-1,'Q',ref,val,ex);mvLine(doc,mvt,m,p,sl,q,1,'B',ref,val,ex);note=`${fmtN(q)} ${mt.um} de ${m} pasan de control de calidad a stock bloqueado. Siguen en el inventario pero no se pueden consumir.`;}
+  else if(mvt==='344'){mvLine(doc,mvt,m,p,sl,q,-1,undefined,ref,val,ex);mvLine(doc,mvt,m,p,sl,q,1,'B',ref,val,ex);note=`${fmtN(q)} ${mt.um} de ${m} pasan de libre utilización a bloqueado. El MRP ya no los cuenta como disponibles.`;}
+  else if(mvt==='343'){mvLine(doc,mvt,m,p,sl,q,-1,'B',ref,val,ex);mvLine(doc,mvt,m,p,sl,q,1,undefined,ref,val,ex);note=`${fmtN(q)} ${mt.um} de ${m} se liberan del stock bloqueado a libre utilización.`;}
+  else if(mvt==='553'||mvt==='555'){mvLine(doc,mvt,m,p,sl,q,-1,mvt==='553'?'Q':'B',ref,val,ex);fi=fiPost([{acct:'520100',obj:'CC-CAL-10',d:val},{acct:invAcc(pp),h:val}],'Doc. mat. '+doc);linkFI(doc,fi);note=`Desguace de ${fmtN(q)} ${mt.um} de ${m} desde stock ${mvt==='553'?'en calidad':'bloqueado'}: el inventario baja ${fmtM(val)} y se registra como pérdida en el centro de costo de Calidad.`;}
+  implMv(doc,mvt,m,p,sl,q,['553','555'].includes(mvt)?-1:0,val,before,note);return doc;
+}
+
+/* ---------- Proveedores y registros info ---------- */
+function txMK01(){
+  frame('MK01','Crear proveedor: Datos generales',[h('p',{class:'note'},'El número de proveedor lo asigna el sistema con el grupo de cuentas Proveedores nacionales.'),h('div',{class:'grid'},fld('Nombre o razón social','k-name',{text:true}),fld('RFC','k-rfc'),fld('Ciudad','k-city',{text:true}),fld('Condición de pago','k-pay',{list:Object.entries(PAYT),val:'0030'}))],
+    [btn('Grabar',()=>{const n=$('#k-name').value.trim(),rfc=V('k-rfc'),city=$('#k-city').value.trim(),pay=V('k-pay');
+      if(n.length<3)return msg('E','Llene el campo obligatorio "Nombre o razón social"');
+      if(!/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(rfc))return msg('E','RFC inválido: 3 o 4 letras, 6 dígitos de fecha (AAMMDD) y 3 caracteres de homoclave');
+      if(!city)return msg('E','Llene el campo obligatorio "Ciudad"');
+      if(Object.values(S.sim.vendors).some(v=>v.rfc===rfc))return msg('E',`Ya existe un proveedor con el RFC ${rfc}`);
+      const id=String(S.sim.nextVen++);S.sim.vendors[id]={name:n,rfc,city,pay:PAYT[pay],user:true};evt('MK01',id);persist();txMK03({ven:id,auto:true});msg('S',`Proveedor ${id} creado`);})]);
+}
+function txMK03(pre={}){
+  initScreen('MK03','Visualizar proveedor',[fVen(pre.ven),fld('Organización de compras','f-eko',{val:'1000',ro:true})],()=>{
+    const v=V('f-ven'),x=S.sim.vendors[v];if(!x)return msg('E',`El proveedor ${v||'(vacío)'} no existe`);clearMsg();evt('MK03',v);persist();
+    const irs=Object.entries(S.sim.inforec).filter(([k])=>k.startsWith(v+'|')).map(([k,r])=>{const[,m,p]=k.split('|');return[m,(S.sim.materials[m]||{}).desc||'',p,fmtM(r.price),r.lt+' días'];});
+    const pos=S.sim.pos.filter(po=>po.vendor===v).map(po=>[lnk(po.id,()=>openTx('ME23N',{po:po.id,auto:true})),fmtD(po.date),po.plant,String(po.items.filter(i=>!i.del).length),poStatus(po)]);
+    frame('MK03',`Visualizar proveedor ${v}`,[tabs([['Dirección',h('dl',{class:'kv'},kv('Proveedor',v),kv('Nombre',x.name),kv('RFC',x.rfc),kv('Ciudad',x.city),kv('País','MX'))],['Datos de compras',h('dl',{class:'kv'},kv('Condición de pago',x.pay),kv('Moneda','MXN'),kv('Verificación de factura basada en EM','Sí'))]]),
+      irs.length?table(['Material','Texto breve','Centro','Precio neto','Plazo'],irs,{num:[3],title:'Registros info'}):h('p',{class:'empty'},'Sin registros info.'),pos.length?table(['Pedido','Fecha','Centro','Posiciones','Estatus'],pos,{title:'Pedidos'}):null],[btn('Atrás',()=>txMK03({ven:v}))]);
+  });
+}
+function irTx(mode){
+  const T={ME11:'Crear registro info',ME12:'Modificar registro info',ME13:'Visualizar registro info'}[mode];
+  return function tx(pre={}){
+    initScreen(mode,T,[fVen(pre.ven),fMat(pre.mat),fPlant(pre.plant)],()=>{
+      const v=V('f-ven'),m=V('f-mat'),p=V('f-plant'),k=key(v,m,p),r=S.sim.inforec[k];
+      if(!S.sim.vendors[v])return msg('E',`El proveedor ${v||'(vacío)'} no existe`);
+      if(!S.sim.materials[m])return msg('E',`El material ${m||'(vacío)'} no existe`);
+      if(!ppOf(m,p))return msg('E',`Material ${m} no existe en centro ${p}`);
+      if(mode==='ME11'&&r)return msg('E',`Ya existe un registro info para ${v}, ${m}, centro ${p}. Utilice ME12`);
+      if(mode!=='ME11'&&!r)return msg('E',`No existe registro info para ${v}, ${m}, centro ${p}`);
+      if(mode==='ME11'&&!hasView(m,p,'PUR'))return msg('E',`Material ${m} no está ampliado para Compras en el centro ${p}. Amplíe la vista Compras con MM01`);
+      clearMsg();if(mode==='ME13'){evt('ME13',k);persist();}
+      const ro=mode==='ME13';
+      frame(mode,`${T}: Datos de organización de compras`,[h('dl',{class:'kv'},kv('Proveedor',`${v}  ${venName(v)}`),kv('Material',`${m}  ${S.sim.materials[m].desc}`),kv('Centro',p)),
+        h('div',{class:'grid'},fld('Precio neto (MXN por unidad)','i-price',{num:true,val:r?r.price:'',ro}),fld('Plazo de entrega previsto (días)','i-lt',{num:true,val:r?r.lt:7,ro}))],
+        [btn('Atrás',()=>tx({ven:v,mat:m,plant:p})),ro?null:btn('Grabar',()=>{const pr=parseNum($('#i-price').value),lt=parseNum($('#i-lt').value);
+          if(!(pr>0))return msg('E','Indique un precio neto mayor que cero');if(!(lt>0))return msg('E','Indique el plazo de entrega');
+          S.sim.inforec[k]={price:pr,lt};evt(mode,k);persist();tx();msg('S',`Registro info ${mode==='ME11'?'creado':'modificado'}: ${v}, ${m}, centro ${p}`);})]);
+    });
+  };
+}
+
+/* ---------- Pedidos ---------- */
+function poStatus(po){const it=po.items.filter(i=>!i.del);if(!it.length)return'Borrado';const rec=it.every(i=>(i.grTot||0)>=i.qty),inv=it.every(i=>i.ir>=i.gr&&i.gr>0);return inv&&rec?'Recibido y facturado':rec?'Recibido':it.some(i=>(i.grTot||0)>0)?'Recibido parcialmente':'Pendiente de entrega';}
+function txME21N(pre={}){
+  initScreen('ME21N','Crear pedido',[fVen(pre.ven),fPlant(pre.plant),fld('Solicitud de pedido (opcional)','f-pr',{val:pre.pr||'',dl:'dl-pr',num:true}),fld('Clase de pedido','f-ptype',{list:[['NB','Pedido estándar']],val:'NB',ro:true})],go,'Escribe el proveedor y el centro. Si conviertes una solicitud de pedido, su material y cantidad se copian a la posición.');
+  function go(){
+    const v=V('f-ven'),p=V('f-plant'),pr=V('f-pr');
+    if(!S.sim.vendors[v])return msg('E',`El proveedor ${v||'(vacío)'} no existe`);
+    let items=[{mat:'',qty:'',price:'',sloc:'0001'}],preq=null;
+    if(pr){preq=S.sim.preqs.find(x=>x.id===pr);if(!preq)return msg('E',`La solicitud de pedido ${pr} no existe`);if(preq.po)return msg('E',`La solicitud ${pr} ya se convirtió en el pedido ${preq.po}`);if(preq.plant!==p)return msg('E',`La solicitud ${pr} es del centro ${preq.plant}`);items=[{mat:preq.mat,qty:String(preq.qty),price:'',sloc:'0001'}];}
+    clearMsg();const wrap=h('div');
+    function draw(){
+      wrap.replaceChildren(table(['Pos.','Material','Texto breve','Cantidad','UM','Precio neto','Almacén',''],items.map((it,i)=>{const mt=S.sim.materials[it.mat];const ir=S.sim.inforec[key(v,it.mat,p)];
+        const sl=h('select',{'aria-label':'Almacén posición '+(i+1),onchange:e=>{it.sloc=e.target.value;}},L.sloc.map(([c])=>h('option',{value:c},c)));sl.value=it.sloc;
+        return[String((i+1)*10).padStart(5,'0'),h('input',{value:it.mat,list:'dl-mat',autocapitalize:'characters',autocomplete:'off','aria-label':'Material posición '+(i+1),oninput:e=>{it.mat=e.target.value.trim().toUpperCase();},onchange:draw}),mt?mt.desc:'',
+          h('input',{value:it.qty,inputmode:'decimal','aria-label':'Cantidad posición '+(i+1),oninput:e=>{it.qty=e.target.value;}}),mt?mt.um:'',
+          h('input',{value:it.price,inputmode:'decimal',placeholder:ir?String(ir.price):'',autocomplete:'off','aria-label':'Precio posición '+(i+1),oninput:e=>{it.price=e.target.value;}}),sl,
+          preq?'':h('button',{class:'icon',type:'button','aria-label':'Borrar posición '+(i+1),onclick:()=>{items.splice(i,1);draw();}},'✕')];}),{title:'Resumen de posiciones'}),
+        preq?null:h('button',{class:'addrow',type:'button',onclick:()=>{items.push({mat:'',qty:'',price:'',sloc:'0001'});draw();}},'Añadir posición'));
+    }
+    draw();
+    frame('ME21N',`Pedido estándar: Crear`,[h('dl',{class:'kv'},kv('Proveedor',`${v}  ${venName(v)}`),kv('Centro',`${p}  ${PLANTS[p]}`),kv('Condición de pago',S.sim.vendors[v].pay),preq?kv('Solicitud de pedido',preq.id):null),wrap,
+      h('p',{class:'note'},'Si dejas el precio vacío, se toma del registro info (el número gris). Sin registro info el precio es obligatorio.')],
+      [btn('Atrás',()=>txME21N({ven:v,plant:p,pr})),btn('Grabar',saveIt)]);
+    function saveIt(){
+      const clean=items.filter(it=>it.mat||String(it.qty).trim());if(!clean.length)return msg('E','El pedido necesita al menos una posición');
+      const out=[];
+      for(const[i,it] of clean.entries()){const pos=String((i+1)*10).padStart(5,'0');const mt=S.sim.materials[it.mat];
+        if(!mt)return msg('E',`Posición ${pos}: el material ${it.mat||'(vacío)'} no existe`);
+        if(!ppOf(it.mat,p))return msg('E',`Posición ${pos}: material ${it.mat} no existe en centro ${p}`);
+        if(!hasView(it.mat,p,'PUR'))return msg('E',`Posición ${pos}: material ${it.mat} no está ampliado para Compras en el centro ${p}. Amplíe la vista Compras con MM01`);
+        if(!hasView(it.mat,p,'ACC'))return msg('E',`Posición ${pos}: material ${it.mat} sin vista Contabilidad en el centro ${p}`);
+        const q=parseNum(it.qty);if(!(q>0))return msg('E',`Posición ${pos}: indique una cantidad mayor que cero`);if(mt.um==='PZA'&&!Number.isInteger(q))return msg('E',`Posición ${pos}: la unidad PZA no admite decimales`);
+        let pr=parseNum(it.price);const ir=S.sim.inforec[key(v,it.mat,p)];if(!String(it.price).trim()){if(!ir)return msg('E',`Posición ${pos}: no se encontró registro info para ${v} y ${it.mat}. Indique el precio neto`);pr=ir.price;}
+        if(!(pr>0))return msg('E',`Posición ${pos}: el precio neto debe ser mayor que cero`);
+        out.push({pos,mat:it.mat,qty:q,price:pr,sloc:it.sloc,gr:0,grTot:0,ir:0,irVal:0,ret:0,del:false,preq:preq&&i===0?preq.id:null});}
+      const id=String(S.sim.nextPO++);S.sim.pos.push({id,vendor:v,plant:p,date:todayISO(),items:out});if(preq)preq.po=id;
+      evt('ME21N',id);persist();poScreen('ME23N',findPO(id));msg('S',`Pedido estándar ${id} grabado`);
+    }
+  }
+}
+function poScreen(mode,po){
+  const ro=mode==='ME23N';const items=po.items;const tot=items.filter(i=>!i.del).reduce((a,i)=>a+i.qty*i.price,0);
+  const rows=items.map(it=>{const mt=S.sim.materials[it.mat]||{};const lock=it.del||(it.grTot||0)>0;
+    return[it.pos,it.mat,mt.desc||'',ro||it.del?fmtN(it.qty):h('input',{value:it.qty,inputmode:'decimal','data-q':it.pos,'aria-label':'Cantidad '+it.pos}),mt.um||'',ro||lock?fmtM(it.price):h('input',{value:it.price,inputmode:'decimal','data-p':it.pos,'aria-label':'Precio '+it.pos}),fmtN(it.grTot||0),fmtN(it.ret||0),fmtN(it.ir),
+      it.del?'Borrada':ro?'':(it.grTot||0)>0||it.ir>0?'':h('input',{type:'checkbox','data-d':it.pos,'aria-label':'Borrar posición '+it.pos})];});
+  const hist=S.sim.docs.filter(d=>d.po===po.id&&(d.stype!=='Q'||d.mvt!=='321')).map(d=>[d.mvt==='101'?'EM':'Dev.',d.doc,fmtD(d.date),d.mat,cellN(d.sign*d.qty,true),fmtM(d.value)]).concat(S.sim.invs.filter(x=>x.po===po.id).map(x=>['RF',x.doc,fmtD(x.date),x.items.map(i=>i.mat).join(', '),fmtN(x.items.reduce((a,i)=>a+i.qty,0)),fmtM(x.net)+(x.blocked?' (bloqueada)':'')]));
+  frame(mode,`Pedido estándar ${po.id}${ro?'':': Modificar'}`,[h('dl',{class:'kv'},kv('Proveedor',`${po.vendor}  ${venName(po.vendor)}`),kv('Centro',po.plant),kv('Fecha',fmtD(po.date)),kv('Valor neto',fmtM(tot)),kv('Estatus',poStatus(po))),
+    tabs([['Posiciones',table(['Pos.','Material','Texto breve','Cantidad','UM','Precio','Recibido','Devuelto','Facturado',ro?'':'Borrar'],rows,{num:[3,5,6,7,8]})],['Historial de pedido',hist.length?table(['Tipo','Documento','Fecha','Material','Cantidad','Importe'],hist,{num:[4,5]}):h('p',{class:'empty'},'Todavía no hay entradas ni facturas.')]])],
+    [btn('Atrás',()=>(mode==='ME22N'?txME22N:txME23N)({po:po.id})),ro?null:btn('Grabar',saveIt)]);
+  function saveIt(){
+    for(const it of items){if(it.del)continue;const qi=$(`[data-q="${it.pos}"]`),pi=$(`[data-p="${it.pos}"]`),di=$(`[data-d="${it.pos}"]`);
+      const q=parseNum(qi.value);if(!(q>0))return msg('E',`Posición ${it.pos}: cantidad inválida`);if(q<(it.grTot||0))return msg('E',`Posición ${it.pos}: la cantidad no puede ser menor que lo ya recibido (${fmtN(it.grTot)})`);
+      if(pi){const pr=parseNum(pi.value);if(!(pr>0))return msg('E',`Posición ${it.pos}: precio inválido`);if(pr!==it.price){it.price=pr;it.chg=true;}}
+      if(q!==it.qty){it.qty=q;it.chg=true;}if(di&&di.checked){it.del=true;}}
+    evt('ME22N',po.id);persist();poScreen('ME22N',po);msg('S',`Pedido estándar ${po.id} modificado`);
+  }
+}
+function poTx(mode){return function(pre={}){initScreen(mode,mode==='ME22N'?'Modificar pedido':'Visualizar pedido',[fld('Pedido','f-po',{val:pre.po||'',dl:'dl-po',num:true})],()=>{const po=findPO(V('f-po'));if(!po)return msg('E',`El pedido ${V('f-po')||'(vacío)'} no existe`);clearMsg();if(mode==='ME23N'){evt('ME23N',po.id);persist();}poScreen(mode,po);});};}
+const txME22N=poTx('ME22N'),txME23N=poTx('ME23N');
+function txME2(mode){return function(pre={}){
+  initScreen(mode,mode==='ME2M'?'Pedidos por material':'Pedidos por proveedor',[mode==='ME2M'?fMat(pre.mat):fVen(pre.ven),fld('Centro (opcional)','f-plant',{list:Object.entries(PLANTS),val:''})],()=>{
+    const x=mode==='ME2M'?V('f-mat'):V('f-ven'),p=V('f-plant');
+    if(mode==='ME2M'&&!S.sim.materials[x])return msg('E',`El material ${x||'(vacío)'} no existe`);if(mode==='ME2L'&&!S.sim.vendors[x])return msg('E',`El proveedor ${x||'(vacío)'} no existe`);
+    const rows=[];for(const po of S.sim.pos){if(p&&po.plant!==p)continue;if(mode==='ME2L'&&po.vendor!==x)continue;for(const it of po.items){if(it.del||(mode==='ME2M'&&it.mat!==x))continue;rows.push([lnk(po.id,()=>openTx('ME23N',{po:po.id,auto:true})),it.pos,mode==='ME2M'?po.vendor:it.mat,po.plant,fmtN(it.qty),fmtN(Math.max(0,round(it.qty-(it.grTot||0)))),fmtN(Math.max(0,round(it.gr-it.ir))),fmtM(it.qty*it.price)]);}}
+    clearMsg();evt(mode,x);persist();
+    frame(mode,`${mode==='ME2M'?'Pedidos del material':'Pedidos del proveedor'} ${x}`,[rows.length?table(['Pedido','Pos.',mode==='ME2M'?'Proveedor':'Material','Ce.','Cantidad','Por entregar','Por facturar','Valor neto'],rows,{num:[4,5,6,7]}):h('p',{class:'empty'},'No se encontraron pedidos.')],[btn('Atrás',()=>txME2(mode)({mat:x,ven:x}))]);
+  },null,true);};}
+function txME51N(pre={}){
+  initScreen('ME51N','Crear solicitud de pedido',[fMat(pre.mat),fPlant(pre.plant),fld('Cantidad','f-qty',{num:true}),fld('Fecha de entrega','f-date',{date:true,val:addDays(todayISO(),7)})],()=>{
+    const m=V('f-mat'),p=V('f-plant'),q=parseNum($('#f-qty').value),d=$('#f-date').value;const mt=S.sim.materials[m];
+    if(!mt)return msg('E',`El material ${m||'(vacío)'} no existe`);if(!ppOf(m,p))return msg('E',`Material ${m} no existe en centro ${p}`);
+    if(!hasView(m,p,'PUR'))return msg('E',`Material ${m} no está ampliado para Compras en el centro ${p}`);
+    if(!(q>0))return msg('E','Indique una cantidad mayor que cero');if(!d)return msg('E','Indique la fecha de entrega');
+    const id=String(S.sim.nextPR++);S.sim.preqs.push({id,mat:m,plant:p,qty:q,date:d,src:'MAN',po:null});evt('ME51N',id);persist();txME51N();msg('S',`Solicitud de pedido ${id} creada`);
+  });
+}
+function txME5A(pre={}){
+  initScreen('ME5A','Lista de solicitudes de pedido',[fPlant(pre.plant),fld('Mostrar','f-st',{list:[['A','Abiertas'],['T','Todas']],val:'A'})],()=>{
+    const p=V('f-plant'),st=V('f-st');const rows=S.sim.preqs.filter(x=>x.plant===p&&(st==='T'||!x.po)).map(x=>[x.id,x.mat,(S.sim.materials[x.mat]||{}).desc||'',fmtN(x.qty),fmtD(x.date),x.src==='MRP'?'MRP':'Manual',x.po?lnk(x.po,()=>openTx('ME23N',{po:x.po,auto:true})):h('button',{class:'lnk',type:'button',onclick:()=>openTx('ME21N',{pr:x.id,plant:x.plant})},'Convertir')]);
+    clearMsg();evt('ME5A',p);persist();
+    frame('ME5A',`Solicitudes de pedido: centro ${p}`,[rows.length?table(['SolPed','Material','Texto breve','Cantidad','Entrega','Origen','Pedido'],rows,{num:[3]}):h('p',{class:'empty'},'No hay solicitudes de pedido.')],[btn('Atrás',()=>txME5A({plant:p}))]);
+  },null,true);
+}
+function txMIRO(pre={}){
+  initScreen('MIRO','Registrar factura recibida',[fld('Pedido','f-po',{val:pre.po||'',dl:'dl-po',num:true}),fld('Fecha de factura','f-date',{date:true,val:todayISO()}),fld('Referencia (folio del proveedor)','f-ref',{val:pre.ref||''})],go,'La verificación de facturas compara la factura contra el pedido y la entrada de mercancías (verificación a tres vías).');
+  function go(){
+    const po=findPO(V('f-po'));if(!po)return msg('E',`El pedido ${V('f-po')||'(vacío)'} no existe`);const ref=$('#f-ref').value.trim();if(!ref)return msg('E','Indique la referencia (folio de la factura del proveedor)');
+    const open=po.items.filter(it=>!it.del&&round(it.gr-it.ir)>0);if(!open.length)return msg('E',`No hay cantidades recibidas pendientes de facturar en el pedido ${po.id}. La verificación es basada en la entrada de mercancías`);
+    clearMsg();const vals={};
+    const rows=open.map(it=>{const q=round(it.gr-it.ir);vals[it.pos]={q:String(q),a:String(round2(q*it.price))};
+      return[it.pos,it.mat,fmtM(it.price),fmtN(q),h('input',{value:vals[it.pos].q,inputmode:'decimal','aria-label':'Cantidad '+it.pos,oninput:e=>{vals[it.pos].q=e.target.value;}}),h('input',{value:vals[it.pos].a,inputmode:'decimal','aria-label':'Importe '+it.pos,oninput:e=>{vals[it.pos].a=e.target.value;}})];});
+    frame('MIRO',`Registrar factura: pedido ${po.id}`,[h('dl',{class:'kv'},kv('Proveedor',`${po.vendor}  ${venName(po.vendor)}`),kv('Referencia',ref),kv('IVA','16 % acreditable')),
+      table(['Pos.','Material','Precio pedido','Por facturar','Cantidad','Importe neto'],rows,{num:[2,3]}),h('p',{class:'note'},'Si el precio unitario de la factura difiere más de 5 % del pedido, la factura se contabiliza bloqueada para pago.')],
+      [btn('Atrás',()=>txMIRO({po:po.id,ref})),btn('Contabilizar',post)]);
+    function post(){
+      const lines=[];
+      for(const it of open){const q=parseNum(vals[it.pos].q),a=parseNum(vals[it.pos].a);if(!q&&!a)continue;
+        if(!(q>0))return msg('E',`Posición ${it.pos}: cantidad inválida`);if(q>round(it.gr-it.ir)+1e-9)return msg('E',`Posición ${it.pos}: la cantidad facturada excede la cantidad recibida pendiente (${fmtN(round(it.gr-it.ir))})`);
+        if(!(a>0))return msg('E',`Posición ${it.pos}: importe inválido`);lines.push({it,q,a});}
+      if(!lines.length)return msg('E','Indique al menos una posición');
+      beginImpl(`factura del pedido ${po.id}`);const L=[];let net=0,blocked=false;const notes=[];
+      for(const{it,q,a} of lines){const m=it.mat,pp=ppOf(m,po.plant);const grir=round2(q*it.price),diff=round2(a-grir);L.push({acct:'211000',obj:'Pedido '+po.id,d:grir});net+=a;
+        if(diff){const tq=totalStock(m,po.plant);if(pp.priceCtrl==='V'&&tq>=q){L.push(diff>0?{acct:invAcc(pp),d:diff}:{acct:invAcc(pp),h:-diff});const np=round4((tq*pp.price+diff)/tq);notes.push(`${m}: la diferencia de ${fmtM(diff)} ajusta el inventario porque tiene precio medio variable; el precio pasa de ${fmtM(pp.price)} a ${fmtM(np)}.`);pp.price=np;}
+          else{L.push(diff>0?{acct:'540100',d:diff}:{acct:'540100',h:-diff});notes.push(`${m}: la diferencia de ${fmtM(diff)} contra el pedido va a Diferencias de precio (540100).`);}}
+        if(Math.abs(a/q-it.price)/it.price>0.05)blocked=true;it.ir=round(it.ir+q);it.irVal=round2((it.irVal||0)+a);}
+      net=round2(net);const iva=round2(net*0.16);L.push({acct:'118000',d:iva},{acct:'201000',obj:'Proveedor '+po.vendor,h:round2(net+iva)});
+      const doc=String(S.sim.nextInv++);const fi=fiPost(L,`Factura ${doc} (${ref})`);
+      S.sim.invs.unshift({doc,po:po.id,vendor:po.vendor,ref,date:$('#f-date')?todayISO():todayISO(),items:lines.map(x=>({pos:x.it.pos,mat:x.it.mat,qty:x.q,amt:x.a})),net,iva,total:round2(net+iva),blocked,fi});
+      IMP.notes.push(`La factura salda la cuenta puente EM/RF por lo recibido y reconoce la deuda con el proveedor por ${fmtM(net+iva)} con IVA.`,...notes);if(blocked)IMP.notes.push('El precio de la factura difiere más de 5 % del pedido: queda bloqueada para pago hasta que Compras la libere.');
+      evt('MIRO',doc);const I=endImpl();persist();showImpl(I,()=>txMIRO());msg(blocked?'W':'S',`Documento ${doc} contabilizado${blocked?' y bloqueado para pago (diferencia de precio)':''}`);
+    }
+  }
+}
+function txMR21(pre={}){
+  initScreen('MR21','Cambio de precio',[fMat(pre.mat),fPlant(pre.plant)],()=>{
+    const m=V('f-mat'),p=V('f-plant'),pp=ppOf(m,p);if(!S.sim.materials[m])return msg('E',`El material ${m||'(vacío)'} no existe`);if(!pp)return msg('E',`Material ${m} no existe en centro ${p}`);if(!pp.views.includes('ACC'))return msg('E',`Material ${m} sin vista Contabilidad`);
+    clearMsg();const tq=totalStock(m,p);
+    frame('MR21',`Cambio de precio: ${m}`,[h('dl',{class:'kv'},kv('Material',`${m}  ${S.sim.materials[m].desc}`),kv('Control de precios',pp.priceCtrl==='S'?'S Precio estándar':'V Precio medio variable'),kv('Precio actual',fmtM(pp.price)),kv('Stock total valorado',`${fmtN(tq)} ${S.sim.materials[m].um}`),kv('Valor actual',fmtM(tq*pp.price))),
+      h('div',{class:'grid'},fld('Precio nuevo','r-price',{num:true}))],[btn('Atrás',()=>txMR21({mat:m,plant:p})),btn('Contabilizar',()=>{
+        const np=parseNum($('#r-price').value);if(!(np>0))return msg('E','Indique un precio nuevo mayor que cero');if(np===pp.price)return msg('E','El precio nuevo es igual al actual');
+        beginImpl(`cambio de precio de ${m}`);const rv=round2((np-pp.price)*tq);
+        if(rv)fiPost(rv>0?[{acct:invAcc(pp),d:rv},{acct:'540300',h:rv}]:[{acct:'540300',d:-rv},{acct:invAcc(pp),h:-rv}],`Cambio de precio ${m}`);
+        IMP.notes.push(`El precio de ${m} cambia de ${fmtM(pp.price)} a ${fmtM(np)}. Los ${fmtN(tq)} ${S.sim.materials[m].um} en stock se revalúan: ${rv>=0?'el inventario sube':'el inventario baja'} ${fmtM(Math.abs(rv))} contra la cuenta de revaluación (540300).`);
+        pp.price=np;evt('MR21',key(m,p));const I=endImpl();persist();showImpl(I,()=>txMR21({mat:m,plant:p}));msg('S',`Precio de ${m} modificado`);})]);
+  });
+}
+function txMMBE2(pre={}){
+  initScreen('MMBE','Resumen de stocks',[fMat(pre.mat),fld('Centro (opcional)','f-plant',{list:Object.entries(PLANTS),val:pre.plant||''})],()=>{
+    const m=V('f-mat'),p=V('f-plant'),mt=S.sim.materials[m];if(!mt)return msg('E',`El material ${m||'(vacío)'} no existe`);
+    clearMsg();evt('MMBE',m);
+    const keys=new Set();for(const mp of [S.sim.stock,S.sim.qstock,S.sim.bstock])for(const[k,v] of Object.entries(mp)){const[a,b]=k.split('|');if(a===m&&(!p||b===p)&&v)keys.add(k);}
+    const rows=[...keys].sort().map(k=>{const[,pl,s]=k.split('|');return[pl,s,SLOCS[s],fmtN(S.sim.stock[k]||0),fmtN(S.sim.qstock[k]||0),fmtN(S.sim.bstock[k]||0)];});
+    let q=0;for(const k of keys)q+=S.sim.qstock[k]||0;if(q>0)evt('MMBEQ',m);persist();
+    const onPO=S.sim.pos.filter(po=>!p||po.plant===p).reduce((a,po)=>a+po.items.filter(i=>!i.del&&i.mat===m).reduce((b,i)=>b+Math.max(0,i.qty-(i.grTot||0)),0),0);
+    const tot=i=>[...keys].reduce((a,k)=>a+([S.sim.stock,S.sim.qstock,S.sim.bstock][i][k]||0),0);
+    frame('MMBE',`Resumen de stocks: ${m}`,[basicCard(m,mt),rows.length?table(['Centro','Alm.','Denominación','Libre utilización','En control de calidad','Bloqueado'],rows,{num:[3,4,5],title:`Unidad: ${mt.um}`,foot:['Total','','',fmtN(tot(0)),fmtN(tot(1)),fmtN(tot(2))]}):h('p',{class:'empty'},'Sin stock.'),
+      h('dl',{class:'kv'},kv('Pedido en curso (por entregar)',`${fmtN(onPO)} ${mt.um}`)),h('p',{class:'note'},'Solo el stock de libre utilización se puede consumir. El de calidad espera la decisión de empleo y el bloqueado no se usa hasta liberarlo.')],[btn('Atrás',()=>txMMBE2({mat:m,plant:p}))]);
+  },null,true);
+}
+
+/* ---------- MIGO: pedidos y tipos de stock ---------- */
+const MIGO_X={
+  P101:{n:'Entrada de mercancías: pedido (101)',run:id=>{
+    const po=findPO(id);if(!po)return msg('E',`El pedido ${id||'(vacío)'} no existe. Escribe el número de pedido en el campo de referencia`);
+    const open=po.items.filter(it=>!it.del&&round(it.qty-(it.grTot||0))>0);if(!open.length)return msg('E',`El pedido ${po.id} ya se recibió completo`);
+    clearMsg();const vals={};
+    const rows=open.map(it=>{const q=round(it.qty-(it.grTot||0));vals[it.pos]={q:String(q),sl:it.sloc};const sl=h('select',{onchange:e=>{vals[it.pos].sl=e.target.value;},'aria-label':'Almacén '+it.pos},L.sloc.map(([c])=>h('option',{value:c},c)));sl.value=it.sloc;
+      return[it.pos,it.mat,(S.sim.materials[it.mat]||{}).desc||'',fmtN(q),h('input',{value:vals[it.pos].q,inputmode:'decimal','aria-label':'Cantidad '+it.pos,oninput:e=>{vals[it.pos].q=e.target.value;}}),sl,qmOf(it.mat,po.plant)==='01'?'En calidad':'Libre'];});
+    frame('MIGO',`Entrada de mercancías Pedido ${po.id}`,[h('dl',{class:'kv'},kv('Proveedor',`${po.vendor}  ${venName(po.vendor)}`),kv('Centro',po.plant),kv('Clase de movimiento','101')),table(['Pos.','Material','Texto breve','Por entregar','Cantidad','Almacén','Tipo de stock'],rows,{num:[3]}),h('p',{class:'note'},'Pon 0 en las posiciones que no llegaron. Tolerancia de exceso: 0 %.')],
+      [btn('Atrás',()=>txMIGO({mvt:'P101',order:po.id})),btn('Contabilizar',()=>{
+        const go=[];for(const it of open){const q=parseNum(vals[it.pos].q);if(!q)continue;if(!(q>0))return msg('E',`Posición ${it.pos}: cantidad inválida`);const mt=S.sim.materials[it.mat];if(mt.um==='PZA'&&!Number.isInteger(q))return msg('E',`Posición ${it.pos}: la unidad PZA no admite decimales`);
+          if(q>round(it.qty-(it.grTot||0))+1e-9)return msg('E',`Posición ${it.pos}: la cantidad excede lo pendiente del pedido (${fmtN(round(it.qty-(it.grTot||0)))})`);const ve=valCheck(it.mat,po.plant);if(ve)return msg('E',ve);go.push([it,q,vals[it.pos].sl]);}
+        if(!go.length)return msg('E','Indique la cantidad recibida de al menos una posición');
+        beginImpl(`entrada de mercancías del pedido ${po.id}`);let doc;for(const[it,q,sl] of go)doc=grPO(po,it,q,sl);evt('MIGOP101',po.id);const I=endImpl();persist();showImpl(I,()=>txMIGO({mvt:'P101',order:po.id}));msg('S',`Documento de material ${doc} contabilizado`);})]);}},
+  P122:{n:'Devolución a proveedor (122)',run:id=>{
+    const po=findPO(id);if(!po)return msg('E',`El pedido ${id||'(vacío)'} no existe`);const rec=po.items.filter(it=>!it.del&&it.gr>0);if(!rec.length)return msg('E',`El pedido ${po.id} no tiene cantidades recibidas`);
+    clearMsg();const vals={};
+    const rows=rec.map(it=>{vals[it.pos]={q:'',sl:it.sloc};return[it.pos,it.mat,fmtN(it.gr),fmtN(stockAt(it.mat,po.plant,it.sloc)),h('input',{inputmode:'decimal','aria-label':'Cantidad a devolver '+it.pos,oninput:e=>{vals[it.pos].q=e.target.value;}})];});
+    frame('MIGO',`Devolución a proveedor: pedido ${po.id}`,[h('dl',{class:'kv'},kv('Proveedor',`${po.vendor}  ${venName(po.vendor)}`),kv('Clase de movimiento','122')),table(['Pos.','Material','Recibido neto','Libre en almacén','Cantidad a devolver'],rows,{num:[2,3]}),h('p',{class:'note'},'La devolución sale del stock de libre utilización. Si el material está en control de calidad, devuélvelo desde la decisión de empleo (QA11).')],
+      [btn('Atrás',()=>txMIGO({mvt:'P122',order:po.id})),btn('Contabilizar',()=>{
+        const go=[];for(const it of rec){const q=parseNum(vals[it.pos].q);if(!q)continue;if(!(q>0))return msg('E',`Posición ${it.pos}: cantidad inválida`);if(q>it.gr+1e-9)return msg('E',`Posición ${it.pos}: solo se pueden devolver ${fmtN(it.gr)}`);if(stockAt(it.mat,po.plant,it.sloc)+1e-9<q)return msg('E',`Déficit de stock en libre utilización: ${it.mat}, almacén ${it.sloc}`);go.push([it,q]);}
+        if(!go.length)return msg('E','Indique la cantidad a devolver');beginImpl(`devolución al proveedor del pedido ${po.id}`);let doc;for(const[it,q] of go)doc=retPO(po,it,q,it.sloc,undefined);evt('MIGOP122',po.id);const I=endImpl();persist();showImpl(I,()=>txMIGO({mvt:'P122',order:po.id}));msg('S',`Documento de material ${doc} contabilizado`);})]);}},
+  B344:{n:'Libre utilización a bloqueado (344)',gen:'344'},B343:{n:'Bloqueado a libre utilización (343)',gen:'343'},B555:{n:'Desguace desde stock bloqueado (555)',gen:'555'}
+};
+function migoStock(code,pre){
+  const mv=MIGO_X[code].gen;clearMsg();
+  frame('MIGO',`${MIGO_X[code].n}`,[h('div',{class:'grid'},fMat(pre.mat),fPlant(pre.plant),fld('Almacén','g-sl',{list:L.sloc,val:'0001'}),fld('Cantidad','g-qty',{num:true})),h('p',{class:'note'},{344:'Bloquea stock sospechoso para que nadie lo consuma mientras se revisa.',343:'Libera stock bloqueado cuando se confirma que está bien.',555:'Da de baja stock bloqueado que no sirve. Genera asiento de pérdida.'}[mv])],
+    [btn('Atrás',()=>txMIGO({mvt:code})),btn('Contabilizar',()=>{
+      const m=V('f-mat'),p=V('f-plant'),sl=V('g-sl'),q=parseNum($('#g-qty').value);const mt=S.sim.materials[m];
+      if(!mt)return msg('E',`El material ${m||'(vacío)'} no existe`);const ve=valCheck(m,p);if(ve)return msg('E',ve);if(!(q>0))return msg('E','Indique una cantidad mayor que cero');
+      const avail=mv==='344'?stockAt(m,p,sl):bAt(m,p,sl);if(avail+1e-9<q)return msg('E',`Déficit de stock ${mv==='344'?'en libre utilización':'bloqueado'}: ${m}, almacén ${sl}, disponible ${fmtN(avail)}`);
+      beginImpl(`${MIGO_X[code].n.toLowerCase()} de ${m}`);const doc=stockMove(mv,m,p,sl,q,'');evt('MIGO'+mv,m);const I=endImpl();persist();showImpl(I,()=>txMIGO({mvt:code}));msg('S',`Documento de material ${doc} contabilizado`);})]);
+}
+
+/* ---------- Inventario físico ---------- */
+const findPI=id=>S.sim.pi.find(x=>x.doc===String(id));
+function txMI01(pre={}){
+  initScreen('MI01','Crear documento de inventario',[fPlant(pre.plant),fld('Almacén','f-sl',{list:L.sloc,val:'0001'}),fld('Materiales separados por coma','f-mats',{val:pre.mats||''})],()=>{
+    const p=V('f-plant'),sl=V('f-sl'),mats=[...new Set(V('f-mats').split(/[,\s]+/).filter(Boolean))];
+    if(!mats.length)return msg('E','Indique al menos un material');
+    for(const m of mats){if(!S.sim.materials[m])return msg('E',`El material ${m} no existe`);if(!ppOf(m,p))return msg('E',`Material ${m} no existe en centro ${p}`);
+      const open=S.sim.pi.find(d=>d.plant===p&&d.sloc===sl&&d.status!=='CONTAB'&&d.items.some(i=>i.mat===m));if(open)return msg('E',`El material ${m} ya está en el documento de inventario ${open.doc} sin contabilizar`);}
+    const doc=String(S.sim.nextPI++);S.sim.pi.push({doc,plant:p,sloc:sl,date:todayISO(),status:'ABIE',items:mats.map(m=>({mat:m,book:stockAt(m,p,sl),count:null,diff:null}))});
+    evt('MI01',doc);persist();clearMsg();txMI01();msg('S',`Documento de inventario ${doc} creado. El stock en libros quedó congelado; registra el conteo con MI04`);
+  });
+}
+function txMI04(pre={}){
+  initScreen('MI04','Registrar recuento de inventario',[fld('Documento de inventario','f-pi',{val:pre.pi||'',num:true})],()=>{
+    const d=findPI(V('f-pi'));if(!d)return msg('E',`El documento de inventario ${V('f-pi')||'(vacío)'} no existe`);if(d.status==='CONTAB')return msg('E',`El documento ${d.doc} ya está contabilizado`);
+    clearMsg();
+    frame('MI04',`Registrar recuento: documento ${d.doc}`,[h('dl',{class:'kv'},kv('Centro / almacén',`${d.plant} / ${d.sloc}`),kv('Fecha de congelación',fmtD(d.date))),
+      table(['Material','Texto breve','UM','Cantidad contada'],d.items.map(i=>{const mt=S.sim.materials[i.mat];return[i.mat,mt.desc,mt.um,h('input',{value:i.count==null?'':i.count,inputmode:'decimal','data-c':i.mat,'aria-label':'Conteo '+i.mat})];})),
+      h('p',{class:'note'},'Registra lo que contaste físicamente, sin ver el stock en libros. La comparación se ve en MI20.')],
+      [btn('Atrás',()=>txMI04({pi:d.doc})),btn('Grabar',()=>{
+        for(const i of d.items){const v=parseNum($(`[data-c="${i.mat}"]`).value);if(!(v>=0))return msg('E',`Indique la cantidad contada de ${i.mat} (puede ser 0)`);}
+        for(const i of d.items){i.count=parseNum($(`[data-c="${i.mat}"]`).value);i.diff=round(i.count-i.book);}d.status='CONT';evt('MI04',d.doc);persist();txMI04();msg('S',`Recuento del documento ${d.doc} registrado`);})]);
+  });
+}
+function txMI20(pre={}){
+  initScreen('MI20','Lista de diferencias de inventario',[fPlant(pre.plant)],()=>{
+    const p=V('f-plant');const rows=[];for(const d of S.sim.pi){if(d.plant!==p||d.status!=='CONT')continue;for(const i of d.items){const pr=priceOf(i.mat,p);rows.push([d.doc,i.mat,fmtN(i.book),fmtN(i.count),cellN(i.diff,true),cellN(round2(i.diff*pr),true)]);}}
+    clearMsg();evt('MI20',p);persist();
+    frame('MI20',`Diferencias de inventario: centro ${p}`,[rows.length?table(['Documento','Material','Libros','Contado','Diferencia','Valor'],rows,{num:[2,3,4,5]}):h('p',{class:'empty'},'No hay documentos contados pendientes de contabilizar.'),h('p',{class:'note'},'Una diferencia negativa es faltante (movimiento 702); positiva es sobrante (701). Antes de contabilizar se suele recontar lo que tenga diferencia grande.')],[btn('Atrás',()=>txMI20({plant:p}))]);
+  },null,true);
+}
+function txMI07(pre={}){
+  initScreen('MI07','Contabilizar diferencias de inventario',[fld('Documento de inventario','f-pi',{val:pre.pi||'',num:true})],()=>{
+    const d=findPI(V('f-pi'));if(!d)return msg('E',`El documento de inventario ${V('f-pi')||'(vacío)'} no existe`);if(d.status==='ABIE')return msg('E',`El documento ${d.doc} no tiene recuento. Regístralo con MI04`);if(d.status==='CONTAB')return msg('E',`El documento ${d.doc} ya está contabilizado`);
+    for(const i of d.items)if(i.diff<0&&stockAt(i.mat,d.plant,d.sloc)+1e-9<-i.diff)return msg('E',`No hay stock suficiente de ${i.mat} para contabilizar el faltante`);
+    clearMsg();beginImpl(`diferencias del inventario ${d.doc}`);let n=0;
+    for(const i of d.items){if(!i.diff)continue;postMove(i.diff>0?'701':'702',i.mat,d.plant,d.sloc,Math.abs(i.diff),null,{ref:'Inventario '+d.doc});n++;}
+    if(!n)IMP.notes.push('No hubo diferencias: el inventario físico coincide con los libros.');
+    d.status='CONTAB';evt('MI07',d.doc);const I=endImpl();persist();showImpl(I,()=>txMI07());msg('S',`Diferencias del documento ${d.doc} contabilizadas: ${n} movimientos`);
+  });
+}
+
+/* ---------- MRP ---------- */
+function lowLevel(p){const par={};for(const[k,b] of Object.entries(S.sim.boms)){const[pa,pl]=k.split('|');if(pl!==p)continue;for(const i of b.items)(par[i.comp]=par[i.comp]||[]).push(pa);}
+  const lv={};const f=(m,seen)=>{if(lv[m]!=null)return lv[m];if(seen.includes(m))return 0;const ps=par[m]||[];return lv[m]=ps.length?1+Math.max(...ps.map(x=>f(x,[...seen,m]))):0;};
+  for(const[m,x] of Object.entries(S.sim.materials))if(x.plants[p])f(m,[]);return lv;}
+function depReq(m,p){let r=0;for(const pl of S.sim.plo){if(pl.plant!==p)continue;const b=S.sim.boms[key(pl.mat,p)];if(!b)continue;for(const i of b.items)if(i.comp===m)r+=i.qty*pl.qty/(b.base||1);}return round(r);}
+function mrpBalance(m,p){
+  let req=depReq(m,p);for(const o of S.sim.orders){if(o.plant!==p||has(o,'TECO'))continue;for(const c of o.comps)if(c.comp===m)req+=Math.max(0,c.req-c.issued);}
+  for(const x of S.sim.pirs)if(x.mat===m&&x.plant===p)req+=x.qty;
+  let rec=stockPlant(m,p)+sumMap(S.sim.qstock,m,p);
+  for(const o of S.sim.orders)if(o.plant===p&&o.mat===m&&!has(o,'TECO'))rec+=Math.max(0,o.qty-o.gr);
+  for(const pl of S.sim.plo)if(pl.plant===p&&pl.mat===m)rec+=pl.qty;
+  for(const po of S.sim.pos)if(po.plant===p)for(const it of po.items)if(!it.del&&it.mat===m)rec+=Math.max(0,it.qty-(it.grTot||0));
+  for(const x of S.sim.preqs)if(x.plant===p&&x.mat===m&&!x.po)rec+=x.qty;
+  return{req:round(req),rec:round(rec)};
+}
+function mrpRun(p,only){
+  const lv=lowLevel(p);const mats=Object.keys(S.sim.materials).filter(m=>{const pp=ppOf(m,p);return pp&&pp.views.includes('MRP')&&pp.mrpType==='PD'&&(!only||m===only);}).sort((a,b)=>(lv[a]||0)-(lv[b]||0));
+  S.sim.plo=S.sim.plo.filter(x=>!(x.plant===p&&mats.includes(x.mat)));S.sim.preqs=S.sim.preqs.filter(x=>!(x.plant===p&&x.src==='MRP'&&!x.po&&mats.includes(x.mat)));
+  const out=[];
+  for(const m of mats){const{req,rec}=mrpBalance(m,p);const sh=round(req-rec);if(sh<=0)continue;const pp=ppOf(m,p);const mt=S.sim.materials[m];const q=mt.um==='PZA'?Math.ceil(sh):sh;
+    if(pp.procType==='F'){if(!pp.views.includes('PUR')){out.push(['Error',m,fmtN(q),'Sin vista Compras: no se pudo crear la solicitud']);continue;}const id=String(S.sim.nextPR++);S.sim.preqs.push({id,mat:m,plant:p,qty:q,date:addDays(todayISO(),pp.plt||7),src:'MRP',po:null});out.push(['SolPed',m,fmtN(q),id]);}
+    else{const id=String(S.sim.nextPlo++).padStart(10,'0');S.sim.plo.push({id,mat:m,plant:p,qty:q,date:addDays(todayISO(),3)});out.push(['PlOrd',m,fmtN(q),id]);}}
+  return out;
+}
+function txMD61(pre={}){
+  initScreen('MD61','Crear necesidades primarias',[fMat(pre.mat),fPlant(pre.plant),fld('Cantidad','f-qty',{num:true}),fld('Fecha de necesidad','f-date',{date:true,val:addDays(todayISO(),14)})],()=>{
+    const m=V('f-mat'),p=V('f-plant'),q=parseNum($('#f-qty').value),d=$('#f-date').value;if(!S.sim.materials[m])return msg('E',`El material ${m||'(vacío)'} no existe`);if(!hasView(m,p,'MRP'))return msg('E',`Material ${m} sin vista MRP en centro ${p}`);
+    if(!(q>0))return msg('E','Indique una cantidad mayor que cero');if(!d)return msg('E','Indique la fecha');
+    S.sim.pirs.push({mat:m,plant:p,qty:q,date:d});evt('MD61',key(m,p));persist();txMD61();msg('S',`Necesidad primaria de ${fmtN(q)} ${S.sim.materials[m].um} de ${m} creada. Planifica con MD01N`);
+  });
+}
+function txMD01N(pre={}){
+  initScreen('MD01N','Planificación de necesidades (MRP)',[fPlant(pre.plant),fMat(pre.mat,'Material (opcional, planifica solo ese)')],()=>{
+    const p=V('f-plant'),m=V('f-mat');if(m&&!S.sim.materials[m])return msg('E',`El material ${m} no existe`);if(m&&!hasView(m,p,'MRP'))return msg('E',`Material ${m} sin vista MRP en centro ${p}`);
+    const out=mrpRun(p,m||null);evt('MD01N',m?key(p,m):p);persist();clearMsg();
+    frame('MD01N',`Resultado de la planificación: centro ${p}`,[out.length?table(['Elemento','Material','Cantidad','Número'],out,{num:[2],title:'Propuestas creadas'}):h('p',{class:'empty'},'No se crearon propuestas: el stock y las entradas cubren todas las necesidades.'),
+      h('p',{class:'note'},'PlOrd es una orden previsional (para fabricar, se convierte con CO40). SolPed es una solicitud de pedido (para comprar, se convierte con ME21N). Las propuestas sin convertir se recalculan en cada corrida.')],[btn('Atrás',()=>txMD01N({plant:p,mat:m}))]);
+    msg('S',`Planificación terminada: ${out.length} propuestas`);
+  },'El MRP compara necesidades (reservas de órdenes, necesidades primarias y secundarias) contra stock y entradas, nivel por nivel de la lista de materiales.',true);
+}
+function txCO40(pre={}){
+  initScreen('CO40','Convertir orden previsional',[fld('Orden previsional','f-plo',{val:pre.plo||'',num:true})],()=>{
+    const id=V('f-plo').padStart(10,'0');const pl=S.sim.plo.find(x=>x.id===id);if(!pl)return msg('E',`La orden previsional ${V('f-plo')||'(vacía)'} no existe`);
+    const err=canProduce(pl.mat,pl.plant);if(err)return msg('E',err);
+    const o=makeOrder(S.sim,String(S.sim.nextOrder++),pl.mat,pl.plant,pl.qty,todayISO(),pl.date>todayISO()?pl.date:addDays(todayISO(),3));o.user=true;o.fromPlo=pl.id;S.sim.orders.push(o);S.sim.plo=S.sim.plo.filter(x=>x!==pl);
+    evt('CO40',o.id);persist();orderScreen('CO02',o);msg('S',`Orden previsional ${pl.id} convertida en la orden de fabricación ${o.id}`);
+  });
+}
+function txMD04x(pre={}){
+  initScreen('MD04','Lista de necesidades/stocks actual',[fMat(pre.mat),fPlant(pre.plant)],()=>{
+    const m=V('f-mat'),p=V('f-plant'),mt=S.sim.materials[m];if(!mt)return msg('E',`El material ${m||'(vacío)'} no existe`);const pdt=mt.plants[p];if(!pdt)return msg('E',`Material ${m} no existe en centro ${p}`);
+    if(!pdt.views.includes('MRP'))return msg('E',`Material ${m} sin vista Planificación MRP en centro ${p}; no se planifica`);
+    clearMsg();evt('MD04',key(m,p));const el=[];const t=todayISO();
+    for(const o of S.sim.orders){if(o.plant!==p||has(o,'TECO'))continue;if(o.mat===m){const op=round(o.qty-o.gr);if(op>0)el.push({d:o.end,t:'OrdFab',ref:`${o.id}/${has(o,'REL')?'LIB.':'ABIE'}`,q:op});}for(const c of o.comps)if(c.comp===m){const op=round(c.req-c.issued);if(op>0)el.push({d:o.start,t:'Res.OF',ref:`${o.id}/${o.mat}`,q:-op});}}
+    for(const pl of S.sim.plo){if(pl.plant!==p)continue;if(pl.mat===m)el.push({d:pl.date,t:'PlOrd',ref:pl.id,q:pl.qty});const b=S.sim.boms[key(pl.mat,p)];if(b)for(const i of b.items)if(i.comp===m)el.push({d:pl.date,t:'Nec.sec.',ref:`${pl.id}/${pl.mat}`,q:-round(i.qty*pl.qty/(b.base||1))});}
+    for(const x of S.sim.pirs)if(x.mat===m&&x.plant===p)el.push({d:x.date,t:'NecPri',ref:'Necesidad primaria',q:-x.qty});
+    for(const po of S.sim.pos)if(po.plant===p)for(const it of po.items)if(!it.del&&it.mat===m){const op=round(it.qty-(it.grTot||0));if(op>0)el.push({d:addDays(po.date,(S.sim.inforec[key(po.vendor,m,p)]||{lt:7}).lt),t:'Pedido',ref:`${po.id}/${it.pos}`,q:op});}
+    let sp=false;for(const x of S.sim.preqs)if(x.mat===m&&x.plant===p&&!x.po){el.push({d:x.date,t:'SolPed',ref:x.id,q:x.qty});sp=true;}if(sp)evt('MD04SP',m);persist();
+    el.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.q-b.q);
+    let run=stockPlant(m,p);const rows=[[fmtD(t),'Stock','Libre utilización','',cellN(run)]];const qs=sumMap(S.sim.qstock,m,p);if(qs){run=round(run+qs);rows.push([fmtD(t),'StkCal','En control de calidad',cellN(qs,true),cellN(run)]);}
+    for(const e of el){run=round(run+e.q);rows.push([fmtD(e.d),e.t,e.ref,cellN(e.q,true),cellN(run)]);}
+    frame('MD04','Lista de necesidades/stocks actual',[h('dl',{class:'kv'},kv('Material',`${m}  ${mt.desc}`),kv('Centro',`${p}  ${PLANTS[p]}`),kv('Caract. planif. / aprovisionamiento',`${pdt.mrpType} / ${pdt.procType}`)),
+      table(['Fecha','Elem. MRP','Datos elem. MRP','Entrada/necesidad','Cantidad disponible'],rows,{num:[3,4]}),
+      h('p',{class:'note'},'Entradas: OrdFab, PlOrd (orden previsional), Pedido y SolPed. Necesidades: Res.OF (reserva de una orden), Nec.sec. (secundaria de una orden previsional) y NecPri (necesidad primaria). En rojo hay faltante.')],[btn('Atrás',()=>txMD04x({mat:m,plant:p}))]);
+    if(run<0)msg('W',`Faltante de ${fmtN(-run)} ${mt.um} de ${m} en el centro ${p}. Ejecuta MD01N`);
+  });
+}
+
+/* ---------- QM: características y planes ---------- */
+const fMic=(val,id)=>fld('Característica','f-mic'+(id||''),{val:val||'',dl:'dl-mic'});
+function micTx(mode){
+  const T={QS21:'Crear característica maestra de inspección',QS23:'Modificar característica maestra',QS24:'Visualizar características maestras'}[mode];
+  return function tx(pre={}){
+    if(mode==='QS24'){const rows=Object.entries(S.sim.mics).map(([c,x])=>[c,x.d,x.q?'Cuantitativa':'Cualitativa',x.q?x.unit:'',x.q&&x.lo!=null?fmtN(x.lo):'',x.q&&x.hi!=null?fmtN(x.hi):'']);evt('QS24','x');persist();
+      frame('QS24',T,[table(['Característica','Texto breve','Tipo','Unidad','Límite inferior','Límite superior'],rows,{num:[4,5]}),h('p',{class:'note'},'Las cuantitativas se miden con un valor y límites; las cualitativas se evalúan como conforme o no conforme.')],[]);return;}
+    const ex=mode==='QS23';
+    if(ex&&!pre.code){initScreen(mode,T,[fMic(pre.code)],()=>{const c=V('f-mic');if(!S.sim.mics[c])return msg('E',`La característica ${c||'(vacía)'} no existe`);clearMsg();tx({code:c});});return;}
+    const x=ex?S.sim.mics[pre.code]:null;
+    frame(mode,ex?`${T}: ${pre.code}`:T,[h('div',{class:'grid'},ex?null:fld('Característica (código)','m-code'),fld('Texto breve','m-d',{text:true,val:x?x.d:''}),ex?null:fld('Tipo','m-q',{list:[['Q','Cuantitativa'],['C','Cualitativa']],val:'Q'}),
+      !ex||x.q?fld('Unidad de medida','m-unit',{val:x?x.unit:''}):null,!ex||x.q?fld('Límite inferior (vacío si no aplica)','m-lo',{num:true,val:x&&x.lo!=null?x.lo:''}):null,!ex||x.q?fld('Límite superior (vacío si no aplica)','m-hi',{num:true,val:x&&x.hi!=null?x.hi:''}):null),
+      h('p',{class:'note'},'Para cualitativas, la unidad y los límites se ignoran.')],
+      [btn('Atrás',()=>tx({})),btn('Grabar',()=>{
+        const c=ex?pre.code:V('m-code'),d=$('#m-d').value.trim(),q=ex?x.q:V('m-q')==='Q';
+        if(!ex){if(!/^[A-Z0-9-]{3,12}$/.test(c))return msg('E','Código inválido: de 3 a 12 letras, números o guiones');if(S.sim.mics[c])return msg('E',`La característica ${c} ya existe. Utilice QS23`);}
+        if(!d)return msg('E','Llene el campo obligatorio "Texto breve"');
+        if(!q){S.sim.mics[c]={d,q:false};}
+        else{const unit=$('#m-unit').value.trim(),lo=$('#m-lo').value.trim()===''?null:parseNum($('#m-lo').value),hi=$('#m-hi').value.trim()===''?null:parseNum($('#m-hi').value);
+          if(!unit)return msg('E','Indique la unidad de medida');if(lo==null&&hi==null)return msg('E','Una característica cuantitativa necesita al menos un límite');
+          if((lo!=null&&!isFinite(lo))||(hi!=null&&!isFinite(hi)))return msg('E','Límite inválido');if(lo!=null&&hi!=null&&lo>=hi)return msg('E','El límite inferior debe ser menor que el superior');S.sim.mics[c]={d,q:true,unit,lo,hi};}
+        evt(mode,c);persist();refreshDL();tx({});msg('S',`Característica ${c} ${ex?'modificada':'creada'}`);})]);
+  };
+}
+function planTx(mode){
+  const T={QP01:'Crear plan de inspección',QP02:'Modificar plan de inspección',QP03:'Visualizar plan de inspección'}[mode];
+  return function tx(pre={}){
+    initScreen(mode,T,[fMat(pre.mat),fPlant(pre.plant)],()=>{
+      const m=V('f-mat'),p=V('f-plant'),k=key(m,p),ex=S.sim.plans[k];
+      if(!S.sim.materials[m])return msg('E',`El material ${m||'(vacío)'} no existe`);if(!ppOf(m,p))return msg('E',`Material ${m} no existe en centro ${p}`);
+      if(mode==='QP01'&&ex)return msg('E',`Ya existe un plan de inspección para ${m} en el centro ${p}. Utilice QP02`);if(mode!=='QP01'&&!ex)return msg('E',`No existe plan de inspección para ${m} en el centro ${p}`);
+      clearMsg();const ro=mode==='QP03';if(ro){evt('QP03',k);persist();}
+      let rows=ex?ex.chars.map(c=>({...c})):[{mic:'',n:'5'}];const wrap=h('div');
+      function draw(){wrap.replaceChildren(table(['Op.','Característica','Texto','Tipo','Límites','Tamaño de muestra',''],rows.map((r,i)=>{const x=S.sim.mics[r.mic];const lim=x&&x.q?`${x.lo!=null?fmtN(x.lo):'−'} a ${x.hi!=null?fmtN(x.hi):'−'} ${x.unit}`:'';
+        if(ro)return['0010',r.mic,x?x.d:'',x?(x.q?'Cuant.':'Cual.'):'',lim,String(r.n),''];
+        return['0010',h('input',{value:r.mic,list:'dl-mic',autocapitalize:'characters',autocomplete:'off','aria-label':'Característica '+(i+1),oninput:e=>{r.mic=e.target.value.trim().toUpperCase();},onchange:draw}),x?x.d:'',x?(x.q?'Cuant.':'Cual.'):'',lim,
+          h('input',{value:r.n,inputmode:'numeric','aria-label':'Muestra '+(i+1),oninput:e=>{r.n=e.target.value;}}),h('button',{class:'icon',type:'button','aria-label':'Borrar característica '+(i+1),onclick:()=>{rows.splice(i,1);draw();}},'✕')];}),{title:'Operación 0010 Inspección'}),
+        ro?null:h('button',{class:'addrow',type:'button',onclick:()=>{rows.push({mic:'',n:'5'});draw();}},'Añadir característica'));}
+      draw();
+      frame(mode,`${T}: ${m}`,[h('dl',{class:'kv'},kv('Material',`${m}  ${S.sim.materials[m].desc}`),kv('Centro',p),kv('Utilización','5 Entrada de mercancías')),wrap],[btn('Atrás',()=>tx({mat:m,plant:p})),ro?null:btn('Grabar',()=>{
+        const clean=rows.filter(r=>r.mic||String(r.n).trim());if(!clean.length)return msg('E','El plan necesita al menos una característica');
+        for(const r of clean){if(!S.sim.mics[r.mic])return msg('E',`La característica ${r.mic||'(vacía)'} no existe. Créala con QS21`);const n=parseNum(r.n);if(!(n>=1&&n<=20&&Number.isInteger(n)))return msg('E',`${r.mic}: el tamaño de muestra debe ser un entero de 1 a 20`);r.n=n;}
+        if(new Set(clean.map(r=>r.mic)).size<clean.length)return msg('E','Hay características repetidas');
+        S.sim.plans[k]={chars:clean.map(r=>({mic:r.mic,n:r.n}))};evt(mode,k);persist();tx({mat:m,plant:p});msg('S',`Plan de inspección de ${m} grabado`);})]);
+    });
+  };
+}
+
+/* ---------- QM: lotes, resultados y decisión ---------- */
+const fLot=val=>fld('Lote de inspección','f-lot',{val:val||'',dl:'dl-lot',num:true});
+function lotStatus(l){return l.ud?'DE':l.results?'RREG':'LIB';}
+function lotHead(l){const mt=S.sim.materials[l.mat];return h('dl',{class:'kv'},kv('Lote',l.id),kv('Origen',LOT_O[l.origin]),kv('Material',`${l.mat}  ${mt.desc}`),kv('Centro / almacén',`${l.plant} / ${l.sloc}`),kv('Cantidad',`${fmtN(l.qty)} ${mt.um}`),kv('Referencia',l.ref||(l.vendor?'Proveedor '+l.vendor:'Manual')),kv('Estatus',`${lotStatus(l)}${l.ud?'  '+UD_T[l.ud.code]:''}`));}
+function resultsTable(l){if(!l.results)return h('p',{class:'empty'},'Sin resultados registrados.');
+  return table(['Característica','Texto','Muestra','Valores','Media','Valoración'],Object.entries(l.results).map(([c,r])=>{const x=S.sim.mics[c]||{};return[c,x.d||'',String(r.n),x.q?r.vals.map(v=>fmtN(v)).join('  '):`${r.def} defectuosas`,x.q?fmtN(round(r.mean)):'',h('span',{class:r.val==='R'?'neg':null},r.val==='A'?'A Aceptado':'R Rechazado')];}),{title:'Resultados'});}
+function txQA01(pre={}){
+  initScreen('QA01','Crear lote de inspección manual',[fMat(pre.mat),fPlant(pre.plant),fld('Almacén','f-sl',{list:L.sloc,val:'0001'}),fld('Cantidad del lote','f-qty',{num:true}),fld('Origen','f-org',{list:[['89','89 Manual']],val:'89',ro:true})],()=>{
+    const m=V('f-mat'),p=V('f-plant'),sl=V('f-sl'),q=parseNum($('#f-qty').value);if(!S.sim.materials[m])return msg('E',`El material ${m||'(vacío)'} no existe`);if(!ppOf(m,p))return msg('E',`Material ${m} no existe en centro ${p}`);
+    if(!(q>0))return msg('E','Indique la cantidad del lote');if(stockAt(m,p,sl)+1e-9<q)return msg('E',`El lote manual inspecciona stock existente: solo hay ${fmtN(stockAt(m,p,sl))} en libre utilización en el almacén ${sl}`);
+    beginImpl('lote manual de '+m);const l=createLot('89',m,p,sl,q,{ref:'Inspección manual'});endImpl();evt('QA01',l.id);persist();txQA01();msg('S',`Lote de inspección ${l.id} creado`);
+  });
+}
+function txQA03(pre={}){initScreen('QA03','Visualizar lote de inspección',[fLot(pre.lot)],()=>{const l=findLot(V('f-lot'));if(!l)return msg('E',`El lote ${V('f-lot')||'(vacío)'} no existe`);clearMsg();evt('QA03',l.id);persist();
+  const pst=l.posted||{};frame('QA03',`Lote de inspección ${l.id}`,[lotHead(l),resultsTable(l),l.ud?h('dl',{class:'kv'},kv('Decisión de empleo',UD_T[l.ud.code]),kv('A libre utilización',fmtN(pst.free)),kv('A bloqueado',fmtN(pst.block)),kv('A desguace',fmtN(pst.scrap)),kv('Devuelto al proveedor',fmtN(pst.ret))):h('p',{class:'note'},'Sin decisión de empleo.')],[btn('Atrás',()=>txQA03({lot:l.id}))]);});}
+function txQA32(pre={}){
+  initScreen('QA32','Lista de lotes de inspección',[fPlant(pre.plant),fld('Origen','f-org',{list:[['*','Todos'],...Object.entries(LOT_O)],val:'*'}),fld('Estatus','f-st',{list:[['O','Sin decisión de empleo'],['DE','Con decisión'],['*','Todos']],val:'*'}),fMat(pre.mat,'Material (opcional)')],()=>{
+    const p=V('f-plant'),o=V('f-org'),st=V('f-st'),m=V('f-mat');
+    const rows=S.sim.lots.filter(l=>l.plant===p&&(o==='*'||l.origin===o)&&(st==='*'||(st==='DE'?!!l.ud:!l.ud))&&(!m||l.mat===m)).slice().reverse().map(l=>[lnk(l.id,()=>openTx('QA03',{lot:l.id,auto:true})),l.origin,l.mat,fmtN(l.qty),fmtD(l.date),lotStatus(l),l.ud?l.ud.code:'',
+      l.ud?'':h('span',null,lnk('Resultados',()=>openTx('QE51N',{lot:l.id,auto:true})),' · ',lnk('Decisión',()=>openTx('QA11',{lot:l.id,auto:true})))]);
+    clearMsg();evt('QA32',st);if(o!=='*')evt('QA32',o);persist();
+    frame('QA32',`Lotes de inspección: centro ${p}`,[rows.length?table(['Lote','Or.','Material','Cantidad','Fecha','Estatus','DE','Acciones'],rows,{num:[3]}):h('p',{class:'empty'},'No hay lotes con esos criterios.'),h('p',{class:'note'},'LIB: lote abierto. RREG: resultados registrados. DE: decisión de empleo tomada.')],[btn('Atrás',()=>txQA32({plant:p}))]);
+  },null,true);
+}
+function txQE51N(pre={}){
+  initScreen('QE51N','Registrar resultados',[fLot(pre.lot)],()=>{
+    const l=findLot(V('f-lot'));if(!l)return msg('E',`El lote ${V('f-lot')||'(vacío)'} no existe`);if(l.ud)return msg('E',`El lote ${l.id} ya tiene decisión de empleo; los resultados no se pueden cambiar`);
+    const plan=S.sim.plans[key(l.mat,l.plant)];if(!plan)return msg('E',`No se encontró plan de inspección para ${l.mat} en el centro ${l.plant}. Créalo con QP01 o toma la decisión de empleo sin resultados`);
+    clearMsg();const prev=l.results||{};
+    const blocks=plan.chars.map(c=>{const x=S.sim.mics[c.mic];if(!x)return null;const r=prev[c.mic];
+      if(x.q)return grp(`${c.mic}  ${x.d}  (${x.lo!=null?fmtN(x.lo):'−'} a ${x.hi!=null?fmtN(x.hi):'−'} ${x.unit}, muestra ${c.n})`,h('div',{class:'qe-vals'},Array.from({length:c.n},(_,i)=>h('input',{inputmode:'decimal','data-mic':c.mic,'data-i':i,value:r&&r.vals[i]!=null?r.vals[i]:'','aria-label':`${c.mic} valor ${i+1}`}))));
+      return grp(`${c.mic}  ${x.d}  (cualitativa, muestra ${c.n})`,fld('Unidades no conformes en la muestra','q-'+c.mic,{num:true,val:r?r.def:''}));}).filter(Boolean);
+    frame('QE51N',`Registrar resultados: lote ${l.id}`,[lotHead(l),...blocks,h('p',{class:'note'},'Cada valor fuera de límites rechaza la característica. En las cualitativas, una unidad no conforme la rechaza.')],[btn('Atrás',()=>txQE51N({lot:l.id})),btn('Grabar',()=>{
+      const res={};
+      for(const c of plan.chars){const x=S.sim.mics[c.mic];if(!x)continue;
+        if(x.q){const vals=[];for(let i=0;i<c.n;i++){const v=parseNum($(`[data-mic="${c.mic}"][data-i="${i}"]`).value);if(!isFinite(v))return msg('E',`${c.mic}: falta el valor ${i+1} de ${c.n}`);vals.push(v);}
+          const ok=vals.every(v=>(x.lo==null||v>=x.lo-1e-9)&&(x.hi==null||v<=x.hi+1e-9));res[c.mic]={n:c.n,vals,mean:meanA(vals),val:ok?'A':'R'};}
+        else{const d=parseNum($('#q-'+c.mic).value);if(!(d>=0&&d<=c.n&&Number.isInteger(d)))return msg('E',`${c.mic}: indique de 0 a ${c.n} unidades no conformes`);res[c.mic]={n:c.n,def:d,val:d===0?'A':'R'};}}
+      l.results=res;evt('QE51N',l.id);persist();const bad=Object.entries(res).filter(([,r])=>r.val==='R').map(([c])=>c);
+      frame('QE51N',`Resultados del lote ${l.id}`,[lotHead(l),resultsTable(l)],[btn('Atrás',()=>txQE51N({lot:l.id})),btn('Decisión de empleo',()=>openTx('QA11',{lot:l.id,auto:true}))]);
+      msg(bad.length?'W':'S',bad.length?`Resultados grabados. Características rechazadas: ${bad.join(', ')}`:'Resultados grabados: todas las características aceptadas');})]);
+  });
+}
+function txQA11(pre={}){
+  initScreen('QA11','Registrar decisión de empleo',[fLot(pre.lot)],()=>{
+    const l=findLot(V('f-lot'));if(!l)return msg('E',`El lote ${V('f-lot')||'(vacío)'} no existe`);if(l.ud)return msg('E',`El lote ${l.id} ya tiene decisión de empleo ${l.ud.code}`);
+    const plan=S.sim.plans[key(l.mat,l.plant)];if(plan&&!l.results)return msg('E',`Registre resultados con QE51N antes de la decisión de empleo: el lote tiene plan de inspección`);
+    clearMsg();const open=l.origin==='89'?0:lotOpen(l);const bad=l.results&&Object.values(l.results).some(r=>r.val==='R');
+    const stockTab=open>0?h('div',{class:'grid'},h('p',{class:'empty'},`Stock pendiente en control de calidad: ${fmtN(open)} ${S.sim.materials[l.mat].um}. La suma debe ser igual a esa cantidad.`),fld('A libre utilización (321)','u-free',{num:true,val:bad?'':open}),fld('A stock bloqueado (350)','u-block',{num:true,val:bad?open:''}),fld('A desguace (553)','u-scrap',{num:true}),l.origin==='01'?fld('Devolver al proveedor (122)','u-ret',{num:true}):null):h('p',{class:'empty'},'Lote manual: la decisión no mueve stock.');
+    frame('QA11',`Decisión de empleo: lote ${l.id}`,[lotHead(l),tabs([['Decisión',h('div',null,resultsTable(l),h('div',{class:'grid'},fld('Código de decisión de empleo','u-code',{list:Object.entries(UD_T),val:bad?'R':'A'})))],['Stock del lote',stockTab]])],
+      [btn('Atrás',()=>txQA11({lot:l.id})),btn('Grabar',()=>{
+        const code=V('u-code');if(!UD_T[code])return msg('E','Elija el código de decisión de empleo');
+        const g=id=>{const e=document.getElementById(id);const v=e?parseNum(e.value||0):0;return isFinite(v)?v:NaN;};
+        const fr=g('u-free'),bl=g('u-block'),sc=g('u-scrap'),rt=g('u-ret');
+        if(open>0){if([fr,bl,sc,rt].some(v=>!(v>=0)))return msg('E','Las cantidades deben ser números positivos o cero');if(Math.abs(fr+bl+sc+rt-open)>1e-6)return msg('E',`La suma (${fmtN(fr+bl+sc+rt)}) debe ser igual al stock del lote en calidad (${fmtN(open)})`);
+          if(code==='R'&&fr>0)return msg('E','Con decisión R (rechazado) no se puede pasar stock a libre utilización');}
+        beginImpl(`decisión de empleo del lote ${l.id}`);const ref='Lote '+l.id;
+        if(fr>0){stockMove('321',l.mat,l.plant,l.sloc,fr,ref,{lot:l.id});l.posted.free=fr;}
+        if(bl>0){stockMove('350',l.mat,l.plant,l.sloc,bl,ref,{lot:l.id});l.posted.block=bl;}
+        if(sc>0){stockMove('553',l.mat,l.plant,l.sloc,sc,ref,{lot:l.id});l.posted.scrap=sc;}
+        if(rt>0){const po=findPO(l.po),it=po&&po.items.find(i=>i.pos===l.pos);if(!it){IMP=null;return msg('E','No se encontró la posición de pedido del lote');}retPO(po,it,rt,l.sloc,'Q');l.posted.ret=rt;}
+        l.ud={code,date:todayISO()};IMP.notes.unshift(`Decisión de empleo ${UD_T[code]} para el lote ${l.id}.${code!=='A'?' Si el problema viene del proveedor o del proceso, documéntalo con una notificación de calidad (QM01).':''}`);
+        evt('QA11',l.id);const I=endImpl();persist();showImpl(I,()=>txQA11());msg('S',`Decisión de empleo grabada para el lote ${l.id}`);})]);
+  });
+}
+
+/* ---------- QM: notificaciones ---------- */
+function txQM01(pre={}){
+  initScreen('QM01','Crear notificación de calidad',[fld('Clase de notificación','f-qt',{list:Object.entries(QN_T),val:pre.qt||'Q2'})],()=>{
+    const t=V('f-qt');if(!QN_T[t])return msg('E','Elija la clase de notificación');clearMsg();
+    frame('QM01',`Crear notificación ${QN_T[t]}`,[h('div',{class:'grid'},fMat(pre.mat),fPlant(pre.plant),fld('Cantidad reclamada','n-qty',{num:true}),fLot(pre.lot),t==='Q2'?fVen(pre.ven):null,fld('Código de defecto','n-def',{list:DEFS}),fld('Descripción del problema','n-desc',{text:true})),
+      h('p',{class:'note'},t==='Q2'?'Si indicas el lote, el proveedor se toma del lote.':'Relaciona el lote de inspección si el defecto se detectó en una inspección.')],
+      [btn('Atrás',()=>txQM01({qt:t})),btn('Grabar',()=>{
+        const m=V('f-mat'),p=V('f-plant'),q=parseNum($('#n-qty').value),lid=V('f-lot'),def=V('n-def'),desc=$('#n-desc').value.trim();let ven=t==='Q2'?V('f-ven'):'';
+        if(!S.sim.materials[m])return msg('E',`El material ${m||'(vacío)'} no existe`);if(!(q>0))return msg('E','Indique la cantidad reclamada');
+        let lot=null;if(lid){lot=findLot(lid);if(!lot)return msg('E',`El lote ${lid} no existe`);if(lot.mat!==m)return msg('E',`El lote ${lid} es del material ${lot.mat}`);if(t==='Q2'&&!ven)ven=lot.vendor||'';}
+        if(t==='Q2'&&!S.sim.vendors[ven])return msg('E','Una reclamación a proveedor (Q2) necesita un proveedor válido');
+        if(!def)return msg('E','Elija el código de defecto');if(!desc)return msg('E','Describa el problema');
+        const id=String(S.sim.nextQN++);S.sim.qnots.push({id,type:t,mat:m,plant:p,qty:q,lot:lot?lot.id:null,vendor:ven||null,def,desc,cause:null,causeTxt:'',cont:'',action:'',resp:'',status:'OSNO',date:todayISO()});
+        evt('QM01',id);persist();qnScreen('QM03',findQN(id));msg('S',`Notificación ${id} grabada`);})]);
+  });
+}
+function qnScreen(mode,n){
+  const ro=mode==='QM03'||n.status==='NOCO';const mt=S.sim.materials[n.mat]||{};
+  const data=h('dl',{class:'kv'},kv('Notificación',n.id),kv('Clase',QN_T[n.type]),kv('Estatus',QN_ST[n.status]),kv('Material',`${n.mat}  ${mt.desc||''}`),kv('Cantidad reclamada',`${fmtN(n.qty)} ${mt.um||''}`),kv('Lote de inspección',n.lot||'Sin lote'),n.vendor?kv('Proveedor',`${n.vendor}  ${venName(n.vendor)}`):null,kv('Defecto',`${n.def}  ${(DEFS.find(x=>x[0]===n.def)||[])[1]||''}`),kv('Descripción',n.desc));
+  const cause=h('div',{class:'grid'},fld('Código de causa (6M)','n-cause',{list:CAUSES6,val:n.cause||'',ro}),fld('Causa raíz (5 porqués)','n-ctxt',{text:true,val:n.causeTxt,ro}));
+  const act=h('div',{class:'grid'},fld('Contención inmediata','n-cont',{text:true,val:n.cont,ro}),fld('Acción correctiva','n-act',{text:true,val:n.action,ro}),fld('Responsable','n-resp',{text:true,val:n.resp,ro}));
+  const read=()=>({cause:V('n-cause'),causeTxt:$('#n-ctxt').value.trim(),cont:$('#n-cont').value.trim(),action:$('#n-act').value.trim(),resp:$('#n-resp').value.trim()});
+  frame(mode,`Notificación de calidad ${n.id}`,[tabs([['Datos',data],['Causas',cause],['Acciones',act]]),h('p',{class:'note'},'Flujo tipo 8D: contención inmediata, causa raíz, acción correctiva y cierre cuando la acción está implementada.')],
+    [btn('Atrás',()=>(mode==='QM02'?txQM02:txQM03)({qn:n.id})),ro?null:btn('Grabar',()=>{const r=read();Object.assign(n,r);if(n.cause&&n.causeTxt&&n.action&&n.status==='OSNO')n.status='NOPR';evt('QM02',n.id);persist();qnScreen('QM02',n);msg('S',`Notificación ${n.id} grabada${n.status==='NOPR'?': en proceso':''}`);}),
+     ro?null:btn('Cerrar notificación',()=>{const r=read();if(!r.cause||!r.causeTxt)return msg('E','Para cerrar, registre el código y la descripción de la causa raíz');if(!r.action)return msg('E','Para cerrar, registre la acción correctiva');if(!r.resp)return msg('E','Para cerrar, indique el responsable');
+       Object.assign(n,r);n.status='NOCO';n.closed=todayISO();evt('QM02',n.id);evt('QMCLOSE',n.id);persist();qnScreen('QM03',n);msg('S',`Notificación ${n.id} cerrada`);})]);
+}
+function qnTx(mode){return function(pre={}){initScreen(mode,mode==='QM02'?'Modificar notificación de calidad':'Visualizar notificación de calidad',[fld('Notificación','f-qn',{val:pre.qn||'',dl:'dl-qn',num:true})],()=>{const n=findQN(V('f-qn'));if(!n)return msg('E',`La notificación ${V('f-qn')||'(vacía)'} no existe`);
+  if(mode==='QM02'&&n.status==='NOCO')return msg('E',`La notificación ${n.id} está cerrada. Visualízala con QM03`);clearMsg();if(mode==='QM03'){evt('QM03',n.id);persist();}qnScreen(mode,n);});};}
+const txQM02=qnTx('QM02'),txQM03=qnTx('QM03');
+function txQM11(pre={}){
+  initScreen('QM11','Lista de notificaciones de calidad',[fld('Estatus','f-st',{list:[['*','Todas'],['O','Abiertas o en proceso'],['NOCO','Cerradas']],val:'*'}),fld('Clase','f-qt',{list:[['*','Todas'],...Object.entries(QN_T)],val:'*'})],()=>{
+    const st=V('f-st'),t=V('f-qt');const rows=S.sim.qnots.filter(n=>(st==='*'||(st==='O'?n.status!=='NOCO':n.status==='NOCO'))&&(t==='*'||n.type===t)).slice().reverse().map(n=>[lnk(n.id,()=>openTx('QM03',{qn:n.id,auto:true})),n.type,n.mat,fmtN(n.qty),n.def,n.vendor||'',QN_ST[n.status],fmtD(n.date)]);
+    clearMsg();evt('QM11',st);persist();
+    frame('QM11','Lista de notificaciones de calidad',[rows.length?table(['Notificación','Cl.','Material','Cantidad','Defecto','Proveedor','Estatus','Fecha'],rows,{num:[3]}):h('p',{class:'empty'},'No hay notificaciones con esos criterios.')],[btn('Atrás',()=>txQM11())]);
+  },null,true);
+}
+function txQGC1(pre={}){
+  initScreen('QGC1','Gráfico de control por característica',[fMat(pre.mat),fPlant(pre.plant),fMic(pre.mic)],()=>{
+    const m=V('f-mat'),p=V('f-plant'),c=V('f-mic'),x=S.sim.mics[c];if(!S.sim.materials[m])return msg('E',`El material ${m||'(vacío)'} no existe`);if(!x)return msg('E',`La característica ${c||'(vacía)'} no existe`);if(!x.q)return msg('E','El gráfico de control necesita una característica cuantitativa');
+    const pts=S.sim.lots.filter(l=>l.mat===m&&l.plant===p&&l.results&&l.results[c]).map(l=>[l.id,l.results[c].mean]);
+    if(pts.length<2)return msg('E',`Se necesitan al menos 2 lotes con resultados de ${c} para ${m}. Hay ${pts.length}`);
+    clearMsg();evt('QGC1',key(m,c));const kk='QGC1n:'+key(m,c);S.prog.ev[kk]=Math.max(S.prog.ev[kk]||0,pts.length);persist();
+    const ys=pts.map(q=>q[1]);const xb=meanA(ys);const mr=ys.slice(1).map((v,i)=>Math.abs(v-ys[i]));const mrb=meanA(mr);const ucl=xb+2.66*mrb,lcl=xb-2.66*mrb;
+    const all=[...ys,ucl,lcl,...(x.lo!=null?[x.lo]:[]),...(x.hi!=null?[x.hi]:[])];const mn=Math.min(...all),mx=Math.max(...all),pd2=(mx-mn)*0.08||0.01;
+    const W=340,H=210,l=46,r=12,t=12,b=24;const X=i=>l+(pts.length===1?0:i*(W-l-r)/(pts.length-1)),Y=v=>t+(H-t-b)*(1-(v-(mn-pd2))/((mx+pd2)-(mn-pd2)));
+    let s='';const hl=(v,cls,lab)=>{s+=`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" class="${cls}"/><text x="${l-3}" y="${Y(v)+3}" text-anchor="end" class="qg-t">${esc(lab)}</text>`;};
+    hl(ucl,'qg-cl','LCS');hl(xb,'qg-c','X̄');hl(lcl,'qg-cl','LCI');if(x.lo!=null)hl(x.lo,'qg-sp','LIE');if(x.hi!=null)hl(x.hi,'qg-sp','LSE');
+    s+=`<polyline points="${ys.map((v,i)=>`${X(i)},${Y(v)}`).join(' ')}" fill="none" class="qg-ln"/>`;ys.forEach((v,i)=>{const o=v>ucl||v<lcl;s+=`<circle cx="${X(i)}" cy="${Y(v)}" r="4" class="${o?'qg-bad':'qg-pt'}"/>`;});
+    const out=ys.filter(v=>v>ucl||v<lcl).length;
+    frame('QGC1',`Gráfico de control: ${m} / ${c}`,[h('dl',{class:'kv'},kv('Característica',`${c}  ${x.d} (${x.unit})`),kv('Lotes',String(pts.length)),kv('Media de medias',fmtN(round(xb))),kv('LCS / LCI',`${fmtN(round(ucl))} / ${fmtN(round(lcl))}`)),
+      svgEl(W,H,s,'Gráfico de control de individuales'),table(['Lote','Media'],pts.map(q=>[q[0],fmtN(round(q[1]))]),{num:[1]}),
+      h('p',{class:'note'},`Gráfico de individuales con rango móvil: LC = X̄ ± 2.66 × MR̄. ${out?`Hay ${out} punto(s) fuera de control: investiga la causa.`:'Todos los puntos están dentro de control.'} Las líneas punteadas rojas son los límites de especificación.`)],[btn('Atrás',()=>txQGC1({mat:m,plant:p,mic:c}))]);
+  },null,true);
+}
+
+/* ---------- Registro, menú y parches ---------- */
+Object.assign(TX,{
+  MMBE:['Resumen de stocks',txMMBE2],MD04:['Lista de necesidades/stocks',txMD04x],
+  MK01:['Crear proveedor',txMK01],MK03:['Visualizar proveedor',txMK03],ME11:['Crear registro info',irTx('ME11')],ME12:['Modificar registro info',irTx('ME12')],ME13:['Visualizar registro info',irTx('ME13')],
+  ME21N:['Crear pedido',txME21N],ME22N:['Modificar pedido',txME22N],ME23N:['Visualizar pedido',txME23N],ME2M:['Pedidos por material',txME2('ME2M')],ME2L:['Pedidos por proveedor',txME2('ME2L')],
+  ME51N:['Crear solicitud de pedido',txME51N],ME5A:['Lista de solicitudes de pedido',txME5A],MIRO:['Registrar factura recibida',txMIRO],MR21:['Cambio de precio',txMR21],
+  MI01:['Crear documento de inventario',txMI01],MI04:['Registrar recuento',txMI04],MI20:['Lista de diferencias',txMI20],MI07:['Contabilizar diferencias',txMI07],
+  MD61:['Crear necesidades primarias',txMD61],MD01N:['Planificación de necesidades MRP',txMD01N],CO40:['Convertir orden previsional',txCO40],
+  QS21:['Crear característica de inspección',micTx('QS21')],QS23:['Modificar característica de inspección',micTx('QS23')],QS24:['Visualizar características',micTx('QS24')],
+  QP01:['Crear plan de inspección',planTx('QP01')],QP02:['Modificar plan de inspección',planTx('QP02')],QP03:['Visualizar plan de inspección',planTx('QP03')],
+  QA01:['Crear lote de inspección',txQA01],QA03:['Visualizar lote de inspección',txQA03],QA32:['Lista de lotes de inspección',txQA32],QE51N:['Registrar resultados',txQE51N],QA11:['Decisión de empleo',txQA11],
+  QM01:['Crear notificación de calidad',txQM01],QM02:['Modificar notificación de calidad',txQM02],QM03:['Visualizar notificación de calidad',txQM03],QM11:['Lista de notificaciones',txQM11],QGC1:['Gráfico de control',txQGC1]
+});
+(function(){const find=(node,lab)=>{if(node[0]===lab)return node;if(Array.isArray(node[1]))for(const k of node[1])if(Array.isArray(k)){const r=find(k,lab);if(r)return r;}return null;};
+  find(TREE,'Gestión de materiales')[1].push(['Compras',['ME51N','ME5A','ME21N','ME22N','ME23N','ME2M','ME2L']],['Datos maestros de compras',['MK01','MK03','ME11','ME12','ME13']],['Verificación de facturas',['MIRO']],['Inventario físico',['MI01','MI04','MI20','MI07']],['Valoración',['MR21']]);
+  find(TREE,'Planificación de necesidades')[1].unshift('MD61','MD01N','CO40');
+  find(TREE,'Logística')[1].push(['Gestión de calidad',[['Planificación de calidad',['QS21','QS23','QS24','QP01','QP02','QP03']],['Inspección de calidad',['QA01','QA03','QA32','QE51N','QA11','QGC1']],['Notificaciones de calidad',['QM01','QM02','QM03','QM11']]]]);})();
+{const _mig=migrate;migrate=function(){_mig();ensureX(S.sim);};const _sd=seed;seed=function(){const s=_sd();ensureX(s);return s;};
+ const _rdl=refreshDL;refreshDL=function(){_rdl();const mk=(id,opts)=>{let e=document.getElementById(id);if(!e){e=h('datalist',{id});document.body.append(e);}e.replaceChildren(...opts.map(([v,l])=>h('option',{value:v},l)));};
+  mk('dl-ven',Object.entries(S.sim.vendors||{}).map(([k,v])=>[k,v.name]));mk('dl-po',(S.sim.pos||[]).slice(-40).map(p=>[p.id,venName(p.vendor)+' '+p.items.map(i=>i.mat).join(',')]));
+  mk('dl-pr',(S.sim.preqs||[]).filter(x=>!x.po).map(x=>[x.id,x.mat+' '+x.qty]));mk('dl-lot',(S.sim.lots||[]).slice(-40).map(l=>[l.id,l.mat+' '+l.qty+(l.ud?' '+l.ud.code:'')]));
+  mk('dl-qn',(S.sim.qnots||[]).map(n=>[n.id,n.type+' '+n.mat+' '+QN_ST[n.status]]));mk('dl-mic',Object.entries(S.sim.mics||{}).map(([k,v])=>[k,v.d]));};}
+
+/* ---------- Misiones SAP: MM, PP y QM ---------- */
+const INTRO_X={
+ ven:{c:'El maestro de proveedores guarda los datos generales (nombre, RFC, dirección) y los de compras (condición de pago, moneda). Sin proveedor no se pueden crear registros info, pedidos ni facturas.',ej:'MK03 > proveedor 100001\n  Nombre: Aceros del Norte, S.A. de C.V.\n  Condición de pago: 30 días\n  Registros info: R-3001 a 27.50 MXN/kg, plazo 7 días'},
+ ir:{c:'El registro info une un proveedor con un material en un centro: guarda el precio neto y el plazo de entrega. Al crear un pedido, SAP propone ese precio automáticamente.',ej:'ME11 > proveedor 100002, material R-3009, centro 1000\n  Precio neto 0.55 MXN, plazo 7 días\nME21N con 100002 y R-3009 → precio 0.55 propuesto'},
+ pur:{c:'Para comprar un material, necesita la vista Compras en el centro (grupo de compras y plazo de entrega). Si falta, ME21N, ME11 y ME51N marcan error. Se amplía con MM01 y se cambia con MM02.',ej:'ME21N con R-3009 → error: no está ampliado para Compras\nMM01 > R-3009 > vista Compras > centro 1000\n  Grupo P02 Compras empaque, plazo 7 días\nME21N → ahora sí acepta la posición'},
+ mov:{c:'MIGO registra movimientos sin pedido ni orden: 561 carga inicial, 501 entrada sin pedido, 201 consumo a centro de costo, 551 desguace y 311 traspaso entre almacenes. Cada uno deja documento de material y, salvo el 311, documento contable.',ej:'MIGO 201: 5 kg de R-3007 × 85 MXN = 425 MXN\n  Debe 510100 Consumo (CC-MANT-10)  425\n  Haber 115100 Inventario MP        425'},
+ rep:{c:'Los reportes de stock responden preguntas distintas: MMBE qué hay y en qué tipo de stock; MB52 cuánto vale por almacén; MB51 qué movimientos hubo; MB5B cuánto había en una fecha; MM60 qué materiales existen con sus vistas.',ej:'¿Por qué bajó el stock de R-3004?\n  MB51 → lista de movimientos 261 y 201\n¿Cuánto había al cierre del mes?\n  MB5B → stock inicial + entradas − salidas'},
+ po:{c:'El pedido (ME21N) es el compromiso formal con el proveedor: material, cantidad, precio y centro. Cada posición queda pendiente de entrega hasta la entrada de mercancías y pendiente de factura hasta MIRO.',ej:'ME21N > proveedor 100001 > centro 1000\n  Pos. 00010 R-3001 500 KG precio 27.50 (del registro info)\n  Valor neto: 13,750 MXN\nPedido estándar 4500000101 grabado'},
+ gr:{c:'La entrada por pedido (MIGO 101 con referencia al pedido) sube el inventario y abona la cuenta puente EM/RF (211000) con el valor del pedido. Si el material tiene inspección 01, el stock entra a control de calidad y se crea un lote de inspección.',ej:'Recibir 500 kg de R-3001 a 27.50\n  Debe  115100 Inventario MP        13,750\n  Haber 211000 Cuenta puente EM/RF  13,750\nR-3001 tiene QM 01 → 500 kg en stock de calidad + lote'},
+ inv:{c:'La verificación de facturas (MIRO) compara factura, pedido y entrada (verificación a tres vías). Salda la cuenta puente y reconoce la deuda con el proveedor más IVA. Solo se puede facturar lo que ya se recibió.',ej:'Factura de 500 kg × 27.50 = 13,750 + IVA 2,200\n  Debe  211000 Cuenta puente   13,750\n  Debe  118000 IVA acreditable  2,200\n  Haber 201000 Proveedores     15,950'},
+ tol:{c:'Si el precio de la factura difiere del pedido, la diferencia se contabiliza: con precio medio variable ajusta el inventario; con precio estándar va a Diferencias de precio. Si supera la tolerancia (5 % aquí), la factura queda bloqueada para pago.',ej:'Pedido a 5.80, factura a 6.20 → +6.9 %\n  Mayor que 5 % → factura bloqueada para pago\nPedido a 21.00, factura a 21.50 → +2.4 % → se paga normal'},
+ chg:{c:'ME22N modifica un pedido: cantidades, precios o borrar posiciones que no tienen entradas. No puedes bajar la cantidad por debajo de lo ya recibido. Cada cambio queda registrado.',ej:'Pedido de 1,500 R-3005 sin entradas\nME22N > cantidad 1,800 > Grabar\nPosición sin recibir que ya no se necesita → marcar Borrar'},
+ ret:{c:'La devolución a proveedor (122) saca el material y revierte la cuenta puente: el proveedor ya no puede facturar esa cantidad. Desde stock libre se hace en MIGO; desde control de calidad, en la decisión de empleo (QA11).',ej:'Pedido 20,000 remaches, llegaron 500 defectuosos\nMIGO 122 de 500 → recibido neto 19,500\nMIRO solo acepta facturar 19,500'},
+ multi:{c:'Un pedido puede tener varias posiciones del mismo proveedor. Cada posición se recibe y se factura por separado, aunque se hagan en el mismo documento.',ej:'Pedido a 100003\n  00010 R-3003 10,000 PZA\n  00020 R-3004  3,000 PZA\nMIGO: recibe las dos posiciones en una entrada\nMIRO: factura las dos'},
+ pr:{c:'La solicitud de pedido (ME51N) es una necesidad interna todavía sin proveedor. Compras la convierte en pedido (ME21N con referencia a la solicitud). El MRP también crea solicitudes automáticamente.',ej:'ME51N: 60 kg de R-3007 para dentro de 7 días\nME5A: lista de solicitudes abiertas\nME21N > proveedor 100004 > solicitud 10000001 → pedido'},
+ mrp:{c:'El MRP (MD01N) compara necesidades (reservas de órdenes, necesidades primarias y secundarias) contra stock y entradas, nivel por nivel. Si falta, propone una orden previsional para lo que se fabrica o una solicitud de pedido para lo que se compra.',ej:'Necesidad primaria: 200 M-1003\nMD01N → PlOrd 200 M-1003\n  Nec. secundaria: 200 H-2005\n  Stock 300 − otras reservas 150 → falta 50\n  → SolPed 50 H-2005 (es de compra)'},
+ mr21:{c:'MR21 cambia el precio de valoración. Todo el stock existente se revalúa: la diferencia por cantidad en stock va contra la cuenta de revaluación (540300).',ej:'H-2005: 300 piezas a 22.00 → precio nuevo 23.00\nRevaluación = (23 − 22) × 300 = 300 MXN\n  Debe 115200 Inventario semiterminados  300\n  Haber 540300 Revaluación               300'},
+ stk:{c:'El stock tiene tres tipos: libre utilización (se consume), en control de calidad (espera decisión) y bloqueado (no se usa). 344 bloquea, 343 libera y 555 da de baja desde bloqueado. Solo el desguace genera asiento.',ej:'Sospechas de 50 remaches dañados\n  344: 50 libre → bloqueado\nRevisión: 20 buenos, 30 malos\n  343: 20 bloqueado → libre\n  555: 30 desguace (Debe 520100 / Haber inventario)'},
+ pi:{c:'El inventario físico tiene tres pasos: MI01 crea el documento y congela el stock en libros, MI04 registra lo contado, MI07 contabiliza las diferencias con 701 (sobrante) o 702 (faltante). MI20 muestra las diferencias antes de contabilizar.',ej:'MI01: R-3004, libros 2,990\nMI04: contado 2,980\nMI20: diferencia −10 × 3.40 = −34 MXN\nMI07: movimiento 702 de 10 piezas'},
+ fi:{c:'FS10N muestra el saldo y las partidas de cada cuenta de mayor. Así ves el efecto acumulado de tus movimientos: inventario, consumo, cuenta puente, proveedores, diferencias.',ej:'211000 Cuenta puente EM/RF\n  Haber por cada entrada de mercancías\n  Debe por cada factura\n  Saldo = lo recibido y no facturado'},
+ p2p:{c:'El ciclo de compras completo (procure to pay): solicitud o necesidad → pedido → entrada de mercancías → factura. Revisa en ME23N el historial del pedido para confirmar cada paso.',ej:'ME21N pedido\nMIGO 101 entrada (y lote si hay QM)\nMIRO factura\nME23N > Historial: EM y RF'},
+ bom:{c:'La lista de materiales dice qué componentes y cuántos lleva el producto. CS03 la muestra, CS12 la explota por niveles y CS15 dice en qué productos se usa un componente. CS02 la modifica.',ej:'CS12 M-1003, 100 piezas\n  1 H-2001 cabeza          100\n  .2 R-3001 barra de acero  45 kg\n  1 H-2005 mango de nogal  100'},
+ rt:{c:'La hoja de ruta define operaciones, puestos de trabajo y tiempos. El puesto de trabajo (CR01) aporta la tarifa con la que se costea cada minuto.',ej:'CR01: PUL-01 Pulido, tarifa 3.90 MXN/min\nCA02 M-1003: agregar 0040 PUL-01 Pulido, prep 5, 0.3 min/pza\nCK11N: el costo sube por la operación nueva'},
+ ord:{c:'Una orden de fabricación copia la lista de materiales y la hoja de ruta. Al liberarla (REL) se verifica disponibilidad. Después se notifica, se recibe (101) y se cierra técnicamente.',ej:'CO01 H-2001 300 > Liberar\n  Reserva: 135 kg de R-3001 (0.45 × 300)\nCO11N 300 final → CNF\nMIGO 101 300 → DLV\nCOHV cierre técnico → TECO'},
+ conf:{c:'Las notificaciones pueden ser parciales (sigue abierta la operación) o finales. CO15 notifica todas las operaciones abiertas de la orden de una vez. CO13 anula una notificación equivocada.',ej:'Orden de 150\nCO11N op. 0010: 100 parcial → PCNF\nCO11N op. 0010: 50 final\nCO15: resto de operaciones 150 final → CNF'},
+ scrap:{c:'El rechazo notificado consume material y tiempo pero no entra al almacén. Por eso la orden entrega menos de lo planeado y su costo por pieza buena sube: aparece como desviación al liquidar.',ej:'Orden 250 M-1001\nOp. 0010: 240 buenas, 10 rechazo\nEntrega 240 → TECO con entrega incompleta\nKO88: la desviación incluye el costo de las 10 rechazadas'},
+ gi:{c:'Sin toma retroactiva, los componentes se sacan a mano con MIGO 261 contra la orden. Lo que sobre se regresa con 262. Así se controla exactamente lo que se entrega a la línea.',ej:'Orden H-2006 200, reserva 10 kg de R-3001\nMIGO 261: 10 kg a la orden\nCO11N sin toma retroactiva\nSobró 1 kg → MIGO 262 de 1 kg'},
+ coois:{c:'COOIS es el reporte diario del controlador de órdenes. Con la misma selección obtienes cabeceras, componentes, operaciones, notificaciones o movimientos.',ej:'¿Qué órdenes tienen faltantes? → lista Componentes\n¿Cuánto se notificó hoy? → lista Notificaciones\n¿Qué se consumió en la orden? → lista Movimientos'},
+ cost:{c:'Los costos de la orden se ven en KKBC_ORD (plan contra real) y en la pestaña Costos de CO03. CK11N calcula el costo estándar del producto con su lista de materiales y su hoja de ruta.',ej:'CK11N H-2006, lote 100\n  Material: 0.05 kg × 100 × 28 = 140.00\n  Forja: (30 + 1.2 × 100) min × 9 = 1,350.00\n  Costo unitario = 14.90'},
+ ko88:{c:'Cuando la orden ya se entregó o cerró, KO88 liquida su saldo (costo real menos créditos por entrega) como desviación. La orden queda con estatus SETC y saldo cero.',ej:'Material 10,900 + actividad 1,050 − entrega 12,000\nSaldo −50 → desviación favorable\nKO88: Debe 580100 / Haber 540200  50'},
+ plo:{c:'La orden previsional es una propuesta del MRP para fabricar. No reserva componentes como una orden real ni se puede notificar: primero se convierte con CO40 en orden de fabricación.',ej:'MD01N → PlOrd 0000050001 M-1003 200\nCO40 > 50001 → orden de fabricación 1000010\nLuego se libera y se produce normal'},
+ pir:{c:'La necesidad primaria (MD61) es la demanda planeada de producto terminado, por ejemplo el pronóstico de ventas. Es lo que pone a trabajar al MRP cuando no hay pedidos de cliente.',ej:'MD61: 200 M-1003 para dentro de 14 días\nMD04 M-1003: NecPri −200\nMD01N → PlOrd 200 para cubrirla'},
+ newprod:{c:'Un producto nuevo pasa por todo el ciclo de ingeniería: maestro de material con sus vistas, lista de materiales, hoja de ruta, costo estándar y su primera orden.',ej:'MM01 M-1005 FERT, 5 vistas, precio S\nCS01: componentes con stock\nCA01: operaciones en ENS-01 y EMP-01\nCK11N: costo estándar\nCO01 → CO11N → MIGO 101 → KO88'},
+ mass:{c:'COHV procesa muchas órdenes a la vez: liberar, cerrar técnicamente o imprimir. Ahorra tiempo y asegura que no se quede ninguna orden pendiente.',ej:'COHV > centro 1000 > estatus Abiertas > Ejecutar\nSeleccionar 2 órdenes > Liberar\nCOHV > estatus Entregadas > Seleccionar 3 > Cierre técnico'},
+ mic:{c:'La característica maestra de inspección (QS21) define qué se mide: cuantitativa con unidad y límites, o cualitativa (conforme o no conforme). Se reutiliza en muchos planes.',ej:'QS21 PESO\n  Texto: Peso del martillo\n  Cuantitativa, unidad g, límites 650 a 690\nQS21 OXIDO\n  Texto: Ausencia de óxido, cualitativa'},
+ plan:{c:'El plan de inspección (QP01) dice qué características se revisan en un material y con qué tamaño de muestra. Al crearse un lote, toma el plan del material.',ej:'QP01 H-2005, centro 1000\n  HUMEDAD  muestra 3\n  ASPECTO  muestra 5\nLote de H-2005 → QE51N pide 3 valores de humedad y 5 de aspecto'},
+ qmview:{c:'La vista Gestión de calidad del material activa la inspección automática: tipo 01 crea un lote en cada entrada por pedido y tipo 04 en cada entrada de producción. Sin esa vista, el material entra directo a libre utilización.',ej:'MM01 > R-3007 > vista Gestión de calidad > tipo 01\nSiguiente MIGO 101 por pedido:\n  stock → control de calidad + lote de inspección'},
+ lot:{c:'El lote de inspección es la unidad de trabajo de calidad. Se crea solo en la entrada (01 o 04) o a mano (89). Mientras no tenga decisión de empleo, el stock de los lotes 01 y 04 queda en control de calidad.',ej:'Pedido de 300 kg de R-3001 → MIGO 101\n  Lote 010000000105, origen 01, 300 kg\n  MMBE: 300 kg en control de calidad\nQA32: lote con estatus LIB'},
+ res:{c:'QE51N registra los resultados de cada característica del plan. Un valor fuera de límites rechaza la característica; en las cualitativas, una unidad no conforme la rechaza.',ej:'COMP-C (0.43 a 0.50 %), muestra 1: 0.46 → A\nDUREZA (45 a 55 HRC), muestra 3: 48, 52, 57 → R\nResultado del lote: una característica rechazada'},
+ ud:{c:'La decisión de empleo (QA11) cierra el lote: A acepta, R rechaza, AD acepta con desviación. Al mismo tiempo se decide el destino del stock: libre (321), bloqueado (350), desguace (553) o devolución al proveedor (122).',ej:'Lote 300 kg, todo aceptado\n  Decisión A, 300 a libre (321)\nLote 400 piezas fuera de medida\n  Decisión R, 400 devolución (122)'},
+ split:{c:'Un lote puede repartirse entre varios destinos en la misma decisión. La suma debe ser igual al stock del lote en calidad.',ej:'Lote 200 kg\n  180 a libre (321)\n  20 a bloqueado (350) para reinspección\nDespués: 343 libera lo bueno, 555 da de baja lo malo'},
+ qn:{c:'La notificación de calidad documenta un problema: Q1 reclamación de cliente, Q2 reclamación a proveedor y Q3 problema interno. Lleva material, cantidad, defecto y, si aplica, el lote y el proveedor.',ej:'QM01 Q2\n  Material H-2002, 400 piezas\n  Lote 010000000106, proveedor 100002\n  Defecto D01 Dimensión fuera de tolerancia'},
+ close:{c:'Una notificación avanza como un 8D: contención, causa raíz con su código 6M, acción correctiva y responsable. Con causa y acción grabadas pasa a En proceso; al cerrarla queda Cerrada.',ej:'QM02 > Causas: C03 Material, "molde del proveedor desgastado"\nAcciones: contención 100 %, acción "proveedor cambia molde"\nResponsable: Calidad proveedores → Cerrar notificación'},
+ spc:{c:'QGC1 grafica la media de cada lote para una característica. Con el rango móvil calcula límites de control (X̄ ± 2.66 × MR̄). Puntos fuera indican causas especiales.',ej:'Medias de DIAM-OJO: 25.01, 24.99, 25.03\nMR = 0.02, 0.04 → MR̄ = 0.03\nLCS = 25.01 + 2.66 × 0.03 = 25.09'},
+ l89:{c:'El lote manual (QA01, origen 89) inspecciona stock que ya está en libre utilización, por ejemplo por una sospecha o una auditoría. No mueve stock: solo registra resultados y decisión.',ej:'Cliente reporta golpes en martillos\nQA01: lote 89 de 50 M-1001 del almacén 0002\nQE51N + QA11: el stock sigue libre'}
+};
+const nrm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const evAny=pre=>Object.keys(S.prog.ev).some(k=>k.startsWith(pre));
+const uVen=f=>Object.entries(S.sim.vendors).some(([id,v])=>v.user&&(!f||f(v,id)));
+const poI=(m,q,o={})=>S.sim.pos.some(po=>po.items.some(it=>!it.del&&it.mat===m&&Math.abs(it.qty-q)<1e-9&&(!o.v||po.vendor===o.v)&&(!o.p||po.plant===o.p)&&(!o.rec||(it.grTot||0)>=q-1e-9)&&(o.inv==null||it.ir>=(o.inv===true?q:o.inv)-1e-9)&&(!o.ret||(it.ret||0)>=o.ret)&&(!o.chg||it.chg)&&(o.price==null||Math.abs(it.price-o.price)<1e-6)&&(!o.uv||(S.sim.vendors[po.vendor]||{}).user)&&(!o.ev||ev(o.ev+':'+po.id))&&(!o.pr||it.preq)));
+const dc=(mvt,m,q,o={})=>S.sim.docs.some(d=>d.mvt===mvt&&d.mat===m&&Math.abs(d.qty-q)<1e-9&&(!o.p||d.plant===o.p)&&(!o.cc||d.cc===o.cc)&&(!o.sl||d.sloc===o.sl)&&(o.sign==null||d.sign===o.sign)&&(o.val==null||Math.abs(d.value-o.val)<0.01)&&(!o.ord||d.order===o.ord));
+const lt=(m,q,o={})=>S.sim.lots.some(l=>l.mat===m&&Math.abs(l.qty-q)<1e-9&&(!o.org||l.origin===o.org)&&(!o.p||l.plant===o.p)&&(!o.res||!!l.results)&&(!o.allA||(l.results&&Object.values(l.results).every(r=>r.val==='A')))&&(!o.anyR||(l.results&&Object.values(l.results).some(r=>r.val==='R')))&&(!o.rR||(l.results&&l.results[o.rR]&&l.results[o.rR].val==='R'))&&(!o.ud||(l.ud&&(o.ud===true||l.ud.code===o.ud)))&&(o.free==null||(l.posted||{}).free===o.free)&&(o.block==null||(l.posted||{}).block===o.block)&&(o.scrap==null||(l.posted||{}).scrap===o.scrap)&&(o.ret==null||(l.posted||{}).ret===o.ret)&&(!o.uv||(S.sim.vendors[l.vendor]||{}).user)&&(!o.open||!l.ud)&&(!o.n||(l.results&&l.results[o.n[0]]&&l.results[o.n[0]].n===o.n[1])));
+const qnx=(o={})=>S.sim.qnots.some(n=>(!o.t||n.type===o.t)&&(!o.m||n.mat===o.m)&&(o.q==null||n.qty===o.q)&&(!o.def||n.def===o.def)&&(!o.v||n.vendor===o.v)&&(!o.st||(o.st==='NOPR'?n.status!=='OSNO':n.status===o.st))&&(!o.p||n.plant===o.p)&&(!o.lot||(()=>{const l=n.lot&&findLot(n.lot);return!!l&&l.mat===o.lot[0]&&l.qty===o.lot[1];})()));
+const ordQ=(m,q,o={})=>S.sim.orders.some(x=>x.mat===m&&x.qty===q&&(!o.p||x.plant===o.p)&&(!o.st||o.st.every(s=>has(x,s)))&&(!o.f||o.f(x)));
+const planHas=(m,p,mics)=>{const pl=S.sim.plans[key(m,p)];return!!pl&&mics.every(c=>pl.chars.some(x=>x.mic===c));};
+const bomHas=(m,p,c,q)=>{const b=S.sim.boms[key(m,p)];return!!b&&b.items.some(i=>i.comp===c&&(q==null||i.qty===q));};
+const rtHas=(m,p,wc)=>{const r=S.sim.routings[key(m,p)];return!!r&&r.ops.some(o=>o.wc===wc);};
+const piX=(f)=>S.sim.pi.some(f);
+const ordBal=o=>round2(o.costs.mat+o.costs.act-o.costs.gr-o.costs.settled);
+const MXP=[0,30,50,60,80];
+function addMis(mod,list){for(const[id,lvl,tc,title,goal,intro,hints,check] of list)MISSIONS.push({id,mod,lvl,tc,title,goal,intro,hints,check,xp:MXP[lvl]});}
+MISSIONS.forEach((M,i)=>{M.mod='pp';M.lvl=i<5?1:i<12?2:3;});
+addMis('mm',[
+ ['mm001',1,'MK03','Consulta un proveedor','Visualiza el proveedor 100001 (Aceros del Norte) y revisa su condición de pago y sus registros info.','ven',['MK03 > proveedor 100001 > Continuar.','La pestaña Datos de compras muestra la condición de pago.'],()=>ev('MK03:100001')],
+ ['mm002',1,'MK03','Proveedor de madera','Visualiza el proveedor 100005. ¿Qué material le compramos y en cuántos días entrega?','ven',['MK03 > 100005.','La tabla Registros info muestra material, precio y plazo.'],()=>ev('MK03:100005')],
+ ['mm003',1,'ME13','Consulta un registro info','Visualiza el registro info del proveedor 100001 para R-3001 en el centro 1000.','ir',['ME13 > proveedor 100001, material R-3001, centro 1000.'],()=>ev('ME13:'+key('100001','R-3001','1000'))],
+ ['mm004',1,'MM03','Vistas de un material comprado','Visualiza el adhesivo R-3006 en el centro 1000 y revisa sus pestañas Compras y Gestión de calidad.','pur',['MM03 > R-3006 > centro 1000.','Fíjate en el tipo de inspección: 01 significa que cada compra pasa por calidad.'],()=>ev('MM03:R-3006|1000')],
+ ['mm005',1,'MMBE','Stock por tipo','Revisa en MMBE el stock del adhesivo R-3006 y observa las columnas libre, calidad y bloqueado.','rep',['MMBE > R-3006 > Ejecutar.'],()=>ev('MMBE:R-3006')],
+ ['mm006',1,'MB52','Valor del almacén','Consulta en MB52 el stock valorado del centro 2000.','rep',['MB52 > centro 2000 > Ejecutar.'],()=>ev('MB52:2000')],
+ ['mm007',1,'MM60','Lista de materiales del centro','Lista en MM60 los materiales del centro 1000 y revisa cuáles tienen vista Compras (PUR).','rep',['MM60 > centro 1000 > Ejecutar.','La columna Vistas muestra MRP, ACC, PUR, QM...'],()=>ev('MM60:1000')],
+ ['mm008',1,'MB51','Historial de un material','Revisa en MB51 todos los movimientos de la barra R-3001.','rep',['MB51 > material R-3001 > Ejecutar.'],()=>ev('MB51:R-3001')],
+ ['mm009',1,'MB5B','Stock a una fecha','Consulta en MB5B la caja R-3004 del centro 1000 en los últimos 30 días.','rep',['MB5B > R-3004 > centro 1000 > Ejecutar.'],()=>ev('MB5B:R-3004|1000')],
+ ['mm010',1,'MM01','Amplía la vista Compras','La bolsa R-3009 no se puede comprar: le falta la vista Compras. Amplíala en el centro 1000 con grupo P02 y plazo de 7 días.','pur',['MM01 > R-3009 > marca solo Compras > centro 1000.','Grupo de compras P02, plazo 7.'],()=>hasView('R-3009','1000','PUR')],
+ ['mm011',1,'MM01','Compras para un semiterminado','Se va a comprar parte de las cabezas H-2001 a un maquilador. Amplía H-2001 con la vista Compras en el centro 1000.','pur',['MM01 > H-2001 > vista Compras > centro 1000.'],()=>hasView('H-2001','1000','PUR')],
+ ['mm012',1,'MM02','Cambia el plazo de entrega','El proveedor de acero ahora tarda más. Cambia el plazo de entrega de R-3001 a 10 días.','pur',['MM02 > R-3001 > centro 1000 > vista Compras.'],()=>(ppOf('R-3001','1000')||{}).plt===10],
+ ['mm013',1,'MM02','Cambia el grupo de compras','La caja R-3004 la compra el equipo de empaque. Cambia su grupo de compras a P02.','pur',['MM02 > R-3004 > centro 1000 > vista Compras > P02.'],()=>(ppOf('R-3004','1000')||{}).purGrp==='P02'],
+ ['mm014',1,'MM01','Amplía un material a otra planta','El alambre R-3010 solo existe en la Planta Norte. Amplíalo al centro 1000 con las vistas MRP, Contabilidad, Costes, Almacén y Compras.','pur',['MM01 > R-3010 > centro 1000 > marca las 5 vistas.','Categoría 3000, precio V de 34, fabricación F, almacén 0001.'],()=>['MRP','ACC','CST','ALM','PUR'].every(v=>hasView('R-3010','1000',v))],
+ ['mm015',1,'MK01','Da de alta un proveedor','Crea el proveedor "Forjas del Centro" de Querétaro, condición de pago 30 días.','ven',['MK01 > nombre, RFC y ciudad.','Un RFC válido tiene 3 letras, 6 dígitos y 3 caracteres, por ejemplo FCE120304AB1.'],()=>uVen(v=>nrm(v.name).includes('forjas')&&nrm(v.city).includes('queretaro'))],
+ ['mm016',1,'ME11','Registro info del proveedor nuevo','Crea el registro info del proveedor que diste de alta para R-3001 en el centro 1000 a 26.90 MXN.','ir',['ME11 > tu proveedor nuevo > R-3001 > 1000.','Su número aparece en la lista del campo Proveedor.'],()=>Object.entries(S.sim.inforec).some(([k,r])=>{const[v,m,p]=k.split('|');return m==='R-3001'&&p==='1000'&&(S.sim.vendors[v]||{}).user&&r.price===26.9;})],
+ ['mm017',1,'ME11','Registro info de la bolsa','Crea el registro info de 100002 para la bolsa R-3009 en el centro 1000 a 0.55 MXN, 7 días.','ir',['Necesita la vista Compras de la misión 10.'],()=>!!S.sim.inforec[key('100002','R-3009','1000')]],
+ ['mm018',1,'ME12','Actualiza un precio negociado','Tornillería Industrial bajó el precio de los remaches. Cambia el registro info 100006 / R-3008 / centro 2000 a 0.32 MXN.','ir',['ME12 > 100006 > R-3008 > 2000.'],()=>(S.sim.inforec[key('100006','R-3008','2000')]||{}).price===0.32],
+ ['mm019',1,'MM01','Crea una materia prima','Crea R-3011 "Cinta adhesiva de empaque", tipo ROH, unidad PZA, grupo EMPAQUE, en el centro 1000 con vistas MRP, Contabilidad, Almacén y Compras (precio V de 1.25).','pur',['MM01 > R-3011 > tipo ROH > centro 1000.','Contabilidad: categoría 3000, control V, precio 1.25.'],()=>{const x=S.sim.materials['R-3011'];return!!x&&x.type==='ROH'&&hasView('R-3011','1000','ACC')&&hasView('R-3011','1000','PUR');}],
+ ['mm020',1,'MIGO','Carga inicial','Carga 500 piezas de la cinta R-3011 en el almacén 0001 con el movimiento 561.','mov',['MIGO > 561 > material R-3011 > cantidad 500.'],()=>dc('561','R-3011',500)],
+ ['mm021',1,'MIGO','Traspaso entre almacenes','Pasa 20 cajas R-3004 del almacén 0001 al 0002.','mov',['MIGO > 311 > emisor 0001, receptor 0002.'],()=>dc('311','R-3004',20)],
+ ['mm022',1,'MIGO','Consumo a mantenimiento','Mantenimiento usó 5 kg de pintura R-3007. Regístralo al centro de costo CC-MANT-10.','mov',['MIGO > 201 > R-3007 > 5 > CC-MANT-10.'],()=>dc('201','R-3007',5,{cc:'CC-MANT-10'})],
+ ['mm023',1,'MIGO','Desguace','Se mojaron 12 etiquetas R-3003. Dalas de baja con desguace.','mov',['MIGO > 551 > R-3003 > 12.'],()=>dc('551','R-3003',12)],
+ ['mm024',1,'MIGO','Entrada sin pedido','Llegaron 100 remaches R-3008 de muestra sin pedido, con valor de 36 MXN. Regístralos en el centro 1000.','mov',['MIGO > 501 > R-3008 > 100 > importe 36.'],()=>dc('501','R-3008',100,{p:'1000'})],
+ ['mm025',1,'FS10N','Sigue el consumo','Revisa en FS10N las partidas de la cuenta 510100 Consumo de materiales.','fi',['FS10N > cuenta 510100 > Ejecutar.'],()=>ev('FS10N:510100')],
+ ['mm026',2,'ME21N','Tu primer pedido','Crea un pedido a 100001 por 500 kg de barra R-3001 para el centro 1000. Deja el precio vacío para que lo tome del registro info.','po',['ME21N > proveedor 100001 > centro 1000 > Continuar.','Posición: R-3001, cantidad 500, almacén 0001.'],()=>poI('R-3001',500,{v:'100001',p:'1000'})],
+ ['mm027',2,'ME23N','Revisa el pedido','Visualiza en ME23N el pedido de 500 kg de R-3001 y revisa su valor neto.','po',['ME23N > número de pedido (aparece en la lista del campo).'],()=>poI('R-3001',500,{ev:'ME23N'})],
+ ['mm028',2,'MIGO','Recibe el acero','Registra la entrada de los 500 kg de R-3001 contra el pedido. Observa que entran a control de calidad.','gr',['MIGO > Entrada de mercancías: pedido (101) > escribe el número de pedido.','Lee las implicaciones: inventario contra cuenta puente.'],()=>poI('R-3001',500,{rec:true})],
+ ['mm029',2,'MIRO','Factura del acero','Registra la factura del proveedor por los 500 kg de R-3001 al precio del pedido.','inv',['MIRO > pedido > referencia, por ejemplo F-1001.','Deja la cantidad y el importe propuestos.'],()=>poI('R-3001',500,{inv:true})],
+ ['mm030',2,'ME21N','Pedido de cajas','Pide a 100003 2,000 cajas R-3004 para el centro 1000.','po',['ME21N > 100003 > R-3004 > 2000.'],()=>poI('R-3004',2000,{v:'100003',p:'1000'})],
+ ['mm031',2,'MIGO','Entrega parcial','El proveedor solo trajo 1,200 cajas. Recibe esa cantidad del pedido de 2,000.','gr',['MIGO > 101 pedido > cambia la cantidad a 1200.'],()=>S.sim.pos.some(po=>po.items.some(it=>it.mat==='R-3004'&&it.qty===2000&&(it.grTot||0)>=1200))],
+ ['mm032',2,'MIGO','Completa la entrega','Llegaron las 800 cajas restantes. Recíbelas.','gr',['MIGO > 101 pedido: propone solo lo pendiente.'],()=>poI('R-3004',2000,{rec:true})],
+ ['mm033',2,'MIRO','Factura de cajas','Factura las 2,000 cajas R-3004.','inv',['MIRO > pedido de cajas.'],()=>poI('R-3004',2000,{inv:true})],
+ ['mm034',2,'ME21N','Pedido de fundas','Pide a 100002 1,500 fundas R-3005 para el centro 1000.','po',['ME21N > 100002 > R-3005 > 1500.'],()=>S.sim.pos.some(po=>po.vendor==='100002'&&po.items.some(it=>it.mat==='R-3005'&&(it.qty===1500||it.qty===1800)))],
+ ['mm035',2,'ME22N','Cambia la cantidad','Producción necesita más fundas. Cambia ese pedido a 1,800 piezas.','chg',['ME22N > pedido > cantidad 1800 > Grabar.'],()=>poI('R-3005',1800,{v:'100002',chg:true})],
+ ['mm036',2,'MIGO','Recibe las fundas','Recibe las 1,800 fundas R-3005.','gr',['MIGO > 101 pedido.'],()=>poI('R-3005',1800,{rec:true})],
+ ['mm037',2,'MIRO','Factura con precio distinto','El proveedor facturó las 1,800 fundas a 6.20 en lugar de 5.80 (importe 11,160). Regístrala y observa qué pasa.','tol',['MIRO > importe 11160.','Más de 5 % de diferencia: la factura se bloquea para pago.'],()=>S.sim.invs.some(x=>x.blocked&&x.items.some(i=>i.mat==='R-3005'&&i.qty===1800))],
+ ['mm038',2,'FS10N','Cuenta puente','Revisa en FS10N la cuenta 211000. Su saldo es lo recibido que todavía no se factura.','fi',['FS10N > 211000.'],()=>ev('FS10N:211000')],
+ ['mm039',2,'ME21N','Pedido de adhesivo','Pide a 100004 40 kg de adhesivo R-3006.','po',['ME21N > 100004 > R-3006 > 40.'],()=>poI('R-3006',40,{v:'100004'})],
+ ['mm040',2,'MIGO','Recibe el adhesivo','Recibe los 40 kg de R-3006 y revisa en MMBE que quedaron en control de calidad.','gr',['MIGO > 101 pedido.','R-3006 tiene inspección 01.'],()=>poI('R-3006',40,{rec:true})],
+ ['mm041',2,'ME21N','Pedido para Planta Norte','Pide a 100006 20,000 remaches R-3008 para el centro 2000.','po',['ME21N > 100006 > centro 2000.'],()=>poI('R-3008',20000,{v:'100006',p:'2000'})],
+ ['mm042',2,'MIGO','Recibe los remaches','Recibe los 20,000 remaches en el centro 2000.','gr',['MIGO > 101 pedido.'],()=>poI('R-3008',20000,{p:'2000',rec:true})],
+ ['mm043',2,'MIGO','Devuelve material defectuoso','500 remaches llegaron oxidados. Devuélvelos al proveedor con el movimiento 122.','ret',['MIGO > Devolución a proveedor (122) > pedido de remaches > 500.'],()=>poI('R-3008',20000,{ret:500})],
+ ['mm044',2,'MIRO','Factura lo que te quedaste','Factura los 19,500 remaches que sí aceptaste.','inv',['MIRO solo permite facturar lo recibido neto.'],()=>poI('R-3008',20000,{inv:19500})],
+ ['mm045',2,'ME2M','Pedidos por material','Revisa en ME2M todos los pedidos de R-3001 y cuánto falta por entregar.','rep',['ME2M > R-3001 > Ejecutar.'],()=>ev('ME2M:R-3001')],
+ ['mm046',2,'ME2L','Pedidos por proveedor','Revisa en ME2L todo lo que se le ha pedido a 100003.','rep',['ME2L > 100003 > Ejecutar.'],()=>ev('ME2L:100003')],
+ ['mm047',2,'ME21N','Pedido con dos posiciones','En un solo pedido a 100003 pide 10,000 etiquetas R-3003 y 3,000 cajas R-3004.','multi',['ME21N > Añadir posición para la segunda.'],()=>S.sim.pos.some(po=>po.vendor==='100003'&&po.items.some(i=>!i.del&&i.mat==='R-3003'&&i.qty===10000)&&po.items.some(i=>!i.del&&i.mat==='R-3004'&&i.qty===3000))],
+ ['mm048',2,'MIGO','Recibe las dos posiciones','Recibe completo el pedido de etiquetas y cajas.','multi',['MIGO > 101 pedido: aparecen las dos posiciones.'],()=>S.sim.pos.some(po=>po.items.some(i=>i.mat==='R-3003'&&i.qty===10000&&(i.grTot||0)>=10000)&&po.items.some(i=>i.mat==='R-3004'&&i.qty===3000&&(i.grTot||0)>=3000))],
+ ['mm049',2,'MIRO','Factura las dos posiciones','Factura completo el pedido de etiquetas y cajas.','multi',['MIRO > el pedido > las dos posiciones.'],()=>S.sim.pos.some(po=>po.items.some(i=>i.mat==='R-3003'&&i.qty===10000&&i.ir>=10000)&&po.items.some(i=>i.mat==='R-3004'&&i.qty===3000&&i.ir>=3000))],
+ ['mm050',2,'ME21N','Pedido de mangos','Pide a 100002 800 mangos H-2002.','po',['ME21N > 100002 > H-2002 > 800.'],()=>poI('H-2002',800,{v:'100002'})],
+ ['mm051',2,'MIGO','Recibe los mangos','Recibe los 800 mangos H-2002. Se crea un lote de inspección.','gr',['MIGO > 101 pedido.'],()=>poI('H-2002',800,{rec:true})],
+ ['mm052',2,'ME21N','Pedido de madera','Pide a 100005 500 mangos de nogal H-2005.','po',['ME21N > 100005 > H-2005 > 500.'],()=>poI('H-2005',500,{v:'100005'})],
+ ['mm053',2,'MIGO','Recibe la madera','Recibe los 500 mangos H-2005.','gr',['MIGO > 101 pedido.'],()=>poI('H-2005',500,{rec:true})],
+ ['mm054',2,'MIRO','Diferencia dentro de tolerancia','El proveedor facturó los 500 mangos H-2005 a 21.50 (importe 10,750). Regístrala: está dentro de tolerancia.','tol',['MIRO > importe 10750.','H-2005 tiene precio estándar: la diferencia va a 540100.'],()=>S.sim.invs.some(x=>!x.blocked&&x.items.some(i=>i.mat==='H-2005'&&i.qty===500&&Math.abs(i.amt-10750)<0.01))],
+ ['mm055',2,'ME22N','Borra una posición','Crea un pedido a 100004 por 100 kg de pintura R-3007 y luego borra esa posición porque se canceló la compra.','chg',['ME21N para crear, ME22N para marcar Borrar.'],()=>S.sim.pos.some(po=>po.items.some(i=>i.mat==='R-3007'&&i.qty===100&&i.del))],
+ ['mm056',3,'MD04','Necesidades del acero','Revisa en MD04 la situación de R-3001: stock, calidad, pedidos y reservas.','mrp',['MD04 > R-3001 > centro 1000.'],()=>ev('MD04:R-3001|1000')],
+ ['mm057',3,'ME51N','Solicitud de pedido manual','Crea una solicitud de pedido de 60 kg de pintura R-3007 en el centro 1000.','pr',['ME51N > R-3007 > 60.'],()=>S.sim.preqs.some(x=>x.mat==='R-3007'&&x.qty===60)],
+ ['mm058',3,'ME21N','Convierte la solicitud','Convierte esa solicitud de 60 kg en un pedido a 100004.','pr',['ME21N > 100004 > campo Solicitud de pedido.','ME5A también tiene el enlace Convertir.'],()=>S.sim.preqs.some(x=>x.mat==='R-3007'&&x.qty===60&&x.po)],
+ ['mm059',3,'MIGO','Recibe lo solicitado','Recibe los 60 kg de R-3007 del pedido que salió de la solicitud.','pr',['MIGO > 101 pedido.'],()=>poI('R-3007',60,{rec:true,pr:true})],
+ ['mm060',3,'ME5A','Solicitudes abiertas','Revisa en ME5A las solicitudes de pedido del centro 1000.','pr',['ME5A > centro 1000 > Todas.'],()=>ev('ME5A:1000')],
+ ['mm061',3,'MD01N','Corre el MRP','Ejecuta la planificación de necesidades de todo el centro 1000.','mrp',['MD01N > centro 1000 > deja el material vacío > Ejecutar.','Si no hay faltantes, no se crean propuestas: crea primero una orden grande o una necesidad primaria.'],()=>ev('MD01N:1000')],
+ ['mm062',3,'MD04','Lee una solicitud del MRP','Abre en MD04 un material que tenga una solicitud de pedido (SolPed) abierta.','mrp',['ME5A te dice qué materiales tienen solicitudes.'],()=>evAny('MD04SP:')],
+ ['mm063',3,'ME21N','Compra lo que pidió el MRP','Convierte en pedido una solicitud creada por el MRP.','pr',['ME5A > origen MRP > Convertir.'],()=>S.sim.preqs.some(x=>x.src==='MRP'&&x.po)],
+ ['mm064',3,'MR21','Cambio de precio estándar','Contabilidad aprobó un nuevo estándar de 23.00 MXN para el mango H-2005. Aplícalo.','mr21',['MR21 > H-2005 > centro 1000 > 23.'],()=>(ppOf('H-2005','1000')||{}).price===23],
+ ['mm065',3,'FS10N','Cuenta de revaluación','Revisa en FS10N la cuenta 540300 Revaluación de inventario.','fi',['FS10N > 540300.'],()=>ev('FS10N:540300')],
+ ['mm066',3,'MR21','Estándar del producto terminado','Cambia el precio estándar del martillo M-1003 a 105.00 MXN.','mr21',['MR21 > M-1003 > 105.'],()=>(ppOf('M-1003','1000')||{}).price===105],
+ ['mm067',3,'MIGO','Precio medio variable','Llegaron 10 kg de adhesivo R-3006 sin pedido con importe de 1,300 MXN. Regístralo y observa cómo cambia el precio medio.','mov',['MIGO > 501 > R-3006 > 10 > importe 1300.'],()=>dc('501','R-3006',10,{val:1300})],
+ ['mm068',3,'MB5B','Explica el stock del adhesivo','Revisa en MB5B el adhesivo R-3006 del centro 1000.','rep',['MB5B > R-3006.'],()=>ev('MB5B:R-3006|1000')],
+ ['mm069',3,'MIGO','Bloquea stock sospechoso','Bloquea 50 remaches R-3008 del centro 1000 mientras Calidad los revisa.','stk',['MIGO > Libre utilización a bloqueado (344).'],()=>dc('344','R-3008',50,{p:'1000'})],
+ ['mm070',3,'MIGO','Libera lo que está bien','20 de los remaches bloqueados están bien. Pásalos a libre utilización.','stk',['MIGO > Bloqueado a libre (343) > 20.'],()=>dc('343','R-3008',20,{p:'1000'})],
+ ['mm071',3,'MIGO','Desguace desde bloqueado','Los otros 30 remaches no sirven. Dalos de baja desde el stock bloqueado.','stk',['MIGO > Desguace desde stock bloqueado (555) > 30.'],()=>dc('555','R-3008',30,{p:'1000'})],
+ ['mm072',3,'MMBE','Revisa los tipos de stock','Verifica en MMBE cómo quedó R-3008 en libre, calidad y bloqueado.','stk',['MMBE > R-3008.'],()=>ev('MMBE:R-3008')],
+ ['mm073',3,'MI01','Documento de inventario','Crea un documento de inventario físico del centro 1000, almacén 0001, para R-3004 y R-3003.','pi',['MI01 > materiales: R-3004, R-3003.'],()=>piX(d=>d.plant==='1000'&&d.sloc==='0001'&&['R-3004','R-3003'].every(m=>d.items.some(i=>i.mat===m)))],
+ ['mm074',3,'MI04','Registra el conteo','Registra el conteo: R-3004 tiene 10 piezas menos que en libros y R-3003 coincide.','pi',['MI04 > documento > escribe libros − 10 para R-3004.','El stock en libros está en MI20 o MMBE.'],()=>piX(d=>d.items.some(i=>i.mat==='R-3004'&&i.count!=null&&i.diff===-10))],
+ ['mm075',3,'MI20','Lista de diferencias','Revisa en MI20 las diferencias del centro 1000 antes de contabilizar.','pi',['MI20 > centro 1000.'],()=>ev('MI20:1000')],
+ ['mm076',3,'MI07','Contabiliza el faltante','Contabiliza las diferencias del documento: se genera un 702 de 10 cajas.','pi',['MI07 > documento.'],()=>piX(d=>d.status==='CONTAB'&&d.items.some(i=>i.mat==='R-3004'&&i.diff===-10))],
+ ['mm077',3,'MI01','Inventario de pintura','Crea un documento de inventario del centro 1000, almacén 0001, para la pintura R-3007.','pi',['MI01 > R-3007.'],()=>piX(d=>d.items.some(i=>i.mat==='R-3007'))],
+ ['mm078',3,'MI04','Conteo con sobrante','Al contar, encontraste 3 kg más de R-3007 que en libros. Regístralo.','pi',['MI04 > libros + 3.'],()=>piX(d=>d.items.some(i=>i.mat==='R-3007'&&i.diff===3))],
+ ['mm079',3,'MI07','Contabiliza el sobrante','Contabiliza el documento de la pintura: se genera un 701 de 3 kg.','pi',['MI07 > documento.'],()=>piX(d=>d.status==='CONTAB'&&d.items.some(i=>i.mat==='R-3007'&&i.diff===3))],
+ ['mm080',3,'FS10N','Diferencias de inventario','Revisa en FS10N la cuenta 530100 Diferencias de inventario.','fi',['FS10N > 530100.'],()=>ev('FS10N:530100')],
+ ['mm081',4,'ME21N','Ciclo completo en Planta Norte','Compra 300 kg de alambre R-3010 a 100001 para el centro 2000: pedido, entrada y factura.','p2p',['ME21N, MIGO 101 pedido y MIRO.'],()=>poI('R-3010',300,{p:'2000',inv:true})],
+ ['mm082',4,'ME21N','Etiquetas para Planta Norte','Compra 4,000 etiquetas R-3003 a 100003 para el centro 2000 y completa entrada y factura.','p2p',['Ciclo completo.'],()=>poI('R-3003',4000,{p:'2000',inv:true})],
+ ['mm083',4,'MIRO','Factura con descuento','Compra 1,000 cajas R-3004 y registra una factura con descuento por 3,300 MXN en lugar de 3,400.','tol',['ME21N, MIGO y MIRO con importe 3300.'],()=>S.sim.invs.some(x=>x.items.some(i=>i.mat==='R-3004'&&i.qty===1000&&Math.abs(i.amt-3300)<0.01))],
+ ['mm084',4,'QA11','Devolución desde calidad','Compra 600 mangos H-2002. Al recibirlos, en la decisión de empleo devuelve 50 y acepta 550. Factura solo los 550.','ret',['MIGO 101 crea el lote. QA32 lo muestra.','QE51N resultados, QA11: 550 a libre y 50 devolver.','MIRO: 550.'],()=>poI('H-2002',600,{ret:50,inv:550})],
+ ['mm085',4,'MIGO','Ida y vuelta entre almacenes','Pasa 100 fundas R-3005 del almacén 0001 al 0002 y después regrésalas al 0001.','mov',['Dos movimientos 311.'],()=>S.sim.docs.some(d=>d.mvt==='311'&&d.mat==='R-3005'&&d.qty===100&&d.sloc==='0002'&&d.sign===-1)],
+ ['mm086',4,'MM01','Cinta para Planta Norte','Amplía la cinta R-3011 al centro 2000 con vistas MRP, Contabilidad, Almacén y Compras.','pur',['MM01 > R-3011 > centro 2000.'],()=>['MRP','ACC','ALM','PUR'].every(v=>hasView('R-3011','2000',v))],
+ ['mm087',4,'MIGO','Stock inicial en Planta Norte','Carga 300 piezas de R-3011 en el centro 2000.','mov',['MIGO > 561 > centro 2000.'],()=>dc('561','R-3011',300,{p:'2000'})],
+ ['mm088',4,'ME11','Precio de la cinta','Crea el registro info de 100003 para R-3011 en el centro 1000 a 1.20 MXN.','ir',['ME11 > 100003 > R-3011 > 1000.'],()=>(S.sim.inforec[key('100003','R-3011','1000')]||{}).price===1.2],
+ ['mm089',4,'ME21N','Pedido con precio del registro info','Pide a 100003 1,000 rollos R-3011 dejando el precio vacío: debe tomar 1.20.','po',['ME21N sin capturar precio.'],()=>poI('R-3011',1000,{v:'100003',price:1.2})],
+ ['mm090',4,'MIRO','Cierra la compra de cinta','Recibe y factura los 1,000 rollos R-3011.','p2p',['MIGO 101 y MIRO.'],()=>poI('R-3011',1000,{inv:true})],
+ ['mm091',4,'MD01N','MRP en Planta Norte','Ejecuta la planificación de todo el centro 2000.','mrp',['MD01N > centro 2000.'],()=>ev('MD01N:2000')],
+ ['mm092',4,'ME21N','Compra del MRP de Planta Norte','Convierte en pedido una solicitud del MRP del centro 2000.','pr',['Si el MRP no creó solicitudes, crea una necesidad primaria (MD61) de M-1002 en el centro 2000 y vuelve a planificar.'],()=>S.sim.preqs.some(x=>x.src==='MRP'&&x.po&&x.plant==='2000')],
+ ['mm093',4,'MI07','Inventario en Planta Norte','Haz el inventario físico completo de R-3008 en el centro 2000, almacén 0001, hasta contabilizarlo.','pi',['MI01, MI04 y MI07.'],()=>piX(d=>d.plant==='2000'&&d.status==='CONTAB'&&d.items.some(i=>i.mat==='R-3008'))],
+ ['mm094',4,'MR21','Estándar en Planta Norte','Cambia el precio estándar del cuerpo de pinza H-2003 en el centro 2000 a 42.50.','mr21',['MR21 > H-2003 > 2000.'],()=>(ppOf('H-2003','2000')||{}).price===42.5],
+ ['mm095',4,'MIGO','Consumo de laboratorio','Calidad usó 3 kg de adhesivo R-3006 en pruebas. Regístralo a CC-CAL-10.','mov',['MIGO > 201 > CC-CAL-10.'],()=>dc('201','R-3006',3,{cc:'CC-CAL-10'})],
+ ['mm096',4,'ME21N','Compra a un proveedor nuevo','Con un proveedor que hayas creado, compra, recibe y factura 25 kg de pintura R-3007.','p2p',['Puedes usar el de la misión 15 o crear otro.','Sin registro info, captura el precio en el pedido.'],()=>poI('R-3007',25,{uv:true,inv:true})],
+ ['mm097',4,'ME21N','Pedido de empaque completo','En un solo pedido a 100003 pide 1,500 de cada uno: R-3003, R-3004 y R-3009.','multi',['Tres posiciones.','R-3009 necesita la vista Compras (misión 10).'],()=>S.sim.pos.some(po=>po.vendor==='100003'&&['R-3003','R-3004','R-3009'].every(m=>po.items.some(i=>!i.del&&i.mat===m&&i.qty===1500)))],
+ ['mm098',4,'MIRO','Cierra el pedido de empaque','Recibe y factura completas las tres posiciones de 1,500.','multi',['MIGO 101 y MIRO del pedido.'],()=>S.sim.pos.some(po=>['R-3003','R-3004','R-3009'].every(m=>po.items.some(i=>i.mat===m&&i.qty===1500&&i.ir>=1500)))],
+ ['mm099',4,'FS10N','Deuda con proveedores','Revisa en FS10N la cuenta 201000 Proveedores nacionales.','fi',['FS10N > 201000.'],()=>ev('FS10N:201000')],
+ ['mm100',4,'MB5B','Cierre de mes de inventarios','Haz la revisión de cierre: MB5B de cualquier material, FS10N de la cuenta 115100 y ME2M de R-3004.','fi',['Tres consultas.'],()=>evAny('MB5B:')&&ev('FS10N:115100')&&ev('ME2M:R-3004')]
+]);
+addMis('pp',[
+ ['pp017',1,'CS03','Lista del martillo de bola','Visualiza la lista de materiales del martillo de bola M-1003.','bom',['CS03 > M-1003 > centro 1000.'],()=>ev('CS03:M-1003|1000')],
+ ['pp018',1,'CA03','Hoja de ruta del martillo de bola','Visualiza la hoja de ruta de M-1003 y sus tiempos.','rt',['CA03 > M-1003.'],()=>ev('CA03:M-1003|1000')],
+ ['pp019',1,'CS12','Explosión multinivel','Explota en CS12 la lista de M-1003 para 100 piezas. ¿Cuántos kg de acero se necesitan?','bom',['CS12 > M-1003 > cantidad 100.'],()=>ev('CS12:M-1003|1000')],
+ ['pp020',1,'CS15','¿Dónde se usa la etiqueta?','Consulta en CS15 en qué productos se usa la etiqueta R-3003 del centro 1000.','bom',['CS15 > R-3003.'],()=>ev('CS15:R-3003|1000')],
+ ['pp021',1,'CR03','El puesto de forja','Visualiza el puesto FOR-01 y revisa su tarifa y capacidad.','rt',['CR03 > centro 1000 > FOR-01.'],()=>ev('CR03:1000|FOR-01')],
+ ['pp022',1,'MD04','Necesidades del martillo de bola','Revisa en MD04 la situación de M-1003.','mrp',['MD04 > M-1003.'],()=>ev('MD04:M-1003|1000')],
+ ['pp023',1,'COOIS','Cabeceras de orden','Saca en COOIS la lista de cabeceras de órdenes del centro 1000.','coois',['COOIS > lista Cabeceras > centro 1000.'],()=>ev('COOIS:H|1000')],
+ ['pp024',1,'COOIS','Operaciones','Saca en COOIS la lista de operaciones del centro 1000.','coois',['COOIS > lista Operaciones.'],()=>ev('COOIS:O|1000')],
+ ['pp025',1,'COOIS','Notificaciones','Saca en COOIS la lista de notificaciones del centro 1000.','coois',['COOIS > lista Notificaciones.'],()=>ev('COOIS:N|1000')],
+ ['pp026',1,'COOIS','Movimientos de órdenes','Saca en COOIS la lista de movimientos de mercancías del centro 1000.','coois',['COOIS > lista Movimientos.'],()=>ev('COOIS:M|1000')],
+ ['pp027',1,'CO24','Faltantes en Planta Norte','Revisa en CO24 los faltantes del centro 2000.','coois',['CO24 > centro 2000.'],()=>ev('CO24:2000')],
+ ['pp028',1,'CK11N','Costo del martillo de bola','Calcula en CK11N el costo de M-1003 para un lote de 100.','cost',['CK11N > M-1003 > 100.'],()=>ev('CK11N:M-1003|1000')],
+ ['pp029',1,'CK11N','Costo de la cabeza forjada','Calcula en CK11N el costo de H-2001 y compáralo con su precio estándar de 32.','cost',['CK11N > H-2001.'],()=>ev('CK11N:H-2001|1000')],
+ ['pp030',1,'CR01','Puesto de pulido','Crea el puesto de trabajo PUL-01 "Pulido" en el centro 1000 con tarifa de 3.90 MXN por minuto.','rt',['CR01 > centro 1000 > PUL-01 > pestaña Cálculo de costos.'],()=>((S.sim.wcs['1000']||{})['PUL-01']||{}).rate===3.9],
+ ['pp031',1,'CA02','Agrega una operación','Agrega una operación de pulido en PUL-01 a la hoja de ruta de M-1003.','rt',['CA02 > M-1003 > Añadir operación > PUL-01.'],()=>rtHas('M-1003','1000','PUL-01')],
+ ['pp032',1,'CS02','Agrega un componente','El martillo de bola ahora se empaca en bolsa. Agrega 1 bolsa R-3009 a la lista de M-1003.','bom',['CS02 > M-1003 > Añadir posición > R-3009, 1.'],()=>bomHas('M-1003','1000','R-3009',1)],
+ ['pp033',1,'MM01','Crea un semiterminado','Crea H-2006 "Cuña de acero" tipo HALB, unidad PZA, en el centro 1000 con las vistas MRP, Programación, Contabilidad, Costes y Almacén. Fabricación propia, precio S de 2.50.','newprod',['MM01 > H-2006 > HALB > 5 vistas.','Categoría 7900.'],()=>{const x=S.sim.materials['H-2006'];return!!x&&x.type==='HALB'&&['MRP','WS','ACC','CST','ALM'].every(v=>hasView('H-2006','1000',v));}],
+ ['pp034',1,'CS01','Lista de la cuña','Crea la lista de H-2006 con 0.05 kg de barra R-3001.','bom',['CS01 > H-2006 > R-3001 > 0.05.','KG sí admite decimales.'],()=>bomHas('H-2006','1000','R-3001',0.05)],
+ ['pp035',1,'CA01','Ruta de la cuña','Crea la hoja de ruta de H-2006 con una operación en FOR-01: preparación 20 min, 0.3 min por pieza.','rt',['CA01 > H-2006 > FOR-01.'],()=>rtHas('H-2006','1000','FOR-01')],
+ ['pp036',2,'CO01','Orden de forja','Crea y libera una orden de 300 cabezas H-2001.','ord',['CO01 > H-2001 > 300 > Liberar.'],()=>ordQ('H-2001',300,{st:['REL']})],
+ ['pp037',2,'CO11N','Notifica la forja','Notifica la orden de 300 cabezas con 300 buenas, notificación final.','conf',['CO11N > orden > 0010.'],()=>ordQ('H-2001',300,{st:['CNF']})],
+ ['pp038',2,'MIGO','Entrada de cabezas','Da entrada a las 300 cabezas forjadas.','ord',['MIGO > 101 orden.'],()=>ordQ('H-2001',300,{st:['DLV']})],
+ ['pp039',2,'COHV','Cierra la orden de forja','Cierra técnicamente la orden de 300 cabezas desde COHV.','mass',['COHV > estatus Entregadas > Cierre técnico.'],()=>ordQ('H-2001',300,{st:['TECO']})],
+ ['pp040',2,'KO88','Liquida la forja','Liquida la orden de 300 cabezas.','ko88',['KO88 > orden.'],()=>ordQ('H-2001',300,{st:['SETC']})],
+ ['pp041',2,'CO01','Orden de martillo de bola','Crea y libera una orden de 150 martillos M-1003.','ord',['CO01 > M-1003 > 150 > Liberar.','Si falta stock, revisa CO24.'],()=>ordQ('M-1003',150,{st:['REL']})],
+ ['pp042',2,'CO11N','Notificación parcial','En la operación 0010 notifica 100 buenas como notificación parcial.','conf',['CO11N > tipo P Notificación parcial.'],()=>ordQ('M-1003',150,{f:x=>x.ops[0]&&x.ops[0].yield>=100})],
+ ['pp043',2,'CO11N','Completa la operación','Notifica las 50 restantes de la operación 0010 como final.','conf',['CO11N > 0010 > 50 > Final.'],()=>ordQ('M-1003',150,{f:x=>x.ops[0]&&x.ops[0].final&&x.ops[0].yield>=150})],
+ ['pp044',2,'CO15','Notifica el resto','Notifica las demás operaciones de la orden de 150 en una sola vez con CO15.','conf',['CO15 > orden > 150 > Final.'],()=>ordQ('M-1003',150,{st:['CNF']})],
+ ['pp045',2,'MIGO','Entrada con calidad','Da entrada a los 150 martillos. Como M-1003 tiene inspección 04, quedan en control de calidad.','lot',['MIGO > 101 orden.','QA32 muestra el lote nuevo.'],()=>ordQ('M-1003',150,{st:['DLV']})],
+ ['pp046',2,'CO11N','Notifica con rechazo','Crea y libera una orden de 250 M-1001. En la operación 0010 notifica 240 buenas y 10 de rechazo.','scrap',['CO01, luego CO11N con rechazo 10.'],()=>ordQ('M-1001',250,{f:x=>x.ops[0]&&x.ops[0].scrap>=10})],
+ ['pp047',2,'MIGO','Entrega lo bueno','Notifica las demás operaciones de esa orden con 240 buenas y da entrada a 240 martillos.','scrap',['CO11N 0020 y 0030 con 240, MIGO 101 de 240.'],()=>ordQ('M-1001',250,{st:['CNF'],f:x=>x.gr>=240})],
+ ['pp048',2,'CO02','Cierre con entrega incompleta','Cierra técnicamente la orden de 250: solo se entregaron 240.','scrap',['CO02 > Cierre técnico.'],()=>ordQ('M-1001',250,{st:['TECO']})],
+ ['pp049',2,'KO88','Liquida con rechazo','Liquida la orden de 250 y revisa la desviación causada por el rechazo.','ko88',['KO88 > orden.'],()=>ordQ('M-1001',250,{st:['SETC']})],
+ ['pp050',2,'CO01','Producción en Planta Norte','Crea y libera una orden de 120 pinzas M-1002 en el centro 2000.','ord',['Necesita lista y ruta del centro 2000 (misiones 2 a 4).'],()=>ordQ('M-1002',120,{p:'2000',st:['REL']})],
+ ['pp051',2,'CO15','Notificación de cabecera','Notifica la orden de 120 pinzas completa con CO15.','conf',['CO15 > orden > 120.'],()=>ordQ('M-1002',120,{st:['CNF']})],
+ ['pp052',2,'MIGO','Entrada en Planta Norte','Da entrada a las 120 pinzas.','ord',['MIGO > 101 orden.'],()=>ordQ('M-1002',120,{st:['DLV']})],
+ ['pp053',2,'CO01','Orden de cuñas','Crea y libera una orden de 200 cuñas H-2006.','ord',['CO01 > H-2006 > 200.'],()=>ordQ('H-2006',200,{st:['REL']})],
+ ['pp054',2,'MIGO','Salida manual a la orden','Antes de notificar, saca a mano los 10 kg de R-3001 para la orden de cuñas con el movimiento 261.','gi',['MIGO > 261 > orden de cuñas > R-3001 > 10.'],()=>S.sim.orders.some(o=>o.mat==='H-2006'&&o.qty===200&&S.sim.docs.some(d=>d.mvt==='261'&&d.mat==='R-3001'&&d.order===o.id))],
+ ['pp055',2,'CO11N','Notifica sin toma retroactiva','Notifica las 200 cuñas desmarcando la toma retroactiva (ya sacaste el material).','gi',['CO11N > quita la palomita de toma retroactiva.'],()=>ordQ('H-2006',200,{st:['CNF']})],
+ ['pp056',2,'MIGO','Devuelve el sobrante','Sobró 1 kg de R-3001 de la orden de cuñas. Devuélvelo con 262.','gi',['MIGO > 262 > orden de cuñas > R-3001 > 1.'],()=>S.sim.orders.some(o=>o.mat==='H-2006'&&o.qty===200&&dc('262','R-3001',1,{ord:o.id}))],
+ ['pp057',2,'MIGO','Entrada de cuñas','Da entrada a las 200 cuñas.','ord',['MIGO > 101 orden.'],()=>ordQ('H-2006',200,{st:['DLV']})],
+ ['pp058',2,'CO02','Cambia la cantidad de una orden','Crea una orden de 400 M-1001 sin liberar y cámbiala a 350 en CO02.','ord',['CO01 > Grabar (sin liberar), luego CO02 > cantidad 350 > Grabar cambios.'],()=>ordQ('M-1001',350)],
+ ['pp059',2,'CO02','Libera la orden','Libera la orden de 350 M-1001.','ord',['CO02 > Liberar.'],()=>ordQ('M-1001',350,{st:['REL']})],
+ ['pp060',2,'CO13','Corrige una notificación','Notifica algo en la orden de 350 y luego anúlalo con CO13.','conf',['CO11N y después CO13.'],()=>S.sim.orders.some(o=>o.mat==='M-1001'&&o.qty===350&&ev('CO13:'+o.id))],
+ ['pp061',2,'COHV','Liberación masiva','Crea dos órdenes de M-1003 de 60 y 70 piezas sin liberar y libéralas juntas desde COHV.','mass',['CO01 > Grabar dos veces.','COHV > Abiertas > selecciona ambas > Liberar.'],()=>[60,70].every(q=>S.sim.orders.some(o=>o.mat==='M-1003'&&o.qty===q&&ev('COHVREL:'+o.id)))],
+ ['pp062',2,'CO01','Provoca un faltante','Crea una orden de 1,000 M-1003 e intenta liberarla. Lee el aviso de faltante.','mrp',['CO01 > 1000 > Liberar.'],()=>ev('shortage:M-1003')],
+ ['pp063',2,'MD04','Investiga el faltante','Revisa en MD04 el mango H-2005 para ver cuánto falta.','mrp',['MD04 > H-2005.'],()=>ev('MD04:H-2005|1000')],
+ ['pp064',2,'MD61','Necesidad primaria y MRP','Crea una necesidad primaria de 200 M-1003 y planifica solo ese material con MD01N.','pir',['MD61 > M-1003 > 200.','MD01N > centro 1000 > material M-1003.'],()=>S.sim.pirs.some(x=>x.mat==='M-1003'&&x.qty===200)&&ev('MD01N:'+key('1000','M-1003'))],
+ ['pp065',2,'CO40','Convierte la orden previsional','Convierte en orden de fabricación una orden previsional del centro 1000.','plo',['MD04 o la pantalla de MD01N muestran el número.','CO40 > número.'],()=>S.sim.orders.some(o=>o.fromPlo&&o.plant==='1000')],
+ ['pp066',3,'KKBC_ORD','Plan contra real','Revisa en KKBC_ORD los costos de una orden de M-1003.','cost',['KKBC_ORD > orden.'],()=>S.sim.orders.some(o=>o.mat==='M-1003'&&ev('KKBC:'+o.id))],
+ ['pp067',3,'CK11N','Costo de la cuña','Calcula el costo de H-2006 para un lote de 100.','cost',['CK11N > H-2006.'],()=>ev('CK11N:H-2006|1000')],
+ ['pp068',3,'KO88','Liquida el martillo de bola','Cierra técnicamente y liquida la orden de 150 M-1003.','ko88',['CO02 o COHV para el cierre técnico, KO88 para liquidar.'],()=>ordQ('M-1003',150,{st:['SETC']})],
+ ['pp069',3,'FS10N','Desviaciones de fabricación','Revisa en FS10N la cuenta 540200.','fi',['FS10N > 540200.'],()=>ev('FS10N:540200')],
+ ['pp070',3,'FS10N','Variación de existencias','Revisa en FS10N la cuenta 580100.','fi',['FS10N > 580100.'],()=>ev('FS10N:580100')],
+ ['pp071',3,'MB51','Movimientos del martillo de bola','Revisa en MB51 todos los movimientos de M-1003.','rep',['MB51 > M-1003.'],()=>ev('MB51:M-1003')],
+ ['pp072',3,'ZIMP','Bitácora','Abre la bitácora de implicaciones (ZIMP) y revisa tus últimas contabilizaciones.','cost',['ZIMP en el campo de comandos.'],()=>ev('ZIMP:x')],
+ ['pp073',3,'CR01','Pulido en Planta Norte','Crea el puesto PUL-21 en el centro 2000 con tarifa 3.50.','rt',['CR01 > centro 2000 > PUL-21.'],()=>((S.sim.wcs['2000']||{})['PUL-21']||{}).rate===3.5],
+ ['pp074',3,'CA02','Pulido para el subensamble','Agrega una operación en PUL-21 a la hoja de ruta de H-2004.','rt',['CA02 > H-2004 > centro 2000.'],()=>rtHas('H-2004','2000','PUL-21')],
+ ['pp075',3,'CO01','Orden de subensamble','Crea y libera una orden de 100 H-2004 en el centro 2000.','ord',['H-2004 necesita vistas contables (misión 10).'],()=>ordQ('H-2004',100,{p:'2000',st:['REL']})],
+ ['pp076',3,'MIGO','Termina el subensamble','Notifica y da entrada a las 100 piezas H-2004.','ord',['CO11N en cada operación y MIGO 101.'],()=>ordQ('H-2004',100,{st:['DLV']})],
+ ['pp077',3,'KO88','Liquida el subensamble','Cierra técnicamente y liquida la orden de 100 H-2004.','ko88',['CO02 y KO88.'],()=>ordQ('H-2004',100,{st:['SETC']})],
+ ['pp078',3,'CS02','Cambia una cantidad','El subensamble H-2004 ahora lleva 3 fundas R-3005. Cambia la lista.','bom',['CS02 > H-2004 > centro 2000 > cantidad 3.'],()=>bomHas('H-2004','2000','R-3005',3)],
+ ['pp079',3,'CO01','Orden con la lista nueva','Crea una orden de 50 H-2004 y verifica que reserva 150 fundas.','bom',['CO01 > H-2004 > 50.'],()=>S.sim.orders.some(o=>o.mat==='H-2004'&&o.qty===50&&o.comps.some(c=>c.comp==='R-3005'&&c.req===150))],
+ ['pp080',3,'CO03','Revisa la orden','Visualiza en CO03 la orden de 50 H-2004 y su pestaña Costos.','cost',['CO03 > orden.'],()=>S.sim.orders.some(o=>o.mat==='H-2004'&&o.qty===50&&ev('CO03:'+o.id))],
+ ['pp081',3,'MD04','Fundas en Planta Norte','Revisa en MD04 la funda R-3005 del centro 2000.','mrp',['MD04 > R-3005 > 2000.'],()=>ev('MD04:R-3005|2000')],
+ ['pp082',3,'MD01N','MRP de un material','Planifica en MD01N solo el subensamble H-2004 del centro 2000.','mrp',['MD01N > centro 2000 > material H-2004.'],()=>ev('MD01N:'+key('2000','H-2004'))],
+ ['pp083',3,'CO40','Previsional en Planta Norte','Crea una necesidad primaria de 100 M-1002 en el centro 2000, planifica y convierte la orden previsional.','plo',['MD61, MD01N y CO40.'],()=>S.sim.orders.some(o=>o.fromPlo&&o.plant==='2000')],
+ ['pp084',3,'COOIS','Componentes en Planta Norte','Saca en COOIS la lista de componentes del centro 2000.','coois',['COOIS > Componentes > 2000.'],()=>ev('COOIS:C|2000')],
+ ['pp085',3,'CS12','Explosión del martillo uña','Explota en CS12 la lista de M-1001.','bom',['CS12 > M-1001.'],()=>ev('CS12:M-1001|1000')],
+ ['pp086',4,'MM01','Producto nuevo','Crea el producto M-1005 "Martillo de goma", FERT, PZA, centro 1000, con las 5 vistas de fabricación y precio estándar de 45.','newprod',['MM01 > M-1005 > FERT.','Categoría 7920, control S.'],()=>['MRP','WS','ACC','CST','ALM'].every(v=>hasView('M-1005','1000',v))],
+ ['pp087',4,'CS01','Lista del producto nuevo','Crea la lista de M-1005: 1 mango H-2005, 1 bolsa R-3009 y 1 caja R-3004.','newprod',['CS01 > M-1005.'],()=>['H-2005','R-3009','R-3004'].every(c=>bomHas('M-1005','1000',c))],
+ ['pp088',4,'CA01','Ruta del producto nuevo','Crea la hoja de ruta de M-1005 con ensamble en ENS-01 y empaque en EMP-01.','newprod',['CA01 > M-1005.'],()=>rtHas('M-1005','1000','ENS-01')&&rtHas('M-1005','1000','EMP-01')],
+ ['pp089',4,'CK11N','Costo del producto nuevo','Calcula el costo de M-1005 y compáralo con su estándar de 45.','newprod',['CK11N > M-1005.'],()=>ev('CK11N:M-1005|1000')],
+ ['pp090',4,'CO01','Primera orden del producto nuevo','Crea y libera una orden de 80 M-1005.','newprod',['La bolsa R-3009 empieza sin stock: cómprala o cárgala antes.'],()=>ordQ('M-1005',80,{st:['REL']})],
+ ['pp091',4,'CO11N','Entrada automática','Notifica todas las operaciones de la orden de 80 M-1005 y en la última marca la entrada de mercancías automática.','conf',['CO11N > última operación > Entrada de mercancías automática.'],()=>ordQ('M-1005',80,{st:['CNF','DLV']})],
+ ['pp092',4,'KO88','Cierra el producto nuevo','Cierra técnicamente y liquida la orden de 80 M-1005.','ko88',['CO02 y KO88.'],()=>ordQ('M-1005',80,{st:['SETC']})],
+ ['pp093',4,'CO01','Orden de principio a fin','Produce 75 M-1003 de principio a fin hasta su entrada.','ord',['CO01, CO11N o CO15, MIGO 101.'],()=>ordQ('M-1003',75,{st:['DLV']})],
+ ['pp094',4,'CO11N','Rechazo del 10 %','Produce una orden de 120 M-1001 con 12 piezas rechazadas en una operación y da entrada a 108.','scrap',['Notifica el rechazo y entrega lo bueno.'],()=>ordQ('M-1001',120,{f:x=>x.ops.some(o=>o.scrap>=12)&&x.gr>=108})],
+ ['pp095',4,'CO13','Anula y corrige','En la orden de 120 M-1001 anula una notificación con CO13 y vuelve a notificarla.','conf',['CO13 > orden de 120.'],()=>S.sim.orders.some(o=>o.mat==='M-1001'&&o.qty===120&&ev('CO13:'+o.id))],
+ ['pp096',4,'CO01','Lote grande en Planta Norte','Produce 200 pinzas M-1002 en el centro 2000 hasta su entrada.','ord',['Revisa stock de componentes antes de liberar.'],()=>ordQ('M-1002',200,{p:'2000',st:['DLV']})],
+ ['pp097',4,'KO88','Liquida Planta Norte','Liquida la orden de 200 pinzas M-1002.','ko88',['KO88 > orden.'],()=>ordQ('M-1002',200,{st:['SETC']})],
+ ['pp098',4,'CO01','Producción multinivel','Produce primero 110 cabezas H-2001 y después 110 martillos M-1001, ambas órdenes hasta su entrada.','ord',['Dos órdenes en secuencia.'],()=>ordQ('H-2001',110,{st:['DLV']})&&ordQ('M-1001',110,{st:['DLV']})],
+ ['pp099',4,'COHV','Cierre técnico masivo','Cierra técnicamente al menos 3 órdenes en una sola ejecución de COHV.','mass',['COHV > Entregadas > selecciona 3 o más > Cierre técnico.'],()=>ev('COHVTECO3:x')],
+ ['pp100',4,'KO88','Cierre de mes de producción','Deja en cero el saldo de todas las órdenes entregadas del centro 1000.','ko88',['COOIS cabeceras para encontrarlas, KKBC_ORD para ver saldos y KO88 para liquidar.'],()=>{const d=S.sim.orders.filter(o=>o.plant==='1000'&&has(o,'DLV'));return d.length>=5&&d.every(o=>has(o,'SETC')||Math.abs(ordBal(o))<0.01);}]
+]);
+addMis('qm',[
+ ['qm001',1,'QS24','Características de inspección','Revisa en QS24 las características maestras y sus límites.','mic',['QS24 en el campo de comandos.'],()=>ev('QS24:x')],
+ ['qm002',1,'QS21','Característica de planitud','Crea PLANITUD "Planitud de la cara", cuantitativa, en mm, con límite superior de 0.05 y sin límite inferior.','mic',['QS21 > código PLANITUD > deja vacío el límite inferior.'],()=>{const x=S.sim.mics.PLANITUD;return!!x&&x.q&&x.hi===0.05&&x.lo==null;}],
+ ['qm003',1,'QS21','Característica de peso','Crea PESO "Peso del martillo", cuantitativa, en g, de 650 a 690.','mic',['QS21 > PESO.'],()=>{const x=S.sim.mics.PESO;return!!x&&x.q&&x.lo===650&&x.hi===690;}],
+ ['qm004',1,'QS21','Espesor de recubrimiento','Crea RECUBR "Espesor de recubrimiento", cuantitativa, en µm, de 60 a 90.','mic',['QS21 > RECUBR.'],()=>{const x=S.sim.mics.RECUBR;return!!x&&x.q&&x.lo===60&&x.hi===90;}],
+ ['qm005',1,'QS21','Característica cualitativa','Crea OXIDO "Ausencia de óxido" como característica cualitativa.','mic',['QS21 > tipo Cualitativa.'],()=>{const x=S.sim.mics.OXIDO;return!!x&&!x.q;}],
+ ['qm006',1,'QS23','Ajusta límites','Ingeniería cerró la tolerancia de dureza. Cambia DUREZA a 46 a 54 HRC.','mic',['QS23 > DUREZA.'],()=>{const x=S.sim.mics.DUREZA;return!!x&&x.lo===46&&x.hi===54;}],
+ ['qm007',1,'QP03','Plan del acero','Visualiza el plan de inspección de R-3001 en el centro 1000.','plan',['QP03 > R-3001.'],()=>ev('QP03:R-3001|1000')],
+ ['qm008',1,'QP03','Plan del martillo de bola','Visualiza el plan de inspección de M-1003.','plan',['QP03 > M-1003.'],()=>ev('QP03:M-1003|1000')],
+ ['qm009',1,'QP01','Plan para la madera','Crea el plan de H-2005 con HUMEDAD (muestra 3) y ASPECTO (muestra 5).','plan',['QP01 > H-2005 > dos características.'],()=>planHas('H-2005','1000',['HUMEDAD','ASPECTO'])],
+ ['qm010',1,'QP01','Plan para la pintura','Crea el plan de R-3007 con RECUBR, muestra 5.','plan',['Necesita la característica de la misión 4.'],()=>planHas('R-3007','1000',['RECUBR'])],
+ ['qm011',1,'QP02','Agrega el peso','Agrega PESO (muestra 3) al plan de M-1003.','plan',['QP02 > M-1003 > Añadir característica.'],()=>planHas('M-1003','1000',['PESO'])],
+ ['qm012',1,'QP02','Agrega la planitud','Agrega PLANITUD (muestra 2) al plan de M-1003.','plan',['QP02 > M-1003.'],()=>planHas('M-1003','1000',['PLANITUD'])],
+ ['qm013',1,'MM03','Vista de calidad','Visualiza el mango H-2002 y revisa su pestaña Gestión de calidad.','qmview',['MM03 > H-2002.'],()=>ev('MM03:H-2002|1000')],
+ ['qm014',1,'MM01','Activa inspección en compras','Activa la inspección 01 para la pintura R-3007 en el centro 1000.','qmview',['MM01 > R-3007 > vista Gestión de calidad > 01.'],()=>qmOf('R-3007','1000')==='01'],
+ ['qm015',1,'MM01','Activa inspección en producción','Activa la inspección 04 para el martillo M-1001.','qmview',['MM01 > M-1001 > Gestión de calidad > 04.'],()=>qmOf('M-1001','1000')==='04'],
+ ['qm016',1,'MM01','Inspección de cajas','Activa la inspección 01 para las cajas R-3004 en el centro 1000.','qmview',['MM01 > R-3004 > Gestión de calidad > 01.'],()=>qmOf('R-3004','1000')==='01'],
+ ['qm017',1,'MM01','Inspección en Planta Norte','Activa la inspección 04 para las pinzas M-1002 en el centro 2000.','qmview',['MM01 > M-1002 > centro 2000.'],()=>qmOf('M-1002','2000')==='04'],
+ ['qm018',1,'QA32','Lista de lotes','Revisa en QA32 todos los lotes del centro 1000.','lot',['QA32 > centro 1000 > Todos.'],()=>evAny('QA32:')],
+ ['qm019',1,'QM11','Lista de notificaciones','Revisa en QM11 las notificaciones de calidad.','qn',['QM11 > Ejecutar.'],()=>evAny('QM11:')],
+ ['qm020',1,'MMBE','Stock en calidad','Revisa en MMBE el acero R-3001 y localiza la columna En control de calidad.','lot',['MMBE > R-3001.'],()=>ev('MMBE:R-3001')],
+ ['qm021',1,'QA01','Lote manual','Un cliente reportó golpes. Crea un lote manual de 50 martillos M-1001 del almacén 0002.','l89',['QA01 > M-1001 > almacén 0002 > 50.'],()=>lt('M-1001',50,{org:'89'})],
+ ['qm022',1,'QA03','Revisa el lote','Visualiza en QA03 el lote manual de 50 M-1001.','l89',['QA03 > número de lote.'],()=>S.sim.lots.some(l=>l.mat==='M-1001'&&l.qty===50&&ev('QA03:'+l.id))],
+ ['qm023',1,'QP01','Plan del martillo uña','El lote no puede registrar resultados sin plan. Crea el plan de M-1001 con DIAM-OJO (5) y ASPECTO (5).','plan',['QP01 > M-1001.'],()=>planHas('M-1001','1000',['DIAM-OJO','ASPECTO'])],
+ ['qm024',1,'QE51N','Registra resultados','Registra los resultados del lote manual de 50 M-1001.','res',['QE51N > lote.','Valores dentro de 24.85 a 25.15 mm.'],()=>lt('M-1001',50,{org:'89',res:true})],
+ ['qm025',1,'QA11','Primera decisión de empleo','Toma la decisión A (aceptado) del lote manual de 50 M-1001.','ud',['QA11 > lote > A.'],()=>lt('M-1001',50,{org:'89',ud:'A'})],
+ ['qm026',2,'MIGO','Compra con inspección','Compra 300 kg de R-3001 y recíbelos: debe crearse un lote de origen 01.','lot',['ME21N y MIGO 101 pedido.'],()=>lt('R-3001',300,{org:'01'})],
+ ['qm027',2,'QE51N','Resultados en especificación','Registra resultados en especificación para el lote de 300 kg de R-3001.','res',['COMP-C entre 0.43 y 0.50; DUREZA entre 46 y 54 si hiciste la misión 6.'],()=>lt('R-3001',300,{allA:true})],
+ ['qm028',2,'QA11','Acepta y libera','Toma la decisión A del lote de 300 kg y manda todo a libre utilización.','ud',['QA11 > A > 300 a libre.'],()=>lt('R-3001',300,{ud:'A',free:300})],
+ ['qm029',2,'MIGO','Compra de mangos con lote','Compra y recibe 400 mangos H-2002.','lot',['ME21N a 100002 y MIGO 101.'],()=>lt('H-2002',400,{org:'01'})],
+ ['qm030',2,'QE51N','Detecta un rechazo','Registra resultados del lote de 400 H-2002 con al menos una longitud fuera de 328 a 332 mm.','res',['Un valor como 333.5 rechaza LONG-MANGO.'],()=>lt('H-2002',400,{rR:'LONG-MANGO'})],
+ ['qm031',2,'QA11','Rechaza y devuelve','Toma la decisión R del lote de 400 H-2002 y devuelve las 400 piezas al proveedor.','ud',['QA11 > R > Devolver al proveedor 400.'],()=>lt('H-2002',400,{ud:'R',ret:400})],
+ ['qm032',2,'QM01','Reclamación al proveedor','Crea una notificación Q2 para 100002 por los 400 mangos, defecto D01, con referencia al lote.','qn',['QM01 > Q2 > lote del rechazo.'],()=>qnx({t:'Q2',m:'H-2002',q:400,def:'D01',v:'100002',lot:['H-2002',400]})],
+ ['qm033',2,'QM02','Analiza la causa','En la reclamación de los 400 mangos registra la causa C03 Material, la causa raíz y una acción correctiva.','close',['QM02 > pestañas Causas y Acciones > Grabar.'],()=>qnx({t:'Q2',m:'H-2002',q:400,st:'NOPR'})],
+ ['qm034',2,'QM02','Cierra la reclamación','Cierra la reclamación de los 400 mangos.','close',['QM02 > Cerrar notificación (necesita responsable).'],()=>qnx({t:'Q2',m:'H-2002',q:400,st:'NOCO'})],
+ ['qm035',2,'MIGO','Lote de adhesivo','Compra y recibe 25 kg de R-3006.','lot',['ME21N a 100004 y MIGO 101.'],()=>lt('R-3006',25,{org:'01'})],
+ ['qm036',2,'QE51N','Viscosidad','Registra viscosidades dentro de 9,000 a 12,000 cP para el lote de 25 kg.','res',['Dos valores, por ejemplo 10500 y 10800.'],()=>lt('R-3006',25,{allA:true})],
+ ['qm037',2,'QA11','Libera el adhesivo','Acepta el lote de 25 kg y pásalo todo a libre.','ud',['QA11 > A > 25.'],()=>lt('R-3006',25,{ud:'A',free:25})],
+ ['qm038',2,'MIGO','Lote de madera','Compra y recibe 300 mangos de nogal H-2005.','lot',['El plan de la misión 9 se asigna solo.'],()=>lt('H-2005',300,{org:'01'})],
+ ['qm039',2,'QE51N','Humedad fuera','Registra resultados del lote de 300 H-2005 con una humedad mayor a 12 %.','res',['Por ejemplo 12.8.'],()=>lt('H-2005',300,{rR:'HUMEDAD'})],
+ ['qm040',2,'QA11','Acepta con desviación','Producción necesita la madera: decide AD (aceptado con desviación) y pasa las 300 piezas a libre.','ud',['QA11 > AD > 300 a libre.'],()=>lt('H-2005',300,{ud:'AD',free:300})],
+ ['qm041',2,'QM01','Documenta la desviación','Crea una notificación interna Q3 para los 300 H-2005 con defecto D06.','qn',['QM01 > Q3.'],()=>qnx({t:'Q3',m:'H-2005',q:300,def:'D06'})],
+ ['qm042',2,'MIGO','Otro lote de acero','Compra y recibe 200 kg de R-3001.','lot',['ME21N y MIGO 101.'],()=>lt('R-3001',200,{org:'01'})],
+ ['qm043',2,'QE51N','Resultados del acero','Registra resultados del lote de 200 kg.','res',['QE51N > lote.'],()=>lt('R-3001',200,{res:true})],
+ ['qm044',2,'QA11','Decisión repartida','Decide el lote de 200 kg: 180 a libre y 20 a bloqueado para reinspección.','split',['QA11 > A o AD > 180 libre, 20 bloqueado.'],()=>lt('R-3001',200,{free:180,block:20})],
+ ['qm045',2,'MIGO','Libera tras reinspección','10 kg de los bloqueados están bien. Libéralos con 343.','stk',['MIGO > 343 > R-3001 > 10.'],()=>dc('343','R-3001',10)],
+ ['qm046',2,'MIGO','Desguace del resto','Los otros 10 kg no sirven. Dalos de baja con 555.','stk',['MIGO > 555 > R-3001 > 10.'],()=>dc('555','R-3001',10)],
+ ['qm047',2,'MIGO','Lote de pintura','Compra y recibe 120 kg de pintura R-3007 (con la inspección de la misión 14).','lot',['ME21N a 100004 y MIGO 101.'],()=>lt('R-3007',120,{org:'01'})],
+ ['qm048',2,'QA11','Libera la pintura','Registra resultados de recubrimiento y acepta el lote de 120 kg.','ud',['QE51N con RECUBR de 60 a 90; QA11 A.'],()=>lt('R-3007',120,{ud:'A'})],
+ ['qm049',2,'QA11','Decisión sin plan','Compra y recibe 5,000 cajas R-3004. Como no tienen plan, decide A sin resultados.','ud',['Necesita la misión 16.','QA11 permite decidir cuando no hay plan.'],()=>lt('R-3004',5000,{ud:'A',free:5000})],
+ ['qm050',2,'QA32','Lotes decididos','Filtra en QA32 los lotes con decisión de empleo.','lot',['QA32 > estatus Con decisión.'],()=>ev('QA32:DE')],
+ ['qm051',2,'MIGO','Lote de mangos aceptado','Compra y recibe 250 mangos H-2002.','lot',['ME21N y MIGO 101.'],()=>lt('H-2002',250,{org:'01'})],
+ ['qm052',2,'QA11','Acepta los mangos','Registra resultados en especificación y acepta los 250 mangos a libre.','ud',['QE51N y QA11.'],()=>lt('H-2002',250,{allA:true,ud:'A',free:250})],
+ ['qm053',2,'QA11','Desguace desde calidad','Compra y recibe 15 kg de R-3006, registra una viscosidad fuera y decide R con desguace de los 15 kg.','ud',['QA11 > R > A desguace 15.'],()=>lt('R-3006',15,{ud:'R',scrap:15})],
+ ['qm054',2,'FS10N','Costo del desguace','Revisa en FS10N la cuenta 520100.','fi',['FS10N > 520100.'],()=>ev('FS10N:520100')],
+ ['qm055',2,'QM01','Reclama el adhesivo','Crea una reclamación Q2 a 100004 por los 15 kg de R-3006 con defecto D05.','qn',['QM01 > Q2 > R-3006 > 15.'],()=>qnx({t:'Q2',m:'R-3006',q:15,def:'D05',v:'100004'})],
+ ['qm056',3,'MIGO','Lote de producción','Produce 60 martillos M-1003 y da entrada: debe crearse un lote de origen 04.','lot',['CO01, CO11N o CO15 y MIGO 101.'],()=>lt('M-1003',60,{org:'04'})],
+ ['qm057',3,'QE51N','Inspección final','Registra los resultados del lote de 60 M-1003.','res',['El plan incluye lo que agregaste en las misiones 11 y 12.'],()=>lt('M-1003',60,{res:true})],
+ ['qm058',3,'QA11','Libera producto terminado','Acepta el lote de 60 M-1003 y pásalo a libre.','ud',['QA11 > A > 60.'],()=>lt('M-1003',60,{ud:'A',free:60})],
+ ['qm059',3,'MMBE','Stock del producto','Revisa en MMBE el stock de M-1003.','lot',['MMBE > M-1003.'],()=>ev('MMBE:M-1003')],
+ ['qm060',3,'QA11','Producto rechazado','Produce 40 M-1003, registra un torque menor al mínimo y decide R con las 40 piezas a bloqueado.','ud',['TORQUE debajo de 40 (o 42 si hiciste la misión 76).'],()=>lt('M-1003',40,{rR:'TORQUE',ud:'R',block:40})],
+ ['qm061',3,'QM01','Problema interno','Crea una notificación Q3 por los 40 M-1003 con defecto D07.','qn',['QM01 > Q3 > D07.'],()=>qnx({t:'Q3',m:'M-1003',q:40,def:'D07'})],
+ ['qm062',3,'QM02','Causa del torque','Registra la causa C02 Método y la acción correctiva de esa notificación.','close',['QM02 > Grabar.'],()=>qnx({t:'Q3',m:'M-1003',q:40,st:'NOPR'})],
+ ['qm063',3,'QM02','Cierra el problema','Cierra la notificación de los 40 M-1003.','close',['QM02 > Cerrar notificación.'],()=>qnx({t:'Q3',m:'M-1003',q:40,st:'NOCO'})],
+ ['qm064',3,'MIGO','Libera tras retrabajo','Las 40 piezas se retrabajaron y pasaron la prueba. Libéralas con 343.','stk',['MIGO > 343 > M-1003 > almacén 0002 > 40.'],()=>dc('343','M-1003',40)],
+ ['qm065',3,'QGC1','Gráfico de control','Revisa en QGC1 el diámetro del ojo (DIAM-OJO) de M-1003.','spc',['Necesita al menos 2 lotes con resultados.'],()=>ev('QGC1:'+key('M-1003','DIAM-OJO'))],
+ ['qm066',3,'MIGO','Lote del martillo uña','Produce 80 M-1001 y da entrada: debe crearse un lote 04.','lot',['Necesita la misión 15.'],()=>lt('M-1001',80,{org:'04'})],
+ ['qm067',3,'QA11','Libera el martillo uña','Registra resultados y acepta el lote de 80 M-1001.','ud',['QE51N y QA11.'],()=>lt('M-1001',80,{org:'04',ud:'A'})],
+ ['qm068',3,'QGC1','Tendencia del martillo uña','Revisa en QGC1 el DIAM-OJO de M-1001.','spc',['QGC1 > M-1001 > DIAM-OJO.'],()=>ev('QGC1:'+key('M-1001','DIAM-OJO'))],
+ ['qm069',3,'QP01','Plan en Planta Norte','Crea el plan de M-1002 en el centro 2000 con ASPECTO (5) y EMPAQUE (5).','plan',['QP01 > M-1002 > 2000.'],()=>planHas('M-1002','2000',['ASPECTO','EMPAQUE'])],
+ ['qm070',3,'QA11','Calidad en Planta Norte','Produce 50 M-1002 en el centro 2000, registra resultados y acepta el lote.','ud',['Necesita la misión 17.'],()=>lt('M-1002',50,{p:'2000',ud:'A'})],
+ ['qm071',3,'QP01','Plan de la cabeza','Crea el plan de H-2001 con DUREZA (5) y DIAM-OJO (5).','plan',['QP01 > H-2001.'],()=>planHas('H-2001','1000',['DUREZA','DIAM-OJO'])],
+ ['qm072',3,'QA11','Auditoría de cabezas','Crea un lote manual de 100 H-2001, registra resultados y toma la decisión.','l89',['QA01, QE51N y QA11.'],()=>lt('H-2001',100,{org:'89',ud:true})],
+ ['qm073',3,'QM01','Reclamación de cliente','Un cliente devolvió 15 M-1001 con golpes. Crea una notificación Q1 con defecto D03.','qn',['QM01 > Q1.'],()=>qnx({t:'Q1',m:'M-1001',q:15,def:'D03'})],
+ ['qm074',3,'QM02','Cierra la reclamación del cliente','Registra la causa C04 Mano de obra, la acción y cierra la reclamación de los 15 M-1001.','close',['QM02 > Cerrar notificación.'],()=>S.sim.qnots.some(n=>n.type==='Q1'&&n.mat==='M-1001'&&n.qty===15&&n.cause==='C04'&&n.status==='NOCO')],
+ ['qm075',3,'QM11','Notificaciones abiertas','Filtra en QM11 las notificaciones abiertas o en proceso.','qn',['QM11 > Abiertas.'],()=>ev('QM11:O')],
+ ['qm076',3,'QS23','Sube el mínimo de torque','Cambia TORQUE para que el mínimo sea 42 N·m.','mic',['QS23 > TORQUE > límite inferior 42.'],()=>(S.sim.mics.TORQUE||{}).lo===42],
+ ['qm077',3,'QP02','Muestra más grande','Cambia la muestra de DIAM-OJO en el plan de M-1003 a 8.','plan',['QP02 > M-1003 > muestra 8.'],()=>{const p=S.sim.plans['M-1003|1000'];return!!p&&p.chars.some(c=>c.mic==='DIAM-OJO'&&c.n===8);}],
+ ['qm078',3,'QE51N','Inspección con la muestra nueva','Produce 30 M-1003, registra 8 valores de DIAM-OJO y acepta el lote.','res',['El lote toma la muestra nueva.'],()=>lt('M-1003',30,{n:['DIAM-OJO',8],ud:true})],
+ ['qm079',3,'QGC1','Tres puntos en el gráfico','Revisa QGC1 de DIAM-OJO de M-1003 cuando tenga al menos 3 lotes con resultados.','spc',['Cada lote de M-1003 aporta un punto.'],()=>(S.prog.ev['QGC1n:'+key('M-1003','DIAM-OJO')]||0)>=3],
+ ['qm080',3,'QA32','Lotes de producción','Filtra en QA32 los lotes de origen 04.','lot',['QA32 > origen 04.'],()=>ev('QA32:04')],
+ ['qm081',4,'QA11','Proveedor nuevo con calidad','Con un proveedor que hayas creado: compra 30 kg de R-3006, recíbelos, registra resultados y acepta el lote.','ud',['MK01 si no tienes, ME21N, MIGO, QE51N, QA11.'],()=>lt('R-3006',30,{uv:true,ud:'A'})],
+ ['qm082',4,'QM01','Rechazo total','Compra 150 kg de R-3001, recházalos con devolución completa y crea una Q2 con referencia al lote.','qn',['QE51N con un valor fuera, QA11 R con 150 devolución, QM01 Q2.'],()=>lt('R-3001',150,{ud:'R',ret:150})&&qnx({t:'Q2',lot:['R-3001',150]})],
+ ['qm083',4,'QM02','Cierra la reclamación del acero','Cierra la Q2 de los 150 kg de R-3001.','close',['QM02 > Cerrar.'],()=>qnx({t:'Q2',lot:['R-3001',150],st:'NOCO'})],
+ ['qm084',4,'QA11','Decisión en tres destinos','Compra 500 mangos H-2002 y decide: 450 a libre, 30 a bloqueado y 20 a desguace.','split',['QA11 > AD > tres cantidades.'],()=>lt('H-2002',500,{free:450,block:30,scrap:20})],
+ ['qm085',4,'MIGO','Recupera lo bloqueado','Libera con 343 los 30 mangos H-2002 bloqueados.','stk',['MIGO > 343 > H-2002 > 30.'],()=>dc('343','H-2002',30)],
+ ['qm086',4,'QA11','Auditoría de empaque','Crea el plan de R-3004 con EMPAQUE (muestra 10) y haz un lote manual de 200 cajas hasta su decisión.','l89',['QP01, QA01, QE51N, QA11.'],()=>planHas('R-3004','1000',['EMPAQUE'])&&lt('R-3004',200,{org:'89',ud:true})],
+ ['qm087',4,'QA11','Desguace en producción','Produce 50 M-1003 y decide 45 a libre y 5 a desguace.','split',['Lote 04 y QA11.'],()=>lt('M-1003',50,{free:45,scrap:5})],
+ ['qm088',4,'QM02','Documenta el desguace','Crea y cierra una Q3 por las 5 M-1003 desguazadas.','close',['QM01 Q3 y QM02 Cerrar.'],()=>qnx({t:'Q3',m:'M-1003',q:5,st:'NOCO'})],
+ ['qm089',4,'MMBE','Stock esperando decisión','Compra y recibe 80 kg de R-3007 y, sin decidir el lote, revisa en MMBE el stock en calidad.','lot',['MIGO 101 y MMBE > R-3007.'],()=>lt('R-3007',80,{org:'01'})&&ev('MMBEQ:R-3007')],
+ ['qm090',4,'QA11','Decide la pintura','Registra resultados y decide el lote de 80 kg de R-3007.','ud',['QE51N y QA11.'],()=>lt('R-3007',80,{ud:true})],
+ ['qm091',4,'QP02','Óxido en el acero','Agrega OXIDO (muestra 5) al plan de R-3001.','plan',['QP02 > R-3001.'],()=>planHas('R-3001','1000',['OXIDO'])],
+ ['qm092',4,'QA11','Acero oxidado','Compra 260 kg de R-3001, registra OXIDO con unidades no conformes y bloquea los 260 kg.','ud',['QA11 > R > 260 a bloqueado.'],()=>lt('R-3001',260,{rR:'OXIDO',ud:'R',block:260})],
+ ['qm093',4,'QM02','Reclamación por óxido','Crea y cierra la reclamación Q2 por el lote de 260 kg de R-3001.','close',['QM01 Q2 con el lote y QM02 Cerrar.'],()=>qnx({t:'Q2',lot:['R-3001',260],st:'NOCO'})],
+ ['qm094',4,'MIGO','Baja del acero oxidado','Da de baja los 260 kg bloqueados de R-3001 con 555.','stk',['MIGO > 555 > R-3001 > 260.'],()=>dc('555','R-3001',260)],
+ ['qm095',4,'FB03','Documento contable del desguace','Abre en FB03 un documento contable de desguace.','fi',['Desde las implicaciones o MB03, toca el documento contable.'],()=>evAny('FB03:')],
+ ['qm096',4,'QGC1','Gráfico del torque','Revisa en QGC1 el TORQUE de M-1003.','spc',['QGC1 > M-1003 > TORQUE.'],()=>ev('QGC1:'+key('M-1003','TORQUE'))],
+ ['qm097',4,'QA11','Decisión repartida en Planta Norte','Produce 80 M-1002 en el centro 2000 y decide 75 a libre y 5 a desguace.','split',['Lote 04 del centro 2000.'],()=>lt('M-1002',80,{p:'2000',free:75,scrap:5})],
+ ['qm098',4,'QM02','Cierra el problema de Planta Norte','Crea y cierra una Q3 por las 5 M-1002 del centro 2000.','close',['QM01 Q3 con centro 2000.'],()=>qnx({t:'Q3',m:'M-1002',q:5,p:'2000',st:'NOCO'})],
+ ['qm099',4,'QA32','Sin lotes pendientes','Deja todos los lotes con decisión de empleo (al menos 10 lotes).','lot',['QA32 > Sin decisión de empleo.'],()=>S.sim.lots.length>=10&&S.sim.lots.every(l=>l.ud)],
+ ['qm100',4,'QM11','Todo cerrado','Cierra todas las notificaciones de calidad (al menos 5).','close',['QM11 > Abiertas.'],()=>S.sim.qnots.length>=5&&S.sim.qnots.every(n=>n.status==='NOCO')]
+]);
+
+/* ---------- Pantalla de misiones por módulo ---------- */
+let MISMOD='pp';
+const MODN={pp:['PP','Producción'],mm:['MM','Materiales y compras'],qm:['QM','Calidad']};
+const LVLN=['','Nivel 1: básico','Nivel 2: intermedio','Nivel 3: avanzado','Nivel 4: experto'];
+function misIntro(M){return M.intro?INTRO_X[M.intro]:INTRO_SAP[M.id];}
+function misRow(M,n,full){
+  const done=!!S.prog.done[M.id];const I=misIntro(M);
+  const more=full?[introEl(I),h('details',{class:'hint'},h('summary',null,'Ver pistas'),h('ol',null,M.hints.map(x=>h('li',null,x))))]
+    :[h('details',{class:'hint'},h('summary',null,'Explicación y pistas'),introEl(I),h('ol',null,M.hints.map(x=>h('li',null,x))))];
+  return h('article',{class:'mis'+(done?' done':'')+(full?' next':'')},h('div',{class:'mis-num','aria-hidden':'true'},done?'✓':String(n)),
+    h('div',null,full?h('p',{class:'xp'},`Siguiente misión · ${MODN[M.mod][0]} ${n} · ${LVLN[M.lvl]}`):null,h('h3',null,M.title),h('p',null,M.goal),...more,
+      h('div',{class:'mis-foot'},h('span',{class:'xp'},done?'Completada':`${M.xp} XP`),btn(`Abrir ${M.tc}`,()=>openTx(M.tc),done?null:'pri'))));
+}
+renderMissions=function(){
+  const done=M=>!!S.prog.done[M.id];const tot=MISSIONS.filter(done).length;
+  $('#mis-meter').style.width=(tot/MISSIONS.length*100)+'%';
+  const list=MISSIONS.filter(M=>M.mod===MISMOD);const idx=new Map(list.map((M,i)=>[M.id,i+1]));const next=list.find(M=>!done(M));
+  const chips=h('div',{class:'mis-mods',role:'tablist'},Object.entries(MODN).map(([k,[a,b]])=>{const l=MISSIONS.filter(M=>M.mod===k);
+    return h('button',{type:'button',role:'tab','aria-selected':String(MISMOD===k),onclick:()=>{MISMOD=k;renderMissions();}},h('b',null,a),h('span',null,b),h('small',null,`${l.filter(done).length}/${l.length}`));}));
+  const levels=[1,2,3,4].map(lv=>{const ms=list.filter(M=>M.lvl===lv);if(!ms.length)return null;const d=ms.filter(done).length;
+    return h('details',{class:'lvl',open:next&&next.lvl===lv?true:null},h('summary',null,h('span',null,LVLN[lv]),h('small',null,`${d} de ${ms.length}`)),h('div',{class:'mis-list'},ms.map(M=>misRow(M,idx.get(M.id),false))));});
+  $('#mis-list').replaceChildren(chips,h('p',{class:'xp'},`${tot} de ${MISSIONS.length} misiones completadas en los tres módulos`),
+    next?misRow(next,idx.get(next.id),true):h('p',{class:'lq-ok'},`Completaste todas las misiones de ${MODN[MISMOD][1]}.`),...levels);
+};
+
 /* ---------- Teoría ---------- */
 const THEORY=[
   {t:'Maestro de materiales y sus vistas',p:['El maestro de material tiene niveles. Los datos básicos (descripción, unidad base, grupo de artículos) son de nivel mandante y valen para toda la empresa. Las vistas MRP, Programación del trabajo, Contabilidad y Costes son de nivel centro. La vista Almacén baja hasta el almacén.','Por eso "ampliar" un material significa crear sus vistas en un centro o almacén donde todavía no existen. Se hace con MM01, no con MM02: MM02 solo modifica vistas que ya existen. MM03 visualiza y MM50 lista materiales con vistas pendientes de ampliar.','Los tipos de material más usados en producción son FERT (producto terminado), HALB (semiterminado) y ROH (materia prima). El tipo controla qué vistas se permiten y la numeración.'],codes:'MM01, MM02, MM03, MM50, MM60',tx:'MM03',ej:{t:'Ejemplo: la pinza M-1002 se va a fabricar en la Planta Norte',p:['La pinza ya existe en el centro 1000 con sus cinco vistas. En el centro 2000 no existe nada todavía.','Si abres MM02 con centro 2000, el sistema responde que la vista no existe: MM02 no puede crear lo que no hay. Lo correcto es MM01 con el mismo número M-1002, marcar las vistas y poner centro 2000. La descripción y la unidad base no se vuelven a capturar porque son de nivel mandante.','En el mismo producto conviven los tres tipos: el martillo M-1001 es FERT, la cabeza forjada H-2001 es HALB y la barra de acero R-3001 es ROH.']}},
@@ -1788,7 +2810,7 @@ function show(t){
 /* =================== Módulos =================== */
 let MOD=null;
 const MODS={
-  sap:{n:'SAP PP',nav:[['mis','Misiones'],['sim','Simulador'],['teo','Teoría'],['exam','Examen'],['prog','Progreso']],first:'mis'},
+  sap:{n:'SAP',nav:[['mis','Misiones'],['sim','Simulador'],['teo','Teoría'],['exam','Examen'],['prog','Progreso']],first:'mis'},
   pbi:{n:'Power BI',nav:[['pbi-ret','Retos'],['pbi-lab','Power BI'],['pbi-teo','Teoría'],['pbi-exam','Examen'],['prog','Progreso']],first:'pbi-ret'},
   lss:{n:'Lean Six Sigma',nav:[['lss-ret','Retos'],['lss-lab','Herramientas'],['lss-teo','Teoría'],['lss-exam','Examen'],['prog','Progreso']],first:'lss-ret'}};
 const LEVELS2=[[0,'Aprendiz'],[200,'Practicante'],[450,'Analista'],[700,'Experto']];
@@ -3498,7 +4520,7 @@ function renderHub(){
     if(m==='pbi')return[PB_RETOS.filter(r=>S.mp.pbi.done[r.id]).length,PB_RETOS.length,S.mp.pbi.xp,'retos'];
     if(m==='lss')return[LSS_TOOLS.filter(t=>S.mp.lss.done[t.id]).length,LSS_TOOLS.length,S.mp.lss.xp,'retos'];
     const C=COURSES[m];return[C.lec.filter(L=>lessonDone(m,L)).length,C.lec.length,S.mp[m].xp,'lecciones'];};
-  const INFO={sap:['SAP','hub-sap','Simulador de SAP GUI para producción: maestros de materiales, órdenes, notificaciones, movimientos de mercancías y costos.'],
+  const INFO={sap:['SAP','hub-sap','Simulador de SAP GUI con 300 misiones de PP, MM y QM: producción, compras, inventarios, MRP, calidad y costos.'],
     pbi:['BI','hub-pbi','Power Query, modelo estrella, DAX e informes con datos de órdenes de producción.'],
     lss:['6σ','hub-lss','Herramientas DMAIC con datos de una línea de martillos: Pareto, Ishikawa, capacidad, cartas de control, OEE, takt y pruebas de hipótesis.']};
   for(const[m,C] of Object.entries(COURSES))INFO[m]=[C.badge,C.cls,C.desc];
@@ -3527,6 +4549,29 @@ function renderProg(){
   $('#prog').replaceChildren(...out);
 }
 courseInit();
+
+/* ---------- SAP ampliado: teoría, examen y niveles ---------- */
+LEVELS.splice(0,LEVELS.length,[0,'Aprendiz'],[1500,'Usuario clave'],[4500,'Analista'],[9000,'Consultor'],[14000,'Experto SAP']);
+THEORY.push(
+ {t:'Compras: del pedido al pago (P2P)',p:['El ciclo de compras empieza con una necesidad (solicitud de pedido manual o del MRP), sigue con el pedido al proveedor, la entrada de mercancías y la verificación de la factura. Los datos maestros que lo sostienen son el proveedor, la vista Compras del material y el registro info.','La entrada abona la cuenta puente EM/RF y la factura la salda. Por eso el saldo de esa cuenta es lo recibido pendiente de facturar. Si la factura trae otro precio, la diferencia va al inventario (precio V) o a Diferencias de precio (precio S); arriba de la tolerancia se bloquea el pago.'],codes:'MK01, MK03, ME11, ME12, ME13, ME51N, ME5A, ME21N, ME22N, ME23N, ME2M, ME2L, MIGO, MIRO',tx:'ME21N',
+  ej:{t:'Ejemplo: 500 kg de acero',p:[],calc:'ME21N: 500 kg × 27.50 = 13,750\nMIGO 101:  Debe 115100 13,750 / Haber 211000 13,750\nMIRO:      Debe 211000 13,750\n           Debe 118000  2,200 (IVA)\n           Haber 201000 15,950\nSaldo de 211000 = 0 → recibido y facturado'}},
+ {t:'Tipos de stock e inventario físico',p:['El stock de un material puede estar en libre utilización, en control de calidad o bloqueado. Solo el libre se consume; el de calidad espera la decisión de empleo; el bloqueado no se usa hasta liberarlo (343) o darlo de baja (555).','El inventario físico congela el stock en libros (MI01), registra el conteo (MI04) y contabiliza diferencias (MI07) con 701 o 702. MI20 muestra las diferencias antes de contabilizar.'],codes:'MMBE, MIGO 344, 343, 555, MI01, MI04, MI20, MI07',tx:'MI01',
+  ej:{t:'Ejemplo: conteo cíclico',p:[],calc:'Libros: 2,990 cajas\nContado: 2,980\nDiferencia: −10 × 3.40 = −34.00\nMI07 → 702: Debe 530100 34 / Haber 115100 34'}},
+ {t:'MRP: necesidades primarias, órdenes previsionales y solicitudes',p:['La necesidad primaria (MD61) es la demanda planeada del producto terminado. El MRP (MD01N) la explota nivel por nivel: para cada material compara necesidades contra stock y entradas, y crea órdenes previsionales (fabricación) o solicitudes de pedido (compra).','Las órdenes previsionales se convierten en órdenes de fabricación con CO40 y las solicitudes en pedidos con ME21N. Las propuestas sin convertir se recalculan en cada corrida.'],codes:'MD61, MD01N, MD04, CO40, ME5A, ME21N',tx:'MD61',
+  ej:{t:'Ejemplo: 200 martillos de bola',p:[],calc:'MD61: 200 M-1003\nMD01N:\n  M-1003: necesidad 200 − stock 40 = 160 → PlOrd 160\n  H-2005: Nec.sec. 160 − stock disponible → SolPed si falta\nCO40: PlOrd → orden de fabricación'}},
+ {t:'Gestión de calidad (QM)',p:['Los datos maestros de QM son las características de inspección (QS21) y los planes de inspección (QP01). La vista Gestión de calidad del material decide si cada entrada crea un lote: 01 en compras, 04 en producción.','El lote se inspecciona con QE51N y se cierra con la decisión de empleo (QA11), que también mueve el stock: 321 a libre, 350 a bloqueado, 553 a desguace o 122 devolución. Los problemas se documentan con notificaciones (QM01): Q1 cliente, Q2 proveedor y Q3 interno.'],codes:'QS21, QS23, QS24, QP01, QP02, QP03, QA01, QA32, QE51N, QA11, QM01, QM02, QM11, QGC1',tx:'QA32',
+  ej:{t:'Ejemplo: mangos fuera de medida',p:[],calc:'MIGO 101: 400 H-2002 → stock en calidad + lote 01\nQE51N: LONG-MANGO 333.5 mm → R\nQA11: R, 400 devolución (122)\nQM01: Q2 a 100002, D01\nQM02: causa C03, acción correctiva, cerrar'}});
+QB.push(
+ {q:'¿Qué cuenta abona la entrada de mercancías por pedido?',o:['211000 Cuenta puente EM/RF','201000 Proveedores','510100 Consumo','540200 Desviaciones'],e:'La factura la salda después.'},
+ {q:'Factura con precio 8 % arriba del pedido y tolerancia de 5 %:',o:['Se contabiliza bloqueada para pago','Se rechaza el pedido','Se cambia el precio estándar','No se puede registrar'],e:'Compras revisa y libera el pago.'},
+ {q:'¿Qué transacción convierte una orden previsional en orden de fabricación?',o:['CO40','ME21N','MD61','CO01'],e:'Las solicitudes de pedido se convierten con ME21N.'},
+ {q:'El registro info guarda:',o:['El precio y plazo de un proveedor para un material','El stock por almacén','La lista de materiales','El plan de inspección'],e:'ME11, ME12, ME13.'},
+ {q:'Inventario físico: ¿qué movimiento registra un faltante?',o:['702','701','343','561'],e:'701 es sobrante.'},
+ {q:'Un material con inspección 01 al recibirse por pedido:',o:['Entra a stock en control de calidad y crea un lote','Entra directo a libre','Se bloquea el pedido','Requiere MIRO antes'],e:'Espera la decisión de empleo.'},
+ {q:'En QA11, mandar stock de calidad a libre utilización usa el movimiento:',o:['321','350','553','122'],e:'350 bloqueado, 553 desguace, 122 devolución.'},
+ {q:'Una reclamación a proveedor es una notificación:',o:['Q2','Q1','Q3','F2'],e:'Q1 cliente, Q3 interna.'},
+ {q:'MR21 sube el precio estándar con stock existente. La diferencia se registra contra:',o:['540300 Revaluación de inventario','211000 Cuenta puente','580100','201000 Proveedores'],e:'Se revalúa todo el stock.'},
+ {q:'¿Qué stock cuenta el MRP como disponible en este laboratorio?',o:['Libre y en control de calidad','Solo bloqueado','Solo el de calidad','Ninguno'],e:'El bloqueado no se cuenta.'});
 
 load();ensureMods();refreshDL();renderTheory();renderTheoryList('#pbi-theory',PB_THEORY,v=>{PBV=v;show('pbi-lab');});renderTheoryList('#lss-theory',LSS_THEORY,id=>{LSTOOL=id;show('lss-lab');});updateHeader();checkMissions();save();
 $('#b-enter').append(ic('enter'));$('#b-save').append(ic('save'));$('#b-back').append(ic('back'));$('#b-exit').append(ic('exit'));$('#b-cancel').append(ic('cancel'));$('#b-help').append(ic('help'));
