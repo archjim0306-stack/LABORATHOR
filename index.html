@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#16324F">
-<meta name="description" content="Laboratorio de aprendizaje: SAP PP, Ingeniería Industrial, SolidWorks, Power BI, Lean Six Sigma, Inglés, Programación e Indicadores técnicos.">
+<meta name="description" content="Laboratorio de aprendizaje: SAP PP, Ingeniería Industrial, SolidWorks, Power BI, Lean Six Sigma, Inglés, Programación, Informática e Indicadores y KPIs.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -333,7 +333,13 @@ main.pbmode{padding-left:8px;padding-right:8px}
 .lq-in{display:flex;align-items:center;gap:6px}.lq-in small{color:var(--muted)}
 .qmark{width:22px;font-weight:700;text-align:center}.qmark.ok{color:var(--ok)}.qmark.bad{color:var(--err)}
 .lq-fb{margin-top:10px}.lq-ok{color:var(--ok);font-weight:700}.lq-bad{color:var(--err);font-weight:600}
-.hub-ii{background:#7A3E9D;color:#fff}.hub-sw{background:#C8102E;color:#fff}.hub-ind{background:#0F766E;color:#fff}.hub-en{background:#1D4ED8;color:#fff}.hub-code{background:#1F2937;color:#FBBF24;font-family:var(--mono)!important;font-size:17px!important}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:10px}.kpi-card{border:1px solid var(--line,#ddd);border-left:6px solid #9CA3AF;border-radius:10px;padding:10px;background:#fff;min-width:0}.kpi-card p{margin:2px 0}.kpi-n{font-weight:600}.kpi-v{font-size:22px;font-weight:700}.kpi-m,.kpi-f{font-size:13px;color:#555}.kpi-verde{border-left-color:#16A34A}.kpi-amarillo{border-left-color:#D97706}.kpi-rojo{border-left-color:#DC2626}.kpi-edit input{width:90px}.kpi-in{margin:8px 0}
+.hub-ii{background:#7A3E9D;color:#fff}.hub-sw{background:#C8102E;color:#fff}.hub-it{background:#0EA5E9;color:#fff}.hub-ind{background:#0F766E;color:#fff}
+.hub-sql{background:#0B6B3A;color:#fff}.hub-xl{background:#107C41;color:#fff}
+.sqlcode{width:100%;font-family:var(--mono);font-size:14px}.sqlout{margin:10px 0;overflow-x:auto}
+.xlwrap{overflow-x:auto;margin:8px 0}.xlgrid{border-collapse:collapse;font-size:13px;min-width:520px}.xlgrid th,.xlgrid td{border:1px solid var(--line,#ccc);padding:4px 8px;text-align:left}.xlgrid thead th,.xlgrid tbody th{background:#f1f5f9;color:#334155;text-align:center;font-weight:600}.xlgrid td.xr{text-align:right;font-variant-numeric:tabular-nums}
+.exhint{display:block;color:#64748b;margin-top:4px}
+.hub-en{background:#1D4ED8;color:#fff}.hub-code{background:#1F2937;color:#FBBF24;font-family:var(--mono)!important;font-size:17px!important}
 .hub-group{font-size:13px;font-weight:700;color:var(--muted);text-transform:none;margin:10px 0 -4px}
 .intro{background:var(--soft);border-left:4px solid var(--brand);border-radius:0 8px 8px 0;padding:10px 12px;margin:8px 0 10px}
 .intro p{margin:0 0 8px;font-size:15px;line-height:1.5}.intro .intro-h{font-weight:700;font-size:13px;color:var(--brand);margin-bottom:4px}
@@ -3677,6 +3683,10 @@ function exBlock(m,L,E,j,A){
     input=h('div',null,line,bank);getVal=()=>seq;}
   else if(E.t==='code'){const ta=h('textarea',{class:'code',rows:String(Math.max(6,(st.v||E.start||'').split('\n').length+1)),spellcheck:'false',autocapitalize:'off',autocorrect:'off','aria-label':'Editor de código',oninput:e=>{st.v=e.target.value;}});ta.value=st.v!=null?st.v:(E.start||'');
     ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart;ta.setRangeText('  ',s,ta.selectionEnd,'end');st.v=ta.value;}});input=ta;getVal=()=>ta.value;}
+  else if(E.t==='sql'){const ta=h('textarea',{class:'code sqlcode',rows:String(Math.max(3,(st.v||E.start||'').split('\n').length+1)),spellcheck:'false',autocapitalize:'off',autocorrect:'off','aria-label':'Consulta SQL',oninput:e=>{st.v=e.target.value;}});ta.value=st.v!=null?st.v:(E.start||'');
+    ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const p=ta.selectionStart;ta.setRangeText('  ',p,ta.selectionEnd,'end');st.v=ta.value;}});input=h('div',null,ta,h('small',{class:'exhint'},'Base: '+(E.db==='rh'?'rh (empleados)':'pos (productos, ventas, clientes, categorias)')));getVal=()=>ta.value;}
+  else if(E.t==='xl'){const inp=h('input',{type:'text',class:'code',spellcheck:'false',autocapitalize:'off',autocorrect:'off','aria-label':'Fórmula',value:st.v==null?(E.start||'='):st.v,oninput:e=>{st.v=e.target.value;}});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();check();}});input=h('div',null,inp,h('small',{class:'exhint'},'Escribe la fórmula completa, empezando con ='));getVal=()=>inp.value;}
   function check(){
     const v=getVal();
     if(E.t==='opt'){if(v==null)return fb.replaceChildren(h('p',{class:'lq-bad'},'Elige una opción.'));finish(v===0);}
@@ -3689,12 +3699,23 @@ function exBlock(m,L,E,j,A){
         const rows=E.tests.map((t,z)=>{const r=res.r.res[z];const got=r.e!=null?'Error: '+r.e:JSON.stringify(r.v);const ok=r.e==null&&JSON.stringify(r.v)===JSON.stringify(t[1]);return[ok,`${ok?'✓':'✕'} ${t[0]}  esperado ${JSON.stringify(t[1])}  obtenido ${got}`];});
         const logs=res.r.logs&&res.r.logs.length?'\nConsola:\n'+res.r.logs.join('\n'):'';
         finish(rows.every(x=>x[0]),h('div',{class:'calc'},rows.map(x=>x[1]).join('\n')+logs));});}
+    else if(E.t==='sql'){const DB=SQL_DBS[E.db||'pos'];let got,exp;
+      try{exp=sqlRun(DB,E.expect);}catch(e){exp=[];}
+      try{got=sqlRun(DB,v);}catch(e){finish(false,h('div',{class:'calc'},'Error: '+e));return;}
+      const ordered=/order\s+by/i.test(E.expect);const norm=a=>{const rows=a.map(r=>JSON.stringify(Object.keys(r).sort().map(k=>[k,r[k]])));return ordered?rows:rows.slice().sort();};
+      const ok=JSON.stringify(norm(got))===JSON.stringify(norm(exp));
+      finish(ok,h('div',{class:'calc'},sqlPreview(got)+(ok?'':'\n\nSe esperaban '+exp.length+' fila(s)'+(exp.length&&got.length?' con otros valores':'')+'.')));return;}
+    else if(E.t==='xl'){const G=XL_SHEETS[E.sheet||'ventas'];let got;try{got=xlEval(G,v);}catch(er){finish(false,h('div',{class:'calc'},'Error en la fórmula: '+er));return;}
+      let want;try{want=E.expect!=null?xlEval(G,E.expect):E.ans;}catch(er){want=E.ans;}
+      const ok=(typeof want==='number'&&typeof got==='number')?Math.abs(got-want)<0.02:String(got).toLowerCase()===String(want).toLowerCase();
+      finish(ok,h('div',{class:'calc'},'Tu resultado: '+(typeof got==='number'?Math.round(got*100)/100:got)));return;}
   }
-  box.append(h('p',{class:'exn'},`Ejercicio ${j+1}`),h('p',{class:'exq'},E.q),E.say?sayBtn(E.say):null,E.how?h('div',{class:'exhow'},h('b',null,'Cómo resolverlo: '),E.how):null,input,h('div',{class:'row'},btn(E.t==='code'?'Ejecutar pruebas':'Comprobar',check,'pri')),fb);
+  box.append(h('p',{class:'exn'},`Ejercicio ${j+1}`),h('p',{class:'exq'},E.q),E.say?sayBtn(E.say):null,E.how?h('div',{class:'exhow'},h('b',null,'Cómo resolverlo: '),E.how):null,input,h('div',{class:'row'},btn(E.t==='code'?'Ejecutar pruebas':E.t==='sql'?'Ejecutar consulta':E.t==='xl'?'Calcular':'Comprobar',check,'pri')),fb);
   if(st.ok)fb.append(h('p',{class:'lq-ok'},'Resuelto.'),E.why?h('p',null,E.why):null);
   return box;
 }
-function ansText(E){if(E.t==='opt')return E.opts[0];if(E.t==='num')return`${E.ans}${E.unit?' '+E.unit:''}`;if(E.t==='txt')return[].concat(E.ans)[0];if(E.t==='ord')return E.tokens.join(' ');if(E.t==='code')return E.sol||'Revisa las pruebas: cada línea dice qué se esperaba.';return'';}
+function ansText(E){if(E.t==='opt')return E.opts[0];if(E.t==='num')return`${E.ans}${E.unit?' '+E.unit:''}`;if(E.t==='txt')return[].concat(E.ans)[0];if(E.t==='ord')return E.tokens.join(' ');if(E.t==='code')return E.sol||'Revisa las pruebas: cada línea dice qué se esperaba.';if(E.t==='sql')return E.sol||E.expect;if(E.t==='xl')return E.sol||E.expect||String(E.ans);return'';}
+function sqlPreview(rows){if(!rows.length)return '(0 filas)';const cols=Object.keys(rows[0]);const head=cols.join(' | ');const body=rows.slice(0,8).map(r=>cols.map(c=>r[c]==null?'NULL':r[c]).join(' | ')).join('\n');return head+'\n'+'-'.repeat(head.length)+'\n'+body+(rows.length>8?'\n... ('+rows.length+' filas)':'\n('+rows.length+' fila'+(rows.length===1?'':'s')+')');}
 function runJS(code,calls,cb){
   const src=`"use strict";const __logs=[];const console={log:(...a)=>{__logs.push(a.map(x=>typeof x==='object'&&x!==null?JSON.stringify(x):String(x)).join(' '));},error:(...a)=>{__logs.push('Error: '+a.join(' '));}};\n${code}\n;return {logs:__logs,res:[${calls.map(c=>`(()=>{try{return {v:(${c})}}catch(e){return {e:String(e&&e.message||e)}}})()`).join(',')}]};`;
   const direct=()=>{try{const r=new Function(src)();cb({ok:true,r:JSON.parse(JSON.stringify(r))});}catch(e){cb({ok:false,err:String(e&&e.message||e)});}};
@@ -4528,7 +4549,7 @@ function renderHub(){
     return h('article',{class:'hub-card'},h('div',{class:'hub-ic '+cls,'aria-hidden':'true'},badge),h('div',{class:'hub-main'},h('h3',null,MODS[m].n),h('p',null,desc),
       h('div',{class:'meter'},h('i',{style:`width:${total?Math.round(done/total*100):0}%`})),
       h('div',{class:'hub-foot'},h('span',{class:'xp'},`${done} de ${total} ${lbl}, ${xp} XP`),btn('Entrar',()=>setMod(m),'pri'))));};
-  $('#hub').replaceChildren(h('p',{class:'hub-group'},'Tu carrera y tu trabajo'),...['sap','ii','sw','pbi','lss'].map(card),h('p',{class:'hub-group'},'Habilidades en 3 a 6 meses'),...['en','code','ind'].map(card));
+  $('#hub').replaceChildren(h('p',{class:'hub-group'},'Tu carrera y tu trabajo'),...['sap','ii','sw','pbi','lss'].map(card),h('p',{class:'hub-group'},'Habilidades en 3 a 6 meses'),...['en','code','sql','xl','it','ind'].map(card));
 }
 function renderProg(){
   const box=(v,l)=>h('div',{class:'stat-box'},h('b',null,v),h('span',null,l));
@@ -4548,6 +4569,1031 @@ function renderProg(){
     h('div',{class:'row'},armBtn('Reiniciar todo',()=>{S={sim:seed(),prog:newProg()};ensureMods();PBCACHE=null;save();refreshDL();easyAccess();updateHeader();renderProg();toast('Todo reiniciado');})));
   $('#prog').replaceChildren(...out);
 }
+/* =================== KPIs (dentro de Indicadores) =================== */
+const KPI_IN=[['Producción',[['tPlan','Tiempo planeado (min)',450],['tOp','Tiempo operando (min)',405],['cic','Ciclo ideal (min por pieza)',0.5],['prod','Piezas producidas',680],['buenas1','Piezas buenas a la primera',650],['plan','Producción planeada (piezas)',700],['hh','Horas hombre trabajadas',64]]],
+ ['Calidad',[['env','Piezas enviadas al cliente',12000],['devCli','Piezas devueltas por el cliente',18],['scrap','Piezas de desperdicio',30]]],
+ ['Inventario',[['cv','Costo de ventas anual (MXN)',24000000],['invProm','Inventario promedio (MXN)',3000000],['ubiOk','Ubicaciones contadas correctas',388],['ubiCont','Ubicaciones contadas',400]]],
+ ['Entregas',[['pedTot','Pedidos entregados',250],['pedOtif','Pedidos a tiempo y completos',226]]],
+ ['Mantenimiento',[['tFunc','Tiempo funcionando en el mes (h)',600],['fallas','Número de fallas',8],['tRep','Tiempo total de reparación (h)',20]]]];
+const KPI_DEF=[
+ {id:'oee',n:'OEE',u:'%',meta:85,hi:true,f:v=>v.tOp/v.tPlan*(v.prod*v.cic/v.tOp)*(v.buenas1/v.prod)*100,fx:'Disponibilidad × Rendimiento × Calidad'},
+ {id:'cump',n:'Cumplimiento del plan',u:'%',meta:95,hi:true,f:v=>v.prod/v.plan*100,fx:'Producidas / planeadas'},
+ {id:'fpy',n:'FPY (rendimiento a la primera)',u:'%',meta:97,hi:true,f:v=>v.buenas1/v.prod*100,fx:'Buenas a la primera / producidas'},
+ {id:'prodv',n:'Productividad',u:'pzas/HH',meta:10,hi:true,f:v=>v.prod/v.hh,fx:'Producidas / horas hombre'},
+ {id:'scr',n:'Desperdicio',u:'%',meta:2,hi:false,f:v=>v.scrap/v.prod*100,fx:'Desperdicio / producidas'},
+ {id:'ppm',n:'PPM de cliente',u:'ppm',meta:1000,hi:false,f:v=>v.devCli/v.env*1e6,fx:'Devueltas / enviadas × 1,000,000'},
+ {id:'rot',n:'Rotación de inventario',u:'veces',meta:10,hi:true,f:v=>v.cv/v.invProm,fx:'Costo de ventas / inventario promedio'},
+ {id:'dias',n:'Días de inventario',u:'días',meta:36,hi:false,f:v=>365/(v.cv/v.invProm),fx:'365 / rotación'},
+ {id:'exac',n:'Exactitud de inventario',u:'%',meta:98,hi:true,f:v=>v.ubiOk/v.ubiCont*100,fx:'Ubicaciones correctas / contadas'},
+ {id:'otif',n:'OTIF',u:'%',meta:95,hi:true,f:v=>v.pedOtif/v.pedTot*100,fx:'A tiempo y completos / entregados'},
+ {id:'mtbf',n:'MTBF',u:'h',meta:100,hi:true,f:v=>v.tFunc/v.fallas,fx:'Tiempo funcionando / fallas'},
+ {id:'mttr',n:'MTTR',u:'h',meta:2,hi:false,f:v=>v.tRep/v.fallas,fx:'Tiempo de reparación / fallas'},
+ {id:'disp',n:'Disponibilidad del equipo',u:'%',meta:98,hi:true,f:v=>(v.tFunc/v.fallas)/((v.tFunc/v.fallas)+(v.tRep/v.fallas))*100,fx:'MTBF / (MTBF + MTTR)'}];
+function kpiLight(k,x,meta){if(!isFinite(x))return'gris';const r=k.hi?x/meta:meta/x;return r>=1?'verde':r>=0.95?'amarillo':'rojo';}
+function kpiBoard(root){
+  const st=cst('ind');st.kpi=st.kpi||{};st.kmeta=st.kmeta||{};const v={};for(const[,fs] of KPI_IN)for(const[k,,d] of fs)v[k]=st.kpi[k]!=null?st.kpi[k]:d;
+  const out=h('div');
+  const draw=()=>{const vals=KPI_DEF.map(k=>{let x;try{x=k.f(v);}catch(e){x=NaN;}const meta=st.kmeta[k.id]!=null?st.kmeta[k.id]:k.meta;return{k,x,meta,l:kpiLight(k,x,meta)};});
+    const cnt=c=>vals.filter(x=>x.l===c).length;
+    out.replaceChildren(h('p',{class:'xp'},`${cnt('verde')} en meta · ${cnt('amarillo')} cerca · ${cnt('rojo')} fuera de meta`),
+      h('div',{class:'kpi-grid'},vals.map(({k,x,meta,l})=>h('article',{class:'kpi-card kpi-'+l},h('p',{class:'kpi-n'},k.n),h('p',{class:'kpi-v'},isFinite(x)?`${x.toLocaleString('es-MX',{maximumFractionDigits:k.u==='ppm'?0:1})} ${k.u}`:'Sin dato'),
+        h('p',{class:'kpi-m'},`Meta ${k.hi?'≥':'≤'} ${fmtN(meta)} ${k.u}`),h('p',{class:'kpi-f'},k.fx),
+        h('label',{class:'kpi-edit'},'Meta ',h('input',{inputmode:'decimal',value:meta,'aria-label':'Meta de '+k.n,onchange:e=>{const n=parseNum(e.target.value);if(isFinite(n)&&n>0){st.kmeta[k.id]=n;save();draw();}}}))))));
+    if(vals.every(x=>isFinite(x.x))){st.ev.kpiboard=true;save();}};
+  root.replaceChildren(h('h2',null,'Tablero de KPIs de planta'),h('p',{class:'lead'},'Captura los datos del mes y el tablero calcula cada KPI con su semáforo: verde en meta, amarillo a menos de 5 % y rojo fuera de meta. Cambia datos y metas para ver cómo se mueven. Usa datos de tu planta si los tienes.'),
+    h('details',{class:'hint',open:true},h('summary',null,'Datos del mes'),KPI_IN.map(([g,fs])=>h('section',{class:'lq-box kpi-in'},h('h3',null,g),fs.map(([k,l])=>h('label',{class:'lq'},h('span',null,l),h('input',{inputmode:'decimal',value:v[k],oninput:e=>{const n=parseNum(e.target.value);if(isFinite(n)&&n>=0){v[k]=n;st.kpi[k]=n;save();draw();}}})))))),
+    btn('Valores de ejemplo',()=>{st.kpi={};st.kmeta={};save();kpiBoard(root);}),out);
+  draw();
+}
+let INDMODE='kpi';
+function indLab2(root){const body=h('div');root.replaceChildren(h('div',{class:'pb-chips'},[['kpi','Tablero de KPIs'],['mkt','Gráfica de mercado']].map(([k,l])=>h('button',{type:'button',class:'pb-chip','aria-pressed':String(INDMODE===k),onclick:()=>{INDMODE=k;indLab2(root);}},l))),body);(INDMODE==='kpi'?kpiBoard:indLab)(body);}
+Object.assign(COURSES.ind,{n:'Indicadores y KPIs',badge:'KPI',labName:'Práctica',lab:indLab2,desc:'KPIs de planta (OEE, OTIF, FPY, PPM, rotación, MTBF, MTTR y más) con tablero de semáforos, y los indicadores técnicos del mercado: EMA, SMA, RSI, MACD y Bollinger.'});
+COURSES.ind.ruta.intro='Ruta en dos partes: primero los KPIs de operación que se usan en planta, almacén y calidad, con un tablero para practicar; después los indicadores técnicos de mercado (medias móviles, RSI, MACD) con gráfica y prueba de estrategias. La parte de mercado es educativa, no asesoría de inversión.';
+COURSES.ind.ruta.fases.unshift({t:'Fase 0: KPIs de operación',items:[['Qué es un KPI','Indicador contra KPI, metas SMART, adelantados y rezagados.','k1'],['KPIs de producción','OEE, cumplimiento, FPY y productividad.','k2'],['KPIs de calidad','Desperdicio, PPM y costo de no calidad.','k3'],['KPIs de inventario','Rotación, días de inventario y exactitud.','k4'],['KPIs de entregas','OTIF, lead time y proveedores.','k5'],['KPIs de mantenimiento','MTBF, MTTR y disponibilidad.','k6'],['KPIs de personas y finanzas','Ausentismo, rotación, costo unitario.','k7'],['Diseña tu tablero','Pocos KPIs, con dueño, meta y acción.','k8']]});
+COURSES.ind.lec.unshift(
+ {id:'k1',sec:'KPIs de operación',t:'Qué es un KPI',obj:'distinguir un indicador de un KPI y escribir una meta bien hecha.',p:['Un indicador es cualquier número que mide algo. Un KPI (indicador clave de desempeño) es uno de los pocos que dicen si estás logrando un objetivo importante. Cada KPI necesita fórmula, meta, frecuencia, fuente de datos y un dueño que actúe.','Las metas se escriben SMART: específicas, medibles, alcanzables, relevantes y con tiempo. Los KPIs rezagados (lagging) miden el resultado, como el OTIF del mes; los adelantados (leading) anticipan el resultado, como el porcentaje de órdenes liberadas a tiempo.'],
+  ej:{t:'Ejemplo: de un deseo a una meta SMART',calc:'Deseo:  "Mejorar las entregas"\nSMART:  "Subir el OTIF de 90 % a 95 % en la línea de\n         martillos antes del 30 de junio"\nRezagado:  OTIF mensual\nAdelantado: % de órdenes liberadas con material completo'},
+  ex:[{t:'opt',q:'¿Cuál es una meta SMART?',how:'Busca número, alcance y fecha.',opts:['Reducir el desperdicio de la línea 2 de 3 % a 2 % antes de diciembre','Mejorar la calidad','Trabajar más rápido','Tener menos problemas con proveedores'],why:'Es específica, medible y tiene fecha.'},
+   {t:'opt',q:'¿Cuál es un KPI adelantado de la entrega a tiempo?',how:'Algo que pasa antes y anticipa el resultado.',opts:['Porcentaje de órdenes liberadas con todo el material','OTIF del mes pasado','Reclamaciones de clientes del año','Ventas del trimestre'],why:'Si las órdenes salen completas y a tiempo, el OTIF tenderá a mejorar.'},
+   {t:'opt',q:'¿Qué le falta a un KPI que nadie revisa ni atiende?',how:'Piensa en quién actúa.',opts:['Un dueño responsable','Más decimales','Otro color','Más gráficas'],why:'Sin dueño, el número no provoca acciones.'}]},
+ {id:'k2',sec:'KPIs de operación',t:'KPIs de producción',obj:'calcular OEE, cumplimiento del plan, FPY y productividad.',p:['El OEE multiplica disponibilidad, rendimiento y calidad (lo practicaste en Lean Six Sigma). El cumplimiento del plan compara lo producido contra lo planeado. El FPY (first pass yield) es el porcentaje de piezas buenas a la primera, sin retrabajo.','La productividad de mano de obra se mide en piezas por hora hombre. Cuando hay varias operaciones en serie, el rendimiento total (RTY) es el producto de los FPY de cada una.'],
+  ej:{calc:'Planeadas 700, producidas 680, buenas a la primera 650, 64 horas hombre\nCumplimiento = 680 / 700 = 97.1 %\nFPY = 650 / 680 = 95.6 %\nProductividad = 680 / 64 = 10.6 piezas por HH\nRTY de 3 operaciones con FPY 98 %, 95 %, 99 % = 0.98 × 0.95 × 0.99 = 92.2 %'},
+  ex:[{t:'num',q:'Se planearon 1,200 piezas y se produjeron 1,140. ¿Cumplimiento del plan?',unit:'%',how:'Producidas / planeadas × 100.',ans:95,tol:0.05,why:'1,140 / 1,200 = 95 %.'},
+   {t:'num',q:'De 500 piezas, 470 salieron bien a la primera. ¿FPY?',unit:'%',how:'Buenas a la primera / total.',ans:94,tol:0.05,why:'Las 30 restantes se retrabajaron o se tiraron.'},
+   {t:'num',q:'Dos operaciones en serie con FPY de 90 % y 95 %. ¿RTY?',unit:'%',how:'Multiplica los FPY.',ans:85.5,tol:0.05,why:'0.90 × 0.95 = 0.855.'}]},
+ {id:'k3',sec:'KPIs de operación',t:'KPIs de calidad',obj:'calcular desperdicio, PPM y costo de no calidad.',p:['El porcentaje de desperdicio es desperdicio entre producción total. Las PPM (partes por millón) de cliente son piezas defectuosas que llegan al cliente entre piezas enviadas por un millón: permiten comparar volúmenes muy distintos.','El costo de no calidad suma fallas internas y externas y se expresa como porcentaje de las ventas.'],
+  ej:{calc:'Enviadas 12,000, devueltas 18\nPPM = 18 / 12,000 × 1,000,000 = 1,500 PPM\nDesperdicio 30 de 680 producidas = 4.4 %'},
+  ex:[{t:'num',q:'Se enviaron 50,000 piezas y el cliente rechazó 25. ¿PPM?',unit:'ppm',how:'25 / 50,000 × 1,000,000.',ans:500,why:'500 piezas defectuosas por cada millón.'},
+   {t:'num',q:'Fallas internas 80,000 y externas 40,000 con ventas de 4,000,000. ¿Costo de no calidad?',unit:'%',how:'(Internas + externas) / ventas.',ans:3,tol:0.01,why:'120,000 / 4,000,000 = 3 %.'}]},
+ {id:'k4',sec:'KPIs de operación',t:'KPIs de inventario',obj:'calcular rotación, días de inventario y exactitud.',p:['La rotación de inventario dice cuántas veces se renueva el inventario al año: costo de ventas entre inventario promedio. Los días de inventario son 365 entre la rotación: cuántos días de operación cubre lo que tienes.','La exactitud de inventario es el porcentaje de ubicaciones contadas cuyo stock físico coincide con el del sistema (por ejemplo, con los conteos de MI01 a MI07 en SAP). En almacenes de clase mundial pasa de 98 %.'],
+  ej:{calc:'Costo de ventas 24,000,000, inventario promedio 3,000,000\nRotación = 8 veces al año\nDías de inventario = 365 / 8 = 45.6 días\nExactitud: 388 correctas de 400 = 97 %'},
+  ex:[{t:'num',q:'Costo de ventas 18,000,000 e inventario promedio 1,500,000. ¿Rotación?',unit:'veces',how:'Costo de ventas / inventario promedio.',ans:12,why:'El inventario se renueva cada mes.'},
+   {t:'num',q:'Con rotación de 12, ¿cuántos días de inventario hay?',unit:'días',how:'365 / rotación.',ans:30.42,tol:0.05,why:'Alrededor de un mes de cobertura.'},
+   {t:'opt',q:'Si la rotación sube y las ventas siguen igual, el inventario:',how:'Piensa en el denominador.',opts:['Bajó','Subió','No cambió','No se puede saber'],why:'Mismo costo de ventas con más rotación significa menos inventario promedio.'}]},
+ {id:'k5',sec:'KPIs de operación',t:'KPIs de entregas y logística',obj:'calcular OTIF y leer el desempeño de proveedores.',p:['OTIF (on time in full) es el porcentaje de pedidos entregados a tiempo y completos. Un pedido completo pero tarde, o a tiempo pero incompleto, no cuenta. Es de los KPIs que más pesa con los clientes.','El lead time mide cuánto tarda el ciclo, del pedido a la entrega. Con proveedores se mide su propio OTIF y sus PPM.'],
+  ej:{calc:'250 pedidos: 226 a tiempo y completos\nOTIF = 226 / 250 = 90.4 %\n12 llegaron tarde y 12 incompletos → ninguno de esos cuenta'},
+  ex:[{t:'num',q:'De 400 pedidos, 360 fueron a tiempo y completos. ¿OTIF?',unit:'%',how:'A tiempo y completos / total.',ans:90,why:'360 / 400.'},
+   {t:'opt',q:'Un pedido llegó a tiempo pero faltó una caja. Para el OTIF cuenta como:',how:'Necesita las dos condiciones.',opts:['Falla','Cumplido','Medio cumplido','No se mide'],why:'In full significa completo.'}]},
+ {id:'k6',sec:'KPIs de operación',t:'KPIs de mantenimiento',obj:'calcular MTBF, MTTR y disponibilidad.',p:['MTBF (tiempo medio entre fallas) es el tiempo funcionando entre el número de fallas: mientras más alto, más confiable el equipo. MTTR (tiempo medio de reparación) es el tiempo de reparación entre el número de fallas: mientras más bajo, más rápido se recupera.','La disponibilidad inherente es MTBF / (MTBF + MTTR).'],
+  ej:{calc:'600 h funcionando, 8 fallas, 20 h de reparación\nMTBF = 600 / 8 = 75 h\nMTTR = 20 / 8 = 2.5 h\nDisponibilidad = 75 / 77.5 = 96.8 %'},
+  ex:[{t:'num',q:'Una prensa trabajó 720 h y falló 6 veces. ¿MTBF?',unit:'h',how:'Tiempo funcionando / fallas.',ans:120,why:'Falla en promedio cada 120 horas.'},
+   {t:'num',q:'Con MTBF de 120 h y MTTR de 3 h, ¿disponibilidad?',unit:'%',how:'MTBF / (MTBF + MTTR).',ans:97.56,tol:0.05,why:'120 / 123.'}]},
+ {id:'k7',sec:'KPIs de operación',t:'KPIs de personas y financieros',obj:'calcular ausentismo, rotación de personal y costo unitario.',p:['Ausentismo = días perdidos por faltas entre días programados. Rotación de personal = bajas del periodo entre plantilla promedio. Seguridad: índice de frecuencia de accidentes (lo viste en Ingeniería Industrial).','Financieros de planta: costo por unidad (costos totales entre unidades producidas), margen y desviación contra el costo estándar (lo que liquida KO88 en SAP).'],
+  ej:{calc:'Ausentismo: 66 días perdidos de 2,200 programados = 3 %\nRotación: 6 bajas con plantilla promedio de 120 = 5 %\nCosto unitario: 1,020,000 / 12,000 piezas = 85 MXN'},
+  ex:[{t:'num',q:'Hubo 44 días de falta de 2,000 programados. ¿Ausentismo?',unit:'%',how:'Faltas / programados.',ans:2.2,tol:0.01,why:'44 / 2,000.'},
+   {t:'num',q:'Costos totales de 510,000 para 6,000 piezas. ¿Costo por unidad?',unit:'MXN',how:'Costos / unidades.',ans:85,why:'Compáralo contra el estándar para ver la desviación.'}]},
+ {id:'k8',sec:'KPIs de operación',t:'Diseña tu tablero de KPIs',obj:'construir un tablero que provoque acciones.',p:['Un buen tablero tiene pocos KPIs (5 a 9 por nivel), cada uno con meta, dueño, frecuencia y semáforo. Va en cascada: la dirección ve OTIF y costo; la línea ve OEE, FPY y desperdicio del turno.','El color rojo debe disparar una acción concreta: análisis de causa, plan con responsable y fecha. En Power BI puedes construirlo con medidas DAX; en este módulo, la pestaña Práctica tiene un tablero listo para jugar con datos.'],
+  ex:[{t:'opt',q:'¿Qué tablero es mejor para el supervisor de línea?',how:'Piensa en lo que el supervisor controla en el turno.',opts:['OEE, FPY y desperdicio por turno','Utilidad neta anual','Precio de la acción','Ventas por país'],why:'Debe medir lo que puede cambiar ese mismo día.'},
+   {t:'ord',q:'Ordena qué hacer cuando un KPI sale en rojo.',how:'Primero entiende, al final verifica.',tokens:['Revisar el dato y la tendencia','Analizar la causa raíz','Definir acción con responsable y fecha','Verificar el efecto en el KPI']}]});
+COURSES.ind.exam.push(
+ {q:'OTIF mide:',o:['Pedidos entregados a tiempo y completos','Piezas buenas a la primera','Tiempo entre fallas','Rotación del inventario'],e:'On time in full.'},
+ {q:'Rotación de 6 veces al año equivale a:',o:['Unos 61 días de inventario','6 días de inventario','365 días','1 mes exacto'],e:'365 / 6 = 60.8.'},
+ {q:'MTTR alto significa:',o:['Las reparaciones tardan mucho','El equipo falla poco','El equipo es muy confiable','Hay poco inventario'],e:'Tiempo medio de reparación.'},
+ {q:'30 piezas devueltas de 60,000 enviadas son:',o:['500 PPM','30 PPM','5,000 PPM','0.5 PPM'],e:'30 / 60,000 × 1,000,000.'},
+ {q:'Un KPI adelantado:',o:['Anticipa el resultado','Mide el resultado final','Solo se usa en finanzas','No necesita meta'],e:'Por ejemplo, órdenes liberadas a tiempo.'},
+ {q:'FPY de 92 % y 97 % en serie dan un RTY de:',o:['89.2 %','94.5 %','97 %','92 %'],e:'0.92 × 0.97.'});
+
+/* Mini motor SQL didáctico: SELECT ... FROM a [JOIN b ON ...] [WHERE] [GROUP BY] [HAVING] [ORDER BY] [LIMIT] */
+function sqlRun(DB,q){
+  q=String(q).trim().replace(/;+\s*$/,'');
+  if(!q)throw'Escribe una consulta.';
+  if(!/^select\b/i.test(q))throw'Solo se permiten consultas SELECT en este laboratorio.';
+  const m=/^select\s+([\s\S]+?)\s+from\s+([\s\S]+?)(\s+where\s+[\s\S]+?)?(\s+group\s+by\s+[\s\S]+?)?(\s+having\s+[\s\S]+?)?(\s+order\s+by\s+[\s\S]+?)?(\s+limit\s+\d+\s*)?$/i.exec(q);
+  if(!m)throw'No pude leer la consulta. Revisa la estructura SELECT ... FROM ...';
+  const selPart=m[1].trim(),fromPart=m[2].trim();
+  const wherePart=m[3]?m[3].replace(/^\s+where\s+/i,'').trim():null;
+  const groupPart=m[4]?m[4].replace(/^\s+group\s+by\s+/i,'').trim():null;
+  const havingPart=m[5]?m[5].replace(/^\s+having\s+/i,'').trim():null;
+  const orderPart=m[6]?m[6].replace(/^\s+order\s+by\s+/i,'').trim():null;
+  const limitPart=m[7]?parseInt(m[7].replace(/\D/g,''),10):null;
+  const fm=/^([a-z_]+)(?:\s+([a-z_]+))?((?:\s+(?:inner\s+|left\s+)?join\s+[\s\S]+?)*)$/i.exec(fromPart);
+  if(!fm)throw'Revisa la cláusula FROM.';
+  const baseT=fm[1].toLowerCase(),baseA=(fm[2]||fm[1]).toLowerCase();
+  if(!DB[baseT])throw'No existe la tabla "'+baseT+'". Tablas: '+Object.keys(DB).join(', ');
+  let rest=fm[3]||'';const joins=[];const jre=/\s+(inner\s+|left\s+)?join\s+([a-z_]+)(?:\s+([a-z_]+))?\s+on\s+([a-z_]+)\.([a-z_]+)\s*=\s*([a-z_]+)\.([a-z_]+)/gi;let jm;
+  while((jm=jre.exec(rest))){const left=!!jm[1]&&/left/i.test(jm[1]);const t=jm[2].toLowerCase(),a=(jm[3]||jm[2]).toLowerCase();
+    if(!DB[t])throw'No existe la tabla "'+t+'".';joins.push({t,a,left,s1:{a:jm[4].toLowerCase(),c:jm[5].toLowerCase()},s2:{a:jm[6].toLowerCase(),c:jm[7].toLowerCase()}});}
+  let rows=DB[baseT].map(r=>{const o={};for(const k in r){o[baseA+'.'+k]=r[k];o[k]=r[k];}return o;});
+  for(const J of joins){const newSide=J.s1.a===J.a?J.s1:J.s2,oldSide=J.s1.a===J.a?J.s2:J.s1;const out=[];
+    for(const r of rows){let any=false;for(const s of DB[J.t]){if(r[oldSide.a+'.'+oldSide.c]===s[newSide.c]){const o={...r};for(const k in s){o[J.a+'.'+k]=s[k];if(!(k in o))o[k]=s[k];}out.push(o);any=true;}}
+      if(J.left&&!any){const o={...r};for(const k in (DB[J.t][0]||{}))o[J.a+'.'+k]=null;out.push(o);}}
+    rows=out;}
+  const num=v=>typeof v==='number'?v:(v==null?0:parseFloat(v));
+  function arithSplit(e){const toks=[];let depth=0,inStr=false,buf='';for(let i=0;i<e.length;i++){const c=e[i];if(c==="'")inStr=!inStr;
+    if(!inStr){if(c==='(')depth++;else if(c===')')depth--;
+      if(depth===0&&(c==='+'||c==='-'||c==='*'||c==='/')){const prev=buf.trim();const lastTok=toks.length?toks[toks.length-1]:null;
+        if(prev===''&&(toks.length===0||lastTok==='('||['+','-','*','/'].includes(lastTok))){buf+=c;continue;} // signo unario
+        toks.push(prev);toks.push(c);buf='';continue;}}
+    buf+=c;}
+    toks.push(buf.trim());return toks;}
+  function val(r,e){e=e.trim();
+    const toks=arithSplit(e);
+    if(toks.length>1){const nums=[val(r,toks[0])],ops=[];for(let i=1;i<toks.length;i+=2){ops.push(toks[i]);nums.push(val(r,toks[i+1]));}
+      for(let i=0;i<ops.length;){if(ops[i]==='*'||ops[i]==='/'){const a=num(nums[i]),b=num(nums[i+1]);nums.splice(i,2,ops[i]==='*'?a*b:a/b);ops.splice(i,1);}else i++;}
+      let acc=num(nums[0]);for(let i=0;i<ops.length;i++)acc=ops[i]==='+'?acc+num(nums[i+1]):acc-num(nums[i+1]);return acc;}
+    if(/^\(.*\)$/.test(e)&&balanced(e.slice(1,-1)))return val(r,e.slice(1,-1));
+    if(/^'.*'$/.test(e))return e.slice(1,-1);
+    if(/^-?\d+(\.\d+)?$/.test(e))return +e;
+    const k=e.toLowerCase();if(k in r)return r[k];throw'No existe la columna "'+e+'".';}
+  function evalCond(r,expr){expr=expr.trim();
+    let d=splitTopKw(expr,'or');if(d.length>1)return d.some(e=>evalCond(r,e));
+    d=splitTopKw(expr,'and');if(d.length>1)return d.every(e=>evalCond(r,e));
+    if(/^\(.*\)$/.test(expr)&&balanced(expr.slice(1,-1)))return evalCond(r,expr.slice(1,-1));
+    let mm;
+    if((mm=/^(.+?)\s+is\s+(not\s+)?null$/i.exec(expr))){const v=val(r,mm[1]);return mm[2]?v!=null:v==null;}
+    if((mm=/^(.+?)\s+between\s+(.+?)\s+and\s+(.+)$/i.exec(expr))){const v=num(val(r,mm[1]));return v>=num(val(r,mm[2]))&&v<=num(val(r,mm[3]));}
+    if((mm=/^(.+?)\s+(not\s+)?in\s*\((.+)\)$/i.exec(expr))){const v=val(r,mm[1]);const set=splitTop(mm[3],/,/).map(x=>val(r,x));const has=set.some(x=>x===v||num(x)===num(v)&&x!=null);return mm[2]?!has:has;}
+    if((mm=/^(.+?)\s+(not\s+)?like\s+'(.*)'$/i.exec(expr))){const raw=val(r,mm[1]);const v=String(raw==null?'':raw);const re=new RegExp('^'+mm[3].replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/%/g,'.*').replace(/_/g,'.')+'$','i');const t=re.test(v);return mm[2]?!t:t;}
+    if((mm=/^(.+?)\s*(<=|>=|<>|!=|=|<|>)\s*(.+)$/.exec(expr))){const a=val(r,mm[1]),b=val(r,mm[3]);const op=mm[2];
+      if(op==='='||op==='<>'||op==='!='){const eq=a===b||(a!=null&&b!=null&&isFinite(num(a))&&isFinite(num(b))&&num(a)===num(b));return op==='='?eq:!eq;}
+      const x=num(a),y=num(b);return op==='<'?x<y:op==='>'?x>y:op==='<='?x<=y:x>=y;}
+    throw'No entendí la condición: '+expr;}
+  if(wherePart)rows=rows.filter(r=>evalCond(r,wherePart));
+  const label=raw=>{const am=/\s+as\s+([a-z_]+)$/i.exec(raw);if(am)return am[1];return raw.includes('.')&&/^[a-z_]+\.[a-z_]+$/i.test(raw)?raw.split('.').pop():raw;};
+  const items=splitTop(selPart,/,/).map(s=>{s=s.trim();let lab=label(s);const am=/\s+as\s+([a-z_]+)$/i.exec(s);if(am)s=s.slice(0,am.index).trim();
+    const ag=/^(count|sum|avg|min|max)\s*\(\s*(\*|distinct\s+[a-z_.]+|[a-z_.]+)\s*\)$/i.exec(s);
+    if(ag)return{agg:ag[1].toLowerCase(),arg:ag[2].trim(),label:lab};
+    return{expr:s,label:lab};});
+  const round2=v=>typeof v==='number'&&!Number.isInteger(v)?Math.round(v*100)/100:v;
+  const aggVal=(fn,arg,grp)=>{if(fn==='count'){if(arg==='*')return grp.length;if(/^distinct\s/i.test(arg)){const c=arg.replace(/^distinct\s+/i,'');return new Set(grp.map(r=>val(r,c)).filter(v=>v!=null)).size;}return grp.filter(r=>val(r,arg)!=null).length;}
+    const vals=grp.map(r=>num(val(r,arg))).filter(v=>isFinite(v));if(!vals.length)return fn==='sum'?0:null;
+    if(fn==='sum')return round2(vals.reduce((a,b)=>a+b,0));if(fn==='avg')return round2(vals.reduce((a,b)=>a+b,0)/vals.length);if(fn==='min')return Math.min(...vals);if(fn==='max')return Math.max(...vals);};
+  const hasAgg=items.some(i=>i.agg)||groupPart;
+  let result;
+  if(hasAgg){const keys=groupPart?splitTop(groupPart,/,/).map(s=>s.trim()):[];
+    const groups=new Map();for(const r of rows){const k=keys.map(c=>val(r,c)).join('\u0001');if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r);}
+    if(!keys.length&&!groups.size)groups.set('',[]);
+    let grs=[...groups.values()];
+    const evalHaving=(g,expr)=>{expr=expr.trim();let d=splitTopKw(expr,'or');if(d.length>1)return d.some(e=>evalHaving(g,e));d=splitTopKw(expr,'and');if(d.length>1)return d.every(e=>evalHaving(g,e));
+      const mm=/^(count|sum|avg|min|max)\s*\(\s*(\*|distinct\s+[a-z_.]+|[a-z_.]+)\s*\)\s*(<=|>=|<>|!=|=|<|>)\s*(.+)$/i.exec(expr);
+      if(mm){const v=aggVal(mm[1].toLowerCase(),mm[2].trim(),g);const y=num(val(g[0],mm[4]));const op=mm[3];return op==='='?v===y:op==='<'?v<y:op==='>'?v>y:op==='<='?v<=y:op==='>='?v>=y:v!==y;}
+      return evalCond(g[0],expr);};
+    if(havingPart)grs=grs.filter(g=>evalHaving(g,havingPart));
+    result=grs.map(g=>{const o={};for(const it of items)o[it.label]=it.agg?aggVal(it.agg,it.arg,g):round2(val(g[0],it.expr));return o;});
+  } else {
+    const star=items.length===1&&items[0].expr==='*';
+    result=rows.map(r=>{if(star){const o={};for(const k in r)if(!k.includes('.'))o[k]=r[k];return o;}
+      const o={};for(const it of items){if(it.expr==='*'){for(const k in r)if(!k.includes('.'))o[k]=r[k];}else o[it.label]=round2(val(r,it.expr));}return o;});
+  }
+  if(orderPart){const ords=splitTop(orderPart,/,/).map(s=>{const mm=/^([\s\S]+?)(\s+asc|\s+desc)?$/i.exec(s.trim());return{c:mm[1].trim(),d:/desc/i.test(mm[2]||'')?-1:1};});
+    result.sort((A,B)=>{for(const o of ords){const lab=label(o.c);let a=lab in A?A[lab]:(o.c in A?A[o.c]:undefined),b=lab in B?B[lab]:(o.c in B?B[o.c]:undefined);
+      if(a==null&&b==null)continue;if(a==null)return 1;if(b==null)return -1;const cmp=typeof a==='number'&&typeof b==='number'?a-b:String(a).localeCompare(String(b),'es');if(cmp)return cmp*o.d;}return 0;});}
+  if(limitPart!=null)result=result.slice(0,limitPart);
+  return result;
+}
+function splitTopKw(s,kw){const parts=[];let depth=0,inStr=false,buf='',between=0;const re=new RegExp('^'+kw+'\\b','i');
+  for(let i=0;i<s.length;i++){const c=s[i];if(c==="'")inStr=!inStr;if(!inStr){if(c==='(')depth++;else if(c===')')depth--;}
+    if(depth===0&&!inStr&&/\s/.test(c)){const sub=s.slice(i+1);if(/^between\b/i.test(sub))between++;
+      if(re.test(sub)){if(kw==='and'&&between>0){between--;}else{parts.push(buf);buf='';i+=kw.length;continue;}}}
+    buf+=c;}
+  parts.push(buf);return parts.map(x=>x.trim()).filter(x=>x!=='');}
+function splitTop(s,re){const parts=[];let depth=0,inStr=false,buf='';const rx=new RegExp('^(?:'+re.source+')',re.flags.replace('g',''));
+  for(let i=0;i<s.length;i++){const c=s[i];if(c==="'")inStr=!inStr;
+    if(!inStr){if(c==='(')depth++;else if(c===')')depth--;
+      if(depth===0){const mm=rx.exec(s.slice(i));if(mm&&mm[0].length){parts.push(buf);buf='';i+=mm[0].length-1;continue;}}}
+    buf+=c;}
+  parts.push(buf);return parts.map(x=>x.trim()).filter(x=>x!=='');}
+function balanced(s){let d=0,inStr=false;for(const c of s){if(c==="'")inStr=!inStr;if(!inStr){if(c==='(')d++;else if(c===')')d--;if(d<0)return false;}}return d===0;}
+
+
+/* =================== SQL y bases de datos =================== */
+const SQL_POS={
+ categorias:[{id:1,nombre:'Herramienta'},{id:2,nombre:'Ferreteria'},{id:3,nombre:'Pintura'},{id:4,nombre:'Electrico'}],
+ productos:[
+  {id:1,nombre:'Martillo',categoria_id:1,precio:120,costo:70,stock:8},
+  {id:2,nombre:'Clavos 2 pulg',categoria_id:2,precio:35,costo:18,stock:200},
+  {id:3,nombre:'Pintura blanca 1L',categoria_id:3,precio:250,costo:160,stock:4},
+  {id:4,nombre:'Brocha 3 pulg',categoria_id:3,precio:45,costo:20,stock:30},
+  {id:5,nombre:'Desarmador plano',categoria_id:1,precio:60,costo:32,stock:0},
+  {id:6,nombre:'Cinta de aislar',categoria_id:4,precio:28,costo:12,stock:120},
+  {id:7,nombre:'Foco LED 9W',categoria_id:4,precio:55,costo:30,stock:45},
+  {id:8,nombre:'Taladro',categoria_id:1,precio:980,costo:640,stock:3},
+  {id:9,nombre:'Tornillos caja',categoria_id:2,precio:85,costo:40,stock:60},
+  {id:10,nombre:'Thinner 1L',categoria_id:3,precio:70,costo:42,stock:18}],
+ clientes:[
+  {id:1,nombre:'Ana Ruiz',ciudad:'Toluca'},{id:2,nombre:'Luis Mora',ciudad:'Metepec'},
+  {id:3,nombre:'Sofia Lara',ciudad:'Toluca'},{id:4,nombre:'Carlos Vega',ciudad:'Lerma'},
+  {id:5,nombre:'Maria Sosa',ciudad:'Metepec'}],
+ ventas:[
+  {id:1,producto_id:1,cliente_id:1,cantidad:2,fecha:'2026-01-05'},
+  {id:2,producto_id:2,cliente_id:2,cantidad:50,fecha:'2026-01-05'},
+  {id:3,producto_id:1,cliente_id:3,cantidad:1,fecha:'2026-01-06'},
+  {id:4,producto_id:4,cliente_id:3,cantidad:3,fecha:'2026-01-07'},
+  {id:5,producto_id:3,cliente_id:2,cantidad:1,fecha:'2026-01-07'},
+  {id:6,producto_id:7,cliente_id:1,cantidad:4,fecha:'2026-01-08'},
+  {id:7,producto_id:8,cliente_id:4,cantidad:1,fecha:'2026-01-09'},
+  {id:8,producto_id:1,cliente_id:5,cantidad:3,fecha:'2026-01-10'},
+  {id:9,producto_id:6,cliente_id:2,cantidad:10,fecha:'2026-01-10'},
+  {id:10,producto_id:9,cliente_id:4,cantidad:2,fecha:'2026-01-11'}]};
+const SQL_DBS={pos:SQL_POS};
+COURSES.sql={n:'SQL y bases de datos',badge:'SQL',cls:'hub-sql',labName:'Consola SQL',lab:sqlLab,
+ desc:'Aprende a consultar bases de datos con SQL real: SELECT, WHERE, JOIN, GROUP BY y agregados, practicando sobre una base de datos de una tienda tipo POS. Pensado para tus propias apps.',
+ ruta:{intro:'SQL es el lenguaje para preguntarle datos a una base de datos. Lo vas a practicar con consultas reales sobre una tienda con productos, ventas y clientes, igual que en un punto de venta. Al terminar sabrás filtrar, ordenar, agrupar, sacar totales y cruzar varias tablas.',fast:'45 a 60 minutos diarios, 6 días a la semana',slow:'30 minutos diarios',
+  tips:['En la Consola SQL puedes escribir cualquier SELECT y ver el resultado al instante.','Lee primero qué pide la pregunta, imagina el resultado y luego escribe la consulta.','Un error de SQL casi siempre es un nombre de columna o una comilla: lee el mensaje con calma.'],
+  fases:[
+   {t:'Fase 1: Consultar y filtrar',items:[['Qué es una base de datos','Tablas, filas, columnas y llaves.','s1'],['SELECT y FROM','Traer columnas de una tabla.','s2'],['WHERE','Filtrar filas con condiciones.','s3'],['Operadores y comodines','AND, OR, IN, BETWEEN, LIKE.','s4'],['ORDER BY y LIMIT','Ordenar y limitar resultados.','s5']]},
+   {t:'Fase 2: Agrupar y resumir',items:[['Funciones de agregado','COUNT, SUM, AVG, MIN, MAX.','s6'],['GROUP BY','Resumir por categoría.','s7'],['HAVING','Filtrar grupos.','s8'],['Columnas calculadas','Operaciones y alias con AS.','s9']]},
+   {t:'Fase 3: Varias tablas',items:[['Llaves y relaciones','Primaria y foránea.','s10'],['JOIN','Cruzar dos tablas.','s11'],['JOIN con agregado','Totales por cliente o categoría.','s12']]},
+   {t:'Fase 4: Cambiar datos (teoría)',items:[['INSERT, UPDATE, DELETE','Cómo se modifican datos (con cuidado).','s13'],['Diseño e índices','Normalizar y acelerar consultas.','s14']]}]},
+ lec:[
+  {id:'s1',sec:'Consultar y filtrar',t:'Qué es una base de datos',obj:'entender tablas, filas, columnas y llaves.',p:['Una base de datos relacional guarda la información en tablas. Cada tabla es como una hoja de cálculo: las columnas son los campos (nombre, precio) y las filas son los registros (un producto).','Cada fila se identifica con una llave primaria única, normalmente una columna id. Cuando una tabla se refiere a otra, usa una llave foránea: en ventas, producto_id apunta al id de productos.'],
+   ej:{t:'La base de la tienda',calc:'productos(id, nombre, categoria_id, precio, costo, stock)\nventas(id, producto_id, cliente_id, cantidad, fecha)\nclientes(id, nombre, ciudad)\ncategorias(id, nombre)\n\nventas.producto_id  →  productos.id   (llave foránea)'},
+   ex:[{t:'opt',q:'En la tabla productos, ¿qué es "precio"?',how:'Piensa en hoja de cálculo: columnas y filas.',opts:['Una columna (campo)','Una fila (registro)','Una tabla','Una base de datos'],why:'Los campos son columnas; cada producto es una fila.'},
+    {t:'opt',q:'¿Para qué sirve la llave primaria id?',how:'Debe permitir distinguir cada fila.',opts:['Identificar de forma única cada fila','Ordenar alfabéticamente','Guardar el precio','Unir palabras'],why:'Ningún id se repite dentro de la tabla.'},
+    {t:'opt',q:'ventas.producto_id apunta a productos.id. Eso es una:',how:'Una tabla se refiere a otra.',opts:['Llave foránea','Llave primaria','Columna calculada','Vista'],why:'La llave foránea conecta las dos tablas.'}]},
+  {id:'s2',sec:'Consultar y filtrar',t:'SELECT y FROM',obj:'traer columnas de una tabla con SELECT.',p:['SELECT dice qué columnas quieres y FROM de qué tabla. SELECT * trae todas las columnas. Para columnas específicas las separas con comas: SELECT nombre, precio.','En la Consola SQL del laboratorio puedes probar cualquier consulta. Escribe los nombres tal cual: nombre, precio, stock, categoria_id.'],
+   ej:{t:'Ejemplo',calc:"SELECT nombre, precio FROM productos;\n\n→ devuelve dos columnas de los 10 productos\n\nSELECT * FROM clientes;\n→ devuelve todas las columnas de clientes"},
+   ex:[{t:'sql',q:'Trae el nombre y el stock de todos los productos.',how:'SELECT columna1, columna2 FROM tabla. Separa con coma.',db:'pos',start:'SELECT ',expect:'SELECT nombre, stock FROM productos',why:'SELECT elige columnas; FROM elige la tabla.'},
+    {t:'sql',q:'Muestra todas las columnas de la tabla clientes.',how:'Usa el asterisco para todas las columnas.',db:'pos',start:'SELECT * FROM ',expect:'SELECT * FROM clientes',why:'SELECT * trae todos los campos.'},
+    {t:'opt',q:'¿Qué hace SELECT * FROM ventas?',how:'El asterisco significa todo.',opts:['Trae todas las columnas de ventas','Borra la tabla','Suma las ventas','Solo trae una fila'],why:'* devuelve todas las columnas.'}]},
+  {id:'s3',sec:'Consultar y filtrar',t:'Filtrar con WHERE',obj:'filtrar filas con una condición.',p:['WHERE filtra las filas que cumplen una condición. Los textos van entre comillas simples: WHERE ciudad = \'Toluca\'. Los números van sin comillas: WHERE stock = 0.','Operadores de comparación: = igual, <> o != distinto, <, >, <=, >=.'],
+   ej:{t:'Ejemplo',calc:"SELECT nombre FROM productos WHERE stock = 0;\n→ productos agotados\n\nSELECT nombre FROM productos WHERE precio > 100;\n→ productos de más de 100 pesos"},
+   ex:[{t:'sql',q:'Trae el nombre de los productos cuyo stock es menor a 10.',how:'WHERE columna < valor. El número va sin comillas.',db:'pos',start:'SELECT nombre FROM productos WHERE ',expect:'SELECT nombre FROM productos WHERE stock < 10',why:'WHERE deja pasar solo las filas que cumplen.'},
+    {t:'sql',q:'Trae el nombre de los clientes de la ciudad de Metepec.',how:"El texto va entre comillas simples: 'Metepec'.",db:'pos',start:"SELECT nombre FROM clientes WHERE ",expect:"SELECT nombre FROM clientes WHERE ciudad = 'Metepec'",why:'Los textos siempre entre comillas simples.'},
+    {t:'sql',q:'Trae nombre y precio de los productos que cuestan 60 o menos.',how:'Usa el operador <=.',db:'pos',expect:'SELECT nombre, precio FROM productos WHERE precio <= 60',why:'<= incluye el 60.'}]},
+  {id:'s4',sec:'Consultar y filtrar',t:'Operadores y comodines',obj:'combinar condiciones con AND, OR, IN, BETWEEN y LIKE.',p:['AND exige que se cumplan todas las condiciones; OR, al menos una. IN compara contra una lista: categoria_id IN (1, 3). BETWEEN cubre un rango: precio BETWEEN 40 AND 130 (incluye los extremos).','LIKE busca patrones de texto: el comodín % representa cualquier cantidad de caracteres. LIKE \'P%\' empieza con P; LIKE \'%LED%\' contiene LED.'],
+   ej:{t:'Ejemplo',calc:"SELECT nombre FROM productos\nWHERE categoria_id = 1 AND stock > 0;\n\nSELECT nombre FROM productos\nWHERE precio BETWEEN 40 AND 130;\n\nSELECT nombre FROM productos WHERE nombre LIKE '%LED%';"},
+   ex:[{t:'sql',q:'Trae el nombre de los productos de la categoría 1 (Herramienta) que tengan stock mayor a 0.',how:'Une dos condiciones con AND.',db:'pos',expect:'SELECT nombre FROM productos WHERE categoria_id = 1 AND stock > 0',why:'AND exige las dos.'},
+    {t:'sql',q:'Trae el nombre de los productos con precio entre 40 y 130 pesos.',how:'Usa BETWEEN valor1 AND valor2.',db:'pos',expect:'SELECT nombre FROM productos WHERE precio BETWEEN 40 AND 130',why:'BETWEEN incluye los dos extremos.'},
+    {t:'sql',q:'Trae el nombre de los productos cuyo nombre contenga la palabra "Pintura".',how:"LIKE '%Pintura%' con comodines a ambos lados.",db:'pos',expect:"SELECT nombre FROM productos WHERE nombre LIKE '%Pintura%'",why:'El % representa cualquier texto antes o después.'}]},
+  {id:'s5',sec:'Consultar y filtrar',t:'ORDER BY y LIMIT',obj:'ordenar y limitar los resultados.',p:['ORDER BY ordena el resultado por una columna: ASC de menor a mayor (por defecto) y DESC de mayor a menor. LIMIT corta cuántas filas devuelve.','Se combinan para responder preguntas como "los 3 más caros": ordena por precio DESC y limita a 3.'],
+   ej:{t:'Ejemplo',calc:"SELECT nombre, precio FROM productos\nORDER BY precio DESC\nLIMIT 3;\n→ los 3 productos más caros"},
+   ex:[{t:'sql',q:'Trae nombre y precio de todos los productos ordenados del más barato al más caro.',how:'ORDER BY precio (ASC es por defecto).',db:'pos',expect:'SELECT nombre, precio FROM productos ORDER BY precio ASC',why:'ASC ordena de menor a mayor.'},
+    {t:'sql',q:'Trae los 3 productos con más stock: nombre y stock, del mayor al menor.',how:'ORDER BY stock DESC y luego LIMIT 3.',db:'pos',expect:'SELECT nombre, stock FROM productos ORDER BY stock DESC LIMIT 3',why:'DESC ordena de mayor a menor; LIMIT corta a 3.'},
+    {t:'opt',q:'¿Qué hace ORDER BY nombre ASC?',how:'ASC es el orden ascendente.',opts:['Ordena alfabéticamente de la A a la Z','Ordena de la Z a la A','Borra duplicados','Suma los nombres'],why:'ASC va de menor a mayor; en texto, de la A a la Z.'}]},
+  {id:'s6',sec:'Agrupar y resumir',t:'Funciones de agregado',obj:'resumir muchas filas en un solo número.',p:['Las funciones de agregado resumen una columna: COUNT cuenta filas, SUM suma, AVG promedia, MIN y MAX dan el mínimo y el máximo. COUNT(*) cuenta todas las filas; AVG(precio) promedia los precios.','Sin GROUP BY, devuelven un solo número de toda la tabla (o de las filas que pasen el WHERE).'],
+   ej:{t:'Ejemplo',calc:"SELECT COUNT(*) FROM productos;        → 10\nSELECT AVG(precio) FROM productos;     → precio promedio\nSELECT MAX(precio) FROM productos;     → el más caro\nSELECT SUM(stock) FROM productos WHERE categoria_id = 3;"},
+   ex:[{t:'sql',q:'¿Cuántos productos hay en total? Usa un alias n.',how:'COUNT(*) AS n. El alias nombra la columna del resultado.',db:'pos',expect:'SELECT COUNT(*) AS n FROM productos',why:'COUNT(*) cuenta todas las filas.'},
+    {t:'sql',q:'Saca el precio promedio de todos los productos, con alias prom.',how:'AVG(precio) AS prom.',db:'pos',expect:'SELECT AVG(precio) AS prom FROM productos',why:'AVG promedia la columna.'},
+    {t:'sql',q:'¿Cuántos productos están agotados (stock = 0)? Alias n.',how:'Combina COUNT(*) con un WHERE.',db:'pos',expect:'SELECT COUNT(*) AS n FROM productos WHERE stock = 0',why:'El WHERE filtra antes de contar.'}]},
+  {id:'s7',sec:'Agrupar y resumir',t:'GROUP BY',obj:'calcular un resumen por cada categoría.',p:['GROUP BY junta las filas que comparten un valor y aplica el agregado a cada grupo. "Productos por categoría" = agrupar por categoria_id y contar.','En el SELECT van la columna que agrupas y las funciones de agregado. Es la base de cualquier reporte.'],
+   ej:{t:'Ejemplo',calc:"SELECT categoria_id, COUNT(*) AS n\nFROM productos\nGROUP BY categoria_id;\n\n→ cuántos productos hay en cada categoría"},
+   ex:[{t:'sql',q:'Cuenta cuántos productos hay en cada categoría: categoria_id y el conteo con alias n.',how:'GROUP BY categoria_id y COUNT(*) AS n.',db:'pos',expect:'SELECT categoria_id, COUNT(*) AS n FROM productos GROUP BY categoria_id',why:'Cada grupo es una categoría.'},
+    {t:'sql',q:'Suma el stock total por categoría: categoria_id y SUM(stock) con alias total.',how:'GROUP BY categoria_id y SUM(stock) AS total.',db:'pos',expect:'SELECT categoria_id, SUM(stock) AS total FROM productos GROUP BY categoria_id',why:'SUM se aplica dentro de cada grupo.'},
+    {t:'opt',q:'En GROUP BY, ¿qué columnas conviene poner en el SELECT?',how:'Las que agrupas y las funciones de resumen.',opts:['La columna agrupada y funciones de agregado','Cualquier columna suelta','Solo el id','Ninguna'],why:'Mezclar columnas sueltas no agrupadas da resultados ambiguos.'}]},
+  {id:'s8',sec:'Agrupar y resumir',t:'HAVING',obj:'filtrar los grupos después de agrupar.',p:['WHERE filtra filas antes de agrupar; HAVING filtra grupos después, usando el resultado del agregado. "Categorías con más de 100 piezas en stock" se resuelve con HAVING SUM(stock) > 100.','Orden mental: FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY.'],
+   ej:{t:'Ejemplo',calc:"SELECT categoria_id, SUM(stock) AS total\nFROM productos\nGROUP BY categoria_id\nHAVING SUM(stock) > 100;"},
+   ex:[{t:'sql',q:'Muestra las categorías cuyo stock total pase de 100: categoria_id y SUM(stock) AS total.',how:'Agrupa y luego filtra con HAVING SUM(stock) > 100.',db:'pos',expect:'SELECT categoria_id, SUM(stock) AS total FROM productos GROUP BY categoria_id HAVING SUM(stock) > 100',why:'HAVING actúa sobre el total de cada grupo.'},
+    {t:'sql',q:'Muestra las categorías que tienen más de 2 productos: categoria_id y COUNT(*) AS n.',how:'HAVING COUNT(*) > 2.',db:'pos',expect:'SELECT categoria_id, COUNT(*) AS n FROM productos GROUP BY categoria_id HAVING COUNT(*) > 2',why:'HAVING filtra por el conteo del grupo.'},
+    {t:'opt',q:'¿Cuál es la diferencia entre WHERE y HAVING?',how:'Uno actúa antes y otro después de agrupar.',opts:['WHERE filtra filas antes de agrupar; HAVING filtra grupos después','Son idénticos','HAVING es más rápido','WHERE solo sirve con texto'],why:'HAVING puede usar COUNT, SUM, etc.; WHERE no.'}]},
+  {id:'s9',sec:'Agrupar y resumir',t:'Columnas calculadas y alias',obj:'crear columnas con operaciones y nombrarlas con AS.',p:['Puedes calcular columnas con +, -, * y /. La ganancia unitaria es precio - costo; el valor del inventario es precio * stock. AS le pone nombre a la columna del resultado.','Esto convierte datos crudos en información útil para tus reportes.'],
+   ej:{t:'Ejemplo',calc:"SELECT nombre, precio - costo AS ganancia\nFROM productos;\n\nSELECT nombre, precio * stock AS valor_inventario\nFROM productos ORDER BY valor_inventario DESC;"},
+   ex:[{t:'sql',q:'Trae el nombre y la ganancia unitaria (precio menos costo) con alias ganancia.',how:'precio - costo AS ganancia.',db:'pos',expect:'SELECT nombre, precio - costo AS ganancia FROM productos',why:'La resta crea una columna nueva.'},
+    {t:'sql',q:'Trae nombre y el valor del inventario (precio por stock) como valor, del mayor al menor.',how:'precio * stock AS valor y ORDER BY valor DESC.',db:'pos',expect:'SELECT nombre, precio * stock AS valor FROM productos ORDER BY valor DESC',why:'Multiplicas y ordenas por el alias.'}]},
+  {id:'s10',sec:'Varias tablas',t:'Llaves y relaciones',obj:'entender por qué los datos se separan en varias tablas.',p:['En vez de repetir el nombre del cliente en cada venta, se guarda una sola vez en clientes y cada venta guarda su cliente_id. Eso evita errores y repeticiones (normalización).','Para ver el nombre del cliente junto a su venta hay que volver a unir las tablas por su llave: eso es un JOIN.'],
+   ej:{t:'Ejemplo',calc:"ventas.cliente_id = 2   →   clientes.id = 2 → 'Luis Mora'\nventas.producto_id = 1  →   productos.id = 1 → 'Martillo'"},
+   ex:[{t:'opt',q:'¿Por qué ventas guarda cliente_id y no el nombre del cliente?',how:'Piensa en qué pasa si el cliente cambia de nombre.',opts:['Para no repetir datos y evitar errores','Porque el nombre es secreto','Para ocupar más espacio','Porque SQL lo prohíbe'],why:'El dato vive en un solo lugar; se actualiza una vez.'},
+    {t:'opt',q:'Para mostrar el nombre del cliente junto a cada venta necesitas un:',how:'Hay que unir dos tablas.',opts:['JOIN','GROUP BY','LIMIT','DELETE'],why:'El JOIN cruza las tablas por su llave.'}]},
+  {id:'s11',sec:'Varias tablas',t:'JOIN',obj:'cruzar dos tablas por su llave.',p:['JOIN une dos tablas donde coincide la llave. Se usan alias cortos para las tablas: FROM ventas v JOIN productos p ON v.producto_id = p.id. Luego pides columnas con el prefijo: p.nombre, v.cantidad.','Así juntas el nombre del producto (de productos) con la cantidad vendida (de ventas) en una sola consulta.'],
+   ej:{t:'Ejemplo',calc:"SELECT p.nombre, v.cantidad, v.fecha\nFROM ventas v\nJOIN productos p ON v.producto_id = p.id\nORDER BY v.fecha;"},
+   ex:[{t:'sql',q:'Trae el nombre del producto y la cantidad de cada venta. Usa ventas v y productos p.',how:'FROM ventas v JOIN productos p ON v.producto_id = p.id, y pide p.nombre, v.cantidad.',db:'pos',expect:'SELECT p.nombre, v.cantidad FROM ventas v JOIN productos p ON v.producto_id = p.id',why:'El ON dice por dónde se unen las tablas.'},
+    {t:'sql',q:'Trae el nombre del cliente y la fecha de cada venta. Usa ventas v y clientes c.',how:'JOIN clientes c ON v.cliente_id = c.id; pide c.nombre, v.fecha.',db:'pos',expect:'SELECT c.nombre, v.fecha FROM ventas v JOIN clientes c ON v.cliente_id = c.id',why:'Se une por cliente_id = c.id.'},
+    {t:'sql',q:'Trae el nombre del producto y el de su categoría. Usa productos p y categorias c.',how:'JOIN categorias c ON p.categoria_id = c.id; pide p.nombre, c.nombre.',db:'pos',expect:'SELECT p.nombre, c.nombre FROM productos p JOIN categorias c ON p.categoria_id = c.id',why:'Dos tablas unidas por la llave de categoría.'}]},
+  {id:'s12',sec:'Varias tablas',t:'JOIN con agregados',obj:'sacar totales combinando tablas.',p:['Lo más potente: unir tablas y luego agrupar. "Cuánto compró cada cliente" = unir ventas con clientes, agrupar por el nombre del cliente y sumar la cantidad.','El patrón es JOIN + GROUP BY + función de agregado, y casi siempre un ORDER BY para ver el ranking.'],
+   ej:{t:'Ejemplo',calc:"SELECT c.nombre, SUM(v.cantidad) AS total\nFROM ventas v\nJOIN clientes c ON v.cliente_id = c.id\nGROUP BY c.nombre\nORDER BY total DESC;"},
+   ex:[{t:'sql',q:'Total de piezas compradas por cada cliente: c.nombre y SUM(v.cantidad) AS total, de mayor a menor.',how:'JOIN clientes, GROUP BY c.nombre, SUM(v.cantidad) AS total, ORDER BY total DESC.',db:'pos',expect:'SELECT c.nombre, SUM(v.cantidad) AS total FROM ventas v JOIN clientes c ON v.cliente_id = c.id GROUP BY c.nombre ORDER BY total DESC',why:'Unes, agrupas por cliente y sumas.'},
+    {t:'sql',q:'Piezas vendidas por producto: p.nombre y SUM(v.cantidad) AS vendidas, de mayor a menor.',how:'JOIN productos, GROUP BY p.nombre, ORDER BY vendidas DESC.',db:'pos',expect:'SELECT p.nombre, SUM(v.cantidad) AS vendidas FROM ventas v JOIN productos p ON v.producto_id = p.id GROUP BY p.nombre ORDER BY vendidas DESC',why:'Es un ranking de productos por unidades.'}]},
+  {id:'s13',sec:'Cambiar datos',t:'INSERT, UPDATE y DELETE',obj:'saber cómo se agregan, cambian y borran datos.',p:['INSERT agrega filas, UPDATE cambia valores y DELETE borra filas. UPDATE y DELETE casi siempre llevan WHERE: sin él afectan toda la tabla, un error muy caro.','En este laboratorio solo se ejecutan consultas SELECT para no alterar los datos, pero debes conocer la forma de estas instrucciones.'],
+   ej:{t:'Ejemplo',calc:"INSERT INTO clientes (nombre, ciudad)\nVALUES ('Nuevo Cliente', 'Toluca');\n\nUPDATE productos SET precio = 130 WHERE id = 1;\n\nDELETE FROM ventas WHERE id = 10;"},
+   ex:[{t:'opt',q:'¿Qué instrucción cambia el precio de un producto que ya existe?',how:'Modificar un dato existente.',opts:['UPDATE','INSERT','DELETE','SELECT'],why:'UPDATE ... SET ... WHERE.'},
+    {t:'opt',q:'¿Qué pasa si corres DELETE FROM ventas sin WHERE?',how:'El WHERE limita a qué filas.',opts:['Borra todas las filas de la tabla','Borra solo una','No hace nada','Da error de sintaxis'],why:'Sin WHERE, la acción cubre toda la tabla: por eso siempre se revisa dos veces.'},
+    {t:'opt',q:'Para agregar un cliente nuevo usas:',how:'Insertar una fila.',opts:['INSERT INTO','UPDATE','SELECT','ORDER BY'],why:'INSERT INTO ... VALUES ...'}]},
+  {id:'s14',sec:'Cambiar datos',t:'Diseño, índices y buenas prácticas',obj:'conocer normalización, índices y seguridad básica.',p:['Normalizar es separar los datos para no repetirlos (clientes aparte de ventas). Un índice es como el índice de un libro: acelera las búsquedas por una columna, a cambio de un poco más de espacio.','Seguridad: nunca armes consultas pegando texto del usuario directo (riesgo de inyección SQL); se usan consultas parametrizadas. Haz respaldos antes de un cambio masivo.'],
+   ex:[{t:'opt',q:'¿Para qué sirve un índice en una columna?',how:'Piensa en buscar una palabra en un libro.',opts:['Hacer más rápidas las búsquedas por esa columna','Guardar contraseñas','Borrar duplicados solo','Ordenar la tabla para siempre'],why:'El índice evita recorrer toda la tabla.'},
+    {t:'opt',q:'La mejor defensa contra la inyección SQL es:',how:'No mezclar código con datos del usuario.',opts:['Usar consultas parametrizadas','Confiar en el usuario','Quitar el WHERE','Usar solo mayúsculas'],why:'Los parámetros separan el dato del comando.'},
+    {t:'opt',q:'Normalizar una base de datos busca sobre todo:',how:'Evitar repetir información.',opts:['Evitar datos repetidos y errores','Hacerla más lenta','Borrar tablas','Ocultar columnas'],why:'Cada dato vive en un solo lugar.'}]}],
+ exam:[]};
+/* --- Banco de examen SQL (≈100 preguntas) --- */
+const SQL_EXAM=[
+ ['¿Qué palabra elige las columnas que quieres ver?','SELECT','FROM','WHERE','ORDER BY','SELECT lista las columnas.'],
+ ['¿Qué cláusula indica la tabla de origen?','FROM','SELECT','GROUP BY','HAVING','FROM nombra la tabla.'],
+ ['¿Qué trae SELECT *?','Todas las columnas','Solo el id','Una fila','El total','El asterisco significa todas las columnas.'],
+ ['¿Qué cláusula filtra filas?','WHERE','ORDER BY','LIMIT','SELECT','WHERE aplica condiciones a las filas.'],
+ ['Los valores de texto en SQL van entre:','Comillas simples','Paréntesis','Corchetes','Llaves','Ej: ciudad = \'Toluca\'.'],
+ ['¿Cuál operador significa "distinto de"?','<>','==','!','=<','También se escribe !=.'],
+ ['¿Qué ordena ORDER BY precio DESC?','De mayor a menor precio','De menor a mayor','Alfabético','Por id','DESC es descendente.'],
+ ['¿Qué hace LIMIT 5?','Devuelve máximo 5 filas','Suma 5','Borra 5 filas','Salta 5','LIMIT corta el número de filas.'],
+ ['¿Qué función cuenta filas?','COUNT','SUM','AVG','MAX','COUNT(*) cuenta todas las filas.'],
+ ['¿Qué función suma una columna?','SUM','COUNT','MIN','AVG','SUM suma los valores.'],
+ ['¿Qué función da el promedio?','AVG','SUM','COUNT','MAX','AVG = average.'],
+ ['¿Qué función da el valor máximo?','MAX','MIN','TOP','SUM','MAX devuelve el mayor.'],
+ ['¿Qué cláusula agrupa filas para resumirlas?','GROUP BY','ORDER BY','WHERE','LIMIT','GROUP BY junta filas con el mismo valor.'],
+ ['¿Qué cláusula filtra grupos después de agrupar?','HAVING','WHERE','FROM','SELECT','HAVING usa el resultado del agregado.'],
+ ['¿Qué une dos tablas por su llave?','JOIN','UNION','GROUP BY','MERGE','JOIN cruza tablas relacionadas.'],
+ ['¿Qué parte de un JOIN dice cómo se relacionan las tablas?','ON','AS','IN','BY','ON indica la condición de unión.'],
+ ['AS se usa para:','Dar un alias (nombre) a una columna o tabla','Sumar','Ordenar','Filtrar','AS renombra en el resultado.'],
+ ['¿Qué operador compara contra una lista de valores?','IN','LIKE','BETWEEN','IS','Ej: id IN (1,2,3).'],
+ ['¿Qué operador busca un rango con extremos incluidos?','BETWEEN','IN','LIKE','ANY','BETWEEN a AND b incluye a y b.'],
+ ['En LIKE, ¿qué representa el comodín %?','Cualquier cantidad de caracteres','Un solo carácter','Un número','Un espacio','% = cualquier texto.'],
+ ['En LIKE, ¿qué representa el guion bajo _ ?','Un solo carácter','Todo el texto','Nada','Un dígito','_ = exactamente un carácter.'],
+ ['WHERE stock = 0 devuelve productos:','Agotados','Con mucho stock','Caros','Baratos','stock igual a cero.'],
+ ['Para unir dos condiciones y que se cumplan ambas se usa:','AND','OR','NOT','XOR','AND exige las dos.'],
+ ['Para que baste con una condición se usa:','OR','AND','IN','ALL','OR acepta cualquiera.'],
+ ['La llave primaria sirve para:','Identificar de forma única cada fila','Ordenar','Sumar','Filtrar texto','Ningún valor se repite.'],
+ ['Una llave foránea:','Apunta a la llave primaria de otra tabla','Borra filas','Ordena','Es opcional siempre','Conecta tablas.'],
+ ['ventas.producto_id = productos.id es un ejemplo de:','Relación por llave foránea','Índice','Columna calculada','Agregado','Así se hace el JOIN.'],
+ ['¿Qué devuelve COUNT(*) FROM productos si hay 10 filas?','10','1','0','100','Cuenta todas las filas.'],
+ ['SELECT AVG(precio) devuelve:','El precio promedio','El total','El máximo','El conteo','AVG promedia.'],
+ ['¿Cuál NO es una función de agregado?','ORDER','SUM','AVG','COUNT','ORDER BY no es agregado.'],
+ ['El orden lógico correcto es:','FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY','SELECT, FROM, WHERE','WHERE, SELECT, FROM','ORDER BY primero','Así se procesa internamente.'],
+ ['Para el top 3 de productos más caros:','ORDER BY precio DESC LIMIT 3','LIMIT 3 solamente','WHERE precio = max','GROUP BY precio','Ordenar y limitar.'],
+ ['UPDATE sin WHERE:','Cambia todas las filas','Cambia una','Da error','No hace nada','Por eso siempre lleva WHERE.'],
+ ['DELETE FROM ventas WHERE id = 5:','Borra la venta con id 5','Borra todas','Borra productos','Cambia el precio','WHERE limita a esa fila.'],
+ ['INSERT INTO sirve para:','Agregar filas nuevas','Cambiar filas','Borrar filas','Consultar','INSERT agrega registros.'],
+ ['Una columna calculada precio - costo representa:','La ganancia unitaria','El stock','El id','La fecha','Resta de dos columnas.'],
+ ['precio * stock representa:','El valor del inventario de ese producto','La ganancia','El número de ventas','El id','Precio por unidades disponibles.'],
+ ['¿Qué hace DISTINCT?','Quita filas repetidas del resultado','Ordena','Suma','Cuenta','Devuelve valores únicos.'],
+ ['Un índice en una columna:','Acelera las búsquedas por esa columna','Borra datos','Ordena para siempre','Cifra la tabla','Como el índice de un libro.'],
+ ['La inyección SQL se previene con:','Consultas parametrizadas','Más mayúsculas','Quitando el WHERE','Confiando en el usuario','Se separa el dato del comando.'],
+ ['Normalizar una base de datos busca:','Evitar datos repetidos','Hacerla lenta','Borrar tablas','Ocultar columnas','Cada dato en un solo lugar.'],
+ ['¿Qué cláusula usarías para "clientes de Toluca"?','WHERE ciudad = \'Toluca\'','GROUP BY ciudad','ORDER BY ciudad','LIMIT','Filtra por ciudad.'],
+ ['SELECT nombre FROM productos ORDER BY nombre ASC:','Ordena de la A a la Z','De la Z a la A','Por precio','Por id','ASC ascendente.'],
+ ['Para contar productos por categoría:','GROUP BY categoria_id con COUNT(*)','Solo COUNT(*)','WHERE categoria','ORDER BY','Un conteo por grupo.'],
+ ['HAVING COUNT(*) > 2 deja:','Los grupos con más de 2 filas','Las filas mayores a 2','2 filas','Nada','Filtra por el conteo del grupo.'],
+ ['En FROM ventas v, la "v" es:','Un alias de la tabla','Una columna','Un valor','Un error','Alias para abreviar.'],
+ ['p.nombre en un JOIN significa:','La columna nombre de la tabla con alias p','Una variable','Un archivo','Un número','tabla.columna.'],
+ ['¿Qué devuelve MIN(precio)?','El precio más bajo','El más alto','El promedio','El total','MIN = mínimo.'],
+ ['SUM(cantidad) en ventas da:','El total de piezas vendidas','El número de ventas','El precio','El id mayor','Suma la columna cantidad.'],
+ ['WHERE precio BETWEEN 40 AND 130 incluye:','40 y 130','Solo valores entre, sin extremos','Solo 40','Solo 130','BETWEEN incluye ambos extremos.'],
+ ['categoria_id IN (1, 3) trae productos:','De las categorías 1 o 3','Solo de la 1','De la 2','De todas','IN compara contra la lista.'],
+ ['LIKE \'%LED%\' encuentra textos que:','Contienen LED','Empiezan con LED solamente','Terminan en LED solamente','Son exactamente LED','% a ambos lados = contiene.'],
+ ['LIKE \'P%\' encuentra textos que:','Empiezan con P','Terminan en P','Contienen P','Miden P','% al final.'],
+ ['IS NULL sirve para:','Encontrar valores vacíos','Comparar números','Sumar','Ordenar','Las columnas sin valor son NULL.'],
+ ['El resultado de un SELECT es:','Un conjunto de filas y columnas','Un solo número siempre','Una tabla nueva permanente','Un archivo','Una tabla temporal de resultado.'],
+ ['Para renombrar la columna del conteo como total:','COUNT(*) AS total','COUNT(total)','TOTAL COUNT(*)','COUNT = total','AS da el alias.'],
+ ['¿Qué hace un LEFT JOIN además de las coincidencias?','Conserva las filas de la izquierda sin pareja','Borra filas','Solo coincidencias','Ordena','Rellena con NULL lo que no casa.'],
+ ['Para el cliente que más compró:','JOIN + GROUP BY + SUM + ORDER BY DESC + LIMIT 1','Solo SUM','Solo WHERE','Solo ORDER BY','Ranking con límite 1.'],
+ ['Una tabla equivale a:','Una hoja con filas y columnas','Un solo dato','Una fórmula','Una carpeta','Filas = registros, columnas = campos.'],
+ ['El símbolo para todas las columnas es:','*','%','#','@','SELECT *.'],
+ ['¿Qué parte se evalúa primero: WHERE o SELECT?','WHERE','SELECT','Al mismo tiempo','ORDER BY','Primero filtra, luego elige columnas.'],
+ ['COUNT(DISTINCT ciudad) en clientes cuenta:','Las ciudades diferentes','Todas las filas','Los nombres','Las ventas','DISTINCT quita repetidos.'],
+ ['Para sumar el stock solo de la categoría 3:','SUM(stock) con WHERE categoria_id = 3','SUM(stock) sin filtro','COUNT(*)','AVG(stock)','El WHERE filtra antes de sumar.'],
+ ['El alias de tabla se escribe:','Después del nombre de la tabla en FROM','En el SELECT final','En el WHERE','No existe','FROM ventas v.'],
+ ['¿Qué devuelve una consulta sin filas que cumplan el WHERE?','Un resultado vacío (0 filas)','Un error','NULL','Toda la tabla','Simplemente no hay filas.'],
+ ['Para productos con stock entre 1 y 50:','WHERE stock BETWEEN 1 AND 50','WHERE stock IN (1,50)','WHERE stock = 1','ORDER BY stock','Rango con extremos.'],
+ ['ORDER BY puede ordenar por:','Una columna o un alias calculado','Solo el id','Solo texto','Nada','Incluye columnas calculadas.'],
+ ['El promedio de precios se redondea aquí a:','2 decimales','0 decimales','5 decimales','No se redondea','La consola muestra 2 decimales.'],
+ ['SELECT nombre, precio FROM productos WHERE precio > 1000 (no hay ninguno) devuelve:','0 filas','Error','El más caro','Todos','Nadie cumple la condición.'],
+ ['Una consulta parametrizada usa:','Marcadores en vez de pegar texto del usuario','Más JOINs','Mayúsculas','Sin WHERE','Separa dato y comando.'],
+ ['Para ver nombre de producto y nombre de categoría juntos:','JOIN entre productos y categorias','GROUP BY','Dos SELECT','LIMIT','Unión por categoria_id.'],
+ ['El resultado de GROUP BY tiene:','Una fila por grupo','Una fila por registro','Siempre una fila','Ninguna','Cada grupo se resume en una fila.'],
+ ['¿Cuál es válida para "productos ordenados por ganancia"?','SELECT nombre, precio-costo AS g FROM productos ORDER BY g DESC','ORDER BY ganancia sin definirla','GROUP BY ganancia','Imposible','Se ordena por el alias.'],
+ ['WHERE ciudad <> \'Toluca\' devuelve clientes:','De cualquier ciudad menos Toluca','Solo de Toluca','De Toluca y Lerma','Ninguno','<> es distinto.'],
+ ['El tipo de dato de "fecha" conviene que sea:','Fecha (DATE)','Texto libre','Número','Booleano','Permite ordenar y comparar fechas.'],
+ ['Para el total vendido por producto necesitas datos de:','ventas (cantidad) y productos (nombre)','Solo clientes','Solo categorias','Solo ventas sin JOIN','JOIN de las dos.'],
+ ['Un buen reporte de ventas suele combinar:','JOIN, GROUP BY, SUM y ORDER BY','Solo SELECT *','Solo WHERE','Solo LIMIT','Es el patrón típico.'],
+ ['SELECT COUNT(*) FROM ventas WHERE cantidad >= 3 cuenta:','Las ventas de 3 o más piezas','Todas las ventas','Los productos','Los clientes','Filtra y cuenta.'],
+ ['El valor NULL significa:','Ausencia de dato','Cero','Vacío de texto','Falso','No es lo mismo que 0.'],
+ ['Para comparar con NULL se usa:','IS NULL / IS NOT NULL','= NULL','<> NULL','LIKE NULL','NULL no se compara con =.'],
+ ['DISTINCT ciudad FROM clientes devuelve:','Las ciudades sin repetir','Todas las filas','El conteo','La primera ciudad','Valores únicos.'],
+ ['Si olvidas las comillas en un texto, SQL:','Lo toma como nombre de columna y suele fallar','Lo corrige solo','Lo ignora','Suma','Por eso el texto va entre comillas.'],
+ ['El propósito principal de SQL es:','Consultar y manipular bases de datos relacionales','Diseñar páginas web','Editar imágenes','Compilar código','Structured Query Language.'],
+ ['Para los 5 productos con menos stock:','ORDER BY stock ASC LIMIT 5','ORDER BY stock DESC LIMIT 5','WHERE stock = 5','GROUP BY stock','Ascendente y limitar.'],
+ ['En un JOIN, si una venta no tiene producto que coincida, con INNER JOIN:','No aparece en el resultado','Aparece con NULL','Da error','Aparece dos veces','INNER solo deja coincidencias.'],
+ ['Para evitar perder registros sin coincidencia usas:','LEFT JOIN','INNER JOIN','GROUP BY','HAVING','LEFT conserva la tabla izquierda.'],
+ ['SELECT nombre FROM productos LIMIT 1 devuelve:','La primera fila según el orden','La más cara','Un error','Todas','Solo una fila.'],
+ ['El símbolo para multiplicar en SQL es:','*','x','·','mul','precio * stock.'],
+ ['WHERE categoria_id = 3 AND precio > 100 deja productos:','De pintura de más de 100 pesos','De cualquier categoría','Baratos','Sin stock','Dos condiciones con AND.'],
+ ['Una vista (VIEW) es:','Una consulta guardada que se usa como tabla','Una copia física','Un índice','Un respaldo','Guarda un SELECT reutilizable.'],
+ ['El resultado de AVG sobre una columna vacía (sin filas) es:','NULL','0','Error','1','No hay valores que promediar.'],
+ ['Agrupar por ciudad y contar clientes:','SELECT ciudad, COUNT(*) FROM clientes GROUP BY ciudad','COUNT(ciudad)','WHERE ciudad','ORDER BY ciudad','Un conteo por ciudad.'],
+ ['Para sumar el valor total del inventario de toda la tienda:','SELECT SUM(precio*stock) FROM productos','SUM(precio)','COUNT(*)','AVG(stock)','Suma precio por stock de todos.'],
+ ['La cláusula que casi nunca debe faltar en UPDATE y DELETE es:','WHERE','ORDER BY','LIMIT','GROUP BY','Para no afectar toda la tabla.'],
+ ['Las columnas id suelen ser:','Enteros autoincrementales únicos','Texto libre','Decimales','Fechas','Identifican cada fila.'],
+ ['Para encontrar el producto más caro:','SELECT MAX(precio) FROM productos','MIN(precio)','COUNT(*)','SUM(precio)','MAX da el mayor.'],
+ ['Juntar resultados de dos consultas con las mismas columnas se hace con:','UNION','JOIN','GROUP BY','HAVING','UNION apila filas.'],
+ ['Un buen hábito antes de un cambio masivo es:','Hacer un respaldo','Borrar el índice','Quitar el WHERE','Apagar el servidor','Permite revertir errores.'],
+ ['SELECT que responde "cuántas ventas hubo":','SELECT COUNT(*) FROM ventas','SELECT SUM(ventas)','SELECT * FROM ventas','COUNT(ventas)','Contar filas de ventas.'],
+ ['La parte SELECT se ejecuta, en el orden lógico:','Casi al final, después de agrupar','Primero','Antes del FROM','Nunca','Por eso puede usar los grupos.']];
+COURSES.sql.exam=SQL_EXAM.map(([q,...r])=>({q,o:r.slice(0,4),e:r[4]}));
+/* --- Consola SQL (laboratorio) --- */
+const SQL_SCHEMA=[['productos','id, nombre, categoria_id, precio, costo, stock'],['ventas','id, producto_id, cliente_id, cantidad, fecha'],['clientes','id, nombre, ciudad'],['categorias','id, nombre']];
+const SQL_SAMPLES=["SELECT nombre, precio FROM productos ORDER BY precio DESC","SELECT categoria_id, COUNT(*) AS n FROM productos GROUP BY categoria_id","SELECT c.nombre, SUM(v.cantidad) AS total FROM ventas v JOIN clientes c ON v.cliente_id = c.id GROUP BY c.nombre ORDER BY total DESC","SELECT nombre, precio*stock AS valor FROM productos ORDER BY valor DESC LIMIT 5"];
+const SQL_CH=[
+ {id:'q1',d:'Trae el nombre de los productos con stock mayor a 50.',expect:'SELECT nombre FROM productos WHERE stock > 50'},
+ {id:'q2',d:'Cuenta cuántas ventas hubo en total (alias n).',expect:'SELECT COUNT(*) AS n FROM ventas'},
+ {id:'q3',d:'Saca el total de piezas vendidas por cada producto (p.nombre y SUM) de mayor a menor.',expect:'SELECT p.nombre, SUM(v.cantidad) AS total FROM ventas v JOIN productos p ON v.producto_id = p.id GROUP BY p.nombre ORDER BY total DESC'},
+ {id:'q4',d:'Muestra el valor de inventario (precio*stock) por producto, de mayor a menor, los 3 primeros.',expect:'SELECT nombre, precio*stock AS valor FROM productos ORDER BY valor DESC LIMIT 3'}];
+function sqlLab(root){const st=cst('sql');st.lab=st.lab||{};const L=st.lab;
+ const out=h('div',{class:'sqlout'});const ta=h('textarea',{class:'code sqlcode',rows:'3',spellcheck:'false',autocapitalize:'off',autocorrect:'off','aria-label':'Consulta SQL',value:L.q||SQL_SAMPLES[0]});
+ ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const p=ta.selectionStart;ta.setRangeText('  ',p,ta.selectionEnd,'end');}});
+ const run=()=>{L.q=ta.value;save();let r;try{r=sqlRun(SQL_DBS.pos,ta.value);}catch(e){out.replaceChildren(h('p',{class:'lq-bad'},'Error: '+e));return;}
+   if(!r.length){out.replaceChildren(h('p',{class:'empty'},'La consulta corrió pero no devolvió filas.'));return;}
+   const cols=Object.keys(r[0]);out.replaceChildren(table(cols,r.slice(0,50).map(row=>cols.map(c=>row[c]==null?'NULL':row[c])),{title:`${r.length} fila${r.length===1?'':'s'}`}));
+   // retos
+   for(const c of SQL_CH){if(st.ev['lab:'+c.id])continue;try{const want=sqlRun(SQL_DBS.pos,c.expect);const ordered=/order\s+by/i.test(c.expect);const norm=a=>{const rr=a.map(x=>JSON.stringify(Object.keys(x).sort().map(k=>[k,x[k]])));return ordered?rr:rr.slice().sort();};
+     if(JSON.stringify(norm(r))===JSON.stringify(norm(want))){st.ev['lab:'+c.id]=true;st.xp+=30;save();updateHeader();toast('Reto SQL completado: +30 XP');renderSqlCh(chbox,st);}}catch(e){}}};
+ ta.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();run();}});
+ const chbox=h('div');renderSqlCh(chbox,st);
+ root.replaceChildren(h('h2',null,'Consola SQL'),h('p',{class:'lead'},'Escribe cualquier consulta SELECT sobre la base de la tienda y ejecútala (Ctrl/Cmd + Enter). Los datos son ficticios y viven solo en tu navegador.'),
+  h('details',{class:'hint',open:true},h('summary',null,'Tablas disponibles'),h('div',{class:'lkv'},SQL_SCHEMA.map(([t,cols])=>kv(t,cols)))),
+  ta,h('div',{class:'row'},btn('Ejecutar',run,'pri'),btn('Ejemplo',()=>{ta.value=SQL_SAMPLES[Math.floor(Math.random()*SQL_SAMPLES.length)];run();})),out,
+  h('h3',null,'Retos de la consola'),chbox);
+ run();}
+function renderSqlCh(box,st){const dn=SQL_CH.filter(c=>st.ev['lab:'+c.id]).length;
+ box.replaceChildren(h('p',{class:'xp'},`${dn} de ${SQL_CH.length} retos · +30 XP cada uno`),
+  ...SQL_CH.map(c=>h('div',{class:'exb'+(st.ev['lab:'+c.id]?' ok':'')},h('p',{class:'exq'},c.d),st.ev['lab:'+c.id]?h('p',{class:'lq-ok'},'Completado'):h('p',{class:'empty'},'Escribe la consulta arriba y ejecútala.'))));}
+
+/* Evaluador de fórmulas estilo Excel en español. Celdas A1..., funciones comunes. */
+function colToIdx(c){let n=0;for(const ch of c)n=n*26+(ch.charCodeAt(0)-64);return n-1;}
+function xlCell(grid,ref){const m=/^\$?([A-Z]+)\$?(\d+)$/.exec(ref.toUpperCase());if(!m)return null;const col=colToIdx(m[1]),row=+m[2]-1;if(row<0||row>=grid.length)return null;const r=grid[row];return col<r.length?r[col]:null;}
+function xlRange(grid,a,b){const ma=/^\$?([A-Z]+)\$?(\d+)$/.exec(a.toUpperCase()),mb=/^\$?([A-Z]+)\$?(\d+)$/.exec(b.toUpperCase());if(!ma||!mb)throw'Rango inválido';
+  const c1=colToIdx(ma[1]),r1=+ma[2]-1,c2=colToIdx(mb[1]),r2=+mb[2]-1;const out=[];for(let r=Math.min(r1,r2);r<=Math.max(r1,r2);r++)for(let c=Math.min(c1,c2);c<=Math.max(c1,c2);c++){const row=grid[r]||[];out.push(c<row.length?row[c]:null);}return out;}
+const xlNum=v=>{if(typeof v==='number')return v;if(v==null||v==='')return 0;const n=parseFloat(String(v).replace(/[$,%\s]/g,''));return isFinite(n)?n:NaN;};
+const xlNums=a=>a.map(xlNum).filter(n=>isFinite(n));
+function xlEval(grid,formula){
+  let s=String(formula).trim();if(s[0]==='=')s=s.slice(1);
+  let i=0;const src=s;
+  function peek(){return src[i];}
+  function skip(){while(i<src.length&&/\s/.test(src[i]))i++;}
+  function parseExpr(){let v=parseCompare();return v;}
+  function parseCompare(){let a=parseConcatAdd();skip();const m=/^(<=|>=|<>|=|<|>)/.exec(src.slice(i));if(m){i+=m[0].length;const b=parseConcatAdd();const op=m[1];const na=a,nb=b;
+    if(op==='=')return eq(na,nb);if(op==='<>')return!eq(na,nb);const x=xlNum(na),y=xlNum(nb);return op==='<'?x<y:op==='>'?x>y:op==='<='?x<=y:x>=y;}return a;}
+  function parseConcatAdd(){let a=parseTerm();for(;;){skip();const c=src[i];if(c==='+'||c==='-'){i++;const b=parseTerm();a=xlNum(a)+(c==='+'?xlNum(b):-xlNum(b));}else if(c==='&'){i++;const b=parseTerm();a=xlStr(a)+xlStr(b);}else break;}return a;}
+  function parseTerm(){let a=parsePow();for(;;){skip();const c=src[i];if(c==='*'||c==='/'){i++;const b=parsePow();a=c==='*'?xlNum(a)*xlNum(b):xlNum(a)/xlNum(b);}else break;}return a;}
+  function parsePow(){let a=parseUnary();skip();if(src[i]==='^'){i++;const b=parsePow();return Math.pow(xlNum(a),xlNum(b));}return a;}
+  function parseUnary(){skip();if(src[i]==='-'){i++;return-xlNum(parseUnary());}if(src[i]==='+'){i++;return parseUnary();}return parseAtom();}
+  function parseAtom(){skip();const c=src[i];
+    if(c==='('){i++;const v=parseExpr();skip();if(src[i]===')')i++;return v;}
+    if(c==='"'){i++;let str='';while(i<src.length&&src[i]!=='"'){str+=src[i++];}i++;return str;}
+    if(/[0-9.]/.test(c)){let num='';while(i<src.length&&/[0-9.]/.test(src[i]))num+=src[i++];if(src[i]==='%'){i++;return parseFloat(num)/100;}return parseFloat(num);}
+    const fm=/^([A-Za-zÁÉÍÓÚÑ.]+)\s*\(/.exec(src.slice(i));
+    if(fm){const name=fm[1].toUpperCase();i+=fm[0].length;const args=[];skip();if(src[i]!==')'){args.push(parseArg());skip();while(src[i]===','||src[i]===';'){i++;args.push(parseArg());skip();}}if(src[i]===')')i++;return callFn(name,args);}
+    const rm=/^(\$?[A-Za-z]+\$?\d+)(\s*:\s*(\$?[A-Za-z]+\$?\d+))?/.exec(src.slice(i));
+    if(rm){i+=rm[0].length;if(rm[3])return{__range:[rm[1],rm[3]]};const v=xlCell(grid,rm[1]);return v;}
+    const bm=/^(VERDADERO|FALSO)/i.exec(src.slice(i));if(bm){i+=bm[0].length;return/v/i.test(bm[0]);}
+    throw'No entiendo: "'+src.slice(i,i+12)+'"';}
+  function parseArg(){skip();const rm=/^(\$?[A-Za-z]+\$?\d+)\s*:\s*(\$?[A-Za-z]+\$?\d+)/.exec(src.slice(i));if(rm){i+=rm[0].length;return{__range:[rm[1],rm[2]]};}return parseExpr();}
+  function flat(a){if(a&&a.__range)return xlRange(grid,a.__range[0],a.__range[1]);return[a];}
+  function eq(a,b){if(typeof a==='string'||typeof b==='string')return String(a).toLowerCase()===String(b).toLowerCase();return xlNum(a)===xlNum(b);}
+  function matchCrit(val,crit){crit=crit==null?'':crit;const m=/^(<=|>=|<>|=|<|>)(.*)$/.exec(String(crit));
+    if(m){const op=m[1],t=m[2].trim();if(op==='='||op==='<>'){const e=eq(val,isFinite(xlNum(t))&&t!==''?xlNum(t):t);return op==='='?e:!e;}const x=xlNum(val),y=xlNum(t);return op==='<'?x<y:op==='>'?x>y:op==='<='?x<=y:x>=y;}
+    if(/[*?]/.test(String(crit))){const re=new RegExp('^'+String(crit).replace(/[.+^${}()|[\]\\]/g,'\\$&').replace(/\*/g,'.*').replace(/\?/g,'.')+'$','i');return re.test(String(val));}
+    return eq(val,isFinite(xlNum(crit))&&crit!==''?xlNum(crit):crit);}
+  function callFn(name,args){const A=()=>args.flatMap(flat);
+    switch(name){
+      case'SUMA':return xlNums(A()).reduce((a,b)=>a+b,0);
+      case'PROMEDIO':{const n=xlNums(A());if(!n.length)throw'¡DIV/0!';return n.reduce((a,b)=>a+b,0)/n.length;}
+      case'CONTAR':return A().filter(v=>v!==null&&v!==''&&isFinite(xlNum(v))).length;
+      case'CONTARA':return A().filter(v=>v!==null&&v!=='').length;
+      case'MAX':{const n=xlNums(A());return n.length?Math.max(...n):0;}
+      case'MIN':{const n=xlNums(A());return n.length?Math.min(...n):0;}
+      case'REDONDEAR':return Math.round(xlNum(args[0])*10**xlNum(args[1]))/10**xlNum(args[1]);
+      case'ENTERO':return Math.floor(xlNum(args[0]));
+      case'ABS':return Math.abs(xlNum(args[0]));
+      case'POTENCIA':return Math.pow(xlNum(args[0]),xlNum(args[1]));
+      case'RAIZ':return Math.sqrt(xlNum(args[0]));
+      case'SI':{const c=args[0];const cond=typeof c==='boolean'?c:xlNum(c)!==0&&c!==''&&c!=null&&c!==false;return cond?args[1]:(args.length>2?args[2]:false);}
+      case'Y':return args.every(a=>a===true||xlNum(a)!==0&&a!==false);
+      case'O':return args.some(a=>a===true||xlNum(a)!==0&&a!==false);
+      case'NO':return!(args[0]===true||xlNum(args[0])!==0);
+      case'SI.ERROR':try{return args[0];}catch(e){return args[1];}
+      case'CONTAR.SI':{const rng=flat(args[0]);return rng.filter(v=>matchCrit(v,args[1])).length;}
+      case'SUMAR.SI':{const rng=flat(args[0]);const sumR=args[2]?flat(args[2]):rng;let t=0;rng.forEach((v,k)=>{if(matchCrit(v,args[1]))t+=xlNum(sumR[k]);});return t;}
+      case'PROMEDIO.SI':{const rng=flat(args[0]);const avR=args[2]?flat(args[2]):rng;let t=0,c=0;rng.forEach((v,k)=>{if(matchCrit(v,args[1])){t+=xlNum(avR[k]);c++;}});if(!c)throw'¡DIV/0!';return t/c;}
+      case'BUSCARV':{const key=args[0];const tbl=args[1].__range?[args[1].__range[0],args[1].__range[1]]:null;if(!tbl)throw'BUSCARV necesita un rango';
+        const ma=/^\$?([A-Z]+)\$?(\d+)$/i.exec(tbl[0].toUpperCase()),mb=/^\$?([A-Z]+)\$?(\d+)$/i.exec(tbl[1].toUpperCase());
+        const c1=colToIdx(ma[1]),r1=+ma[2]-1,c2=colToIdx(mb[1]),r2=+mb[2]-1;const colIdx=xlNum(args[2])-1;
+        for(let r=Math.min(r1,r2);r<=Math.max(r1,r2);r++){const cell=(grid[r]||[])[c1];if(eq(cell,key))return(grid[r]||[])[c1+colIdx];}throw'#N/D';}
+      case'CONCATENAR':case'CONCAT':return args.flatMap(flat).map(xlStr).join('');
+      case'MAYUSC':return String(args[0]).toUpperCase();
+      case'MINUSC':return String(args[0]).toLowerCase();
+      case'LARGO':return String(args[0]).length;
+      case'IZQUIERDA':return String(args[0]).slice(0,xlNum(args[1]||1));
+      case'DERECHA':return String(args[0]).slice(-xlNum(args[1]||1));
+      case'REDONDEAR.MAS':return Math.ceil(xlNum(args[0])*10**xlNum(args[1]||0))/10**xlNum(args[1]||0);
+      case'REDONDEAR.MENOS':return Math.floor(xlNum(args[0])*10**xlNum(args[1]||0))/10**xlNum(args[1]||0);
+      case'MEDIANA':{const n=xlNums(A()).sort((a,b)=>a-b);if(!n.length)return 0;const mid=Math.floor(n.length/2);return n.length%2?n[mid]:(n[mid-1]+n[mid])/2;}
+      case'CONTAR.BLANCO':return A().filter(v=>v===null||v==='').length;
+      default:throw'Función no soportada: '+name+'()';}
+  }
+  function xlStr(v){if(v===true)return'VERDADERO';if(v===false)return'FALSO';if(typeof v==='number')return String(Math.round(v*1e8)/1e8);return v==null?'':String(v);}
+  const r=parseExpr();skip();
+  if(typeof r==='number')return Math.round(r*1e8)/1e8;return r;
+}
+
+
+/* =================== Excel avanzado =================== */
+const XL_VENTAS=[
+ ['Producto','Categoria','Precio','Cantidad','Importe','Vendedor'],
+ ['Martillo','Herramienta',120,2,240,'Ana'],
+ ['Clavos 2 pulg','Ferreteria',35,50,1750,'Luis'],
+ ['Pintura blanca','Pintura',250,1,250,'Ana'],
+ ['Brocha 3 pulg','Pintura',45,3,135,'Sofia'],
+ ['Taladro','Herramienta',980,1,980,'Luis'],
+ ['Foco LED','Electrico',55,4,220,'Ana'],
+ ['Cinta aislar','Electrico',28,10,280,'Sofia'],
+ ['Thinner','Pintura',70,2,140,'Luis']];
+const XL_SHEETS={ventas:XL_VENTAS};
+COURSES.xl={n:'Excel avanzado',badge:'XL',cls:'hub-xl',labName:'Hoja de práctica',lab:xlLab,
+ desc:'Domina las fórmulas de Excel que de verdad se usan en planta y almacén: SUMA, PROMEDIO, SI, CONTAR.SI, SUMAR.SI y BUSCARV, practicando sobre una hoja real que calcula al instante.',
+ ruta:{intro:'Vas a aprender las fórmulas de Excel que resuelven el 90 % del trabajo diario: sumar, promediar, contar con condiciones, decidir con SI y buscar datos con BUSCARV. Todo se practica sobre una hoja de ventas que calcula de verdad mientras escribes.',fast:'45 minutos diarios, 6 días a la semana',slow:'30 minutos diarios',
+  tips:['En la Hoja de práctica puedes escribir cualquier fórmula y ver el resultado al instante.','Toda fórmula empieza con el signo igual (=).','Los rangos se escriben con dos puntos: C2:C9 son todas las celdas de C2 a C9.'],
+  fases:[
+   {t:'Fase 1: Fundamentos',items:[['Celdas, rangos y referencias','Cómo se nombran las celdas y los rangos.','x1'],['Operaciones básicas','Sumar, restar, multiplicar entre celdas.','x2'],['Referencias absolutas','El signo $ para fijar una celda.','x3']]},
+   {t:'Fase 2: Funciones esenciales',items:[['SUMA y PROMEDIO','Totales y promedios de un rango.','x4'],['CONTAR, MAX y MIN','Contar y encontrar extremos.','x5'],['REDONDEAR','Controlar los decimales.','x6']]},
+   {t:'Fase 3: Lógica y condiciones',items:[['SI','Decidir según una condición.','x7'],['Y, O y SI anidado','Combinar varias condiciones.','x8'],['CONTAR.SI y SUMAR.SI','Contar y sumar con criterio.','x9']]},
+   {t:'Fase 4: Búsqueda y productividad',items:[['BUSCARV','Buscar un dato en una tabla.','x10'],['Texto y concatenar','Unir y transformar texto.','x11'],['Tablas dinámicas (teoría)','Resumir grandes datos sin fórmulas.','x12']]}]},
+ lec:[
+  {id:'x1',sec:'Fundamentos',t:'Celdas, rangos y referencias',obj:'nombrar celdas y rangos correctamente.',p:['Cada celda tiene una dirección: la letra de la columna y el número de la fila. C2 es la columna C, fila 2. Para usar el valor de una celda en una fórmula, escribes su dirección.','Un rango es un bloque de celdas y se escribe con dos puntos: C2:C9 va de C2 hasta C9. Toda fórmula empieza con =.'],
+   ej:{t:'La hoja de práctica',calc:'   A         B          C       D         E        F\n1 Producto  Categoria  Precio  Cantidad  Importe  Vendedor\n2 Martillo  Herram.    120     2         240      Ana\n...\nC2 = 120     D2 = 2     E2 = 240\nRango de precios: C2:C9'},
+   ex:[{t:'opt',q:'¿Qué celda tiene el precio del Martillo?',how:'Columna Precio (C), fila del Martillo (2).',opts:['C2','B2','C1','E2'],why:'Columna C, fila 2.'},
+    {t:'opt',q:'¿Cómo se escribe el rango de todas las cantidades (columna D, filas 2 a 9)?',how:'Inicio:fin con dos puntos.',opts:['D2:D9','D2-D9','D2;D9','D2.D9'],why:'Los rangos usan dos puntos.'},
+    {t:'xl',q:'Escribe una fórmula que muestre el precio de la celda C2.',how:'Empieza con = y escribe la celda.',sheet:'ventas',start:'=',expect:'=C2',why:'=C2 devuelve el valor de esa celda.'}]},
+  {id:'x2',sec:'Fundamentos',t:'Operaciones básicas',obj:'operar entre celdas con +, -, * y /.',p:['Puedes operar celdas como en una calculadora: =C2*D2 multiplica precio por cantidad para obtener el importe. Se usan + - * / y paréntesis para el orden.','Las fórmulas se recalculan solas cuando cambian los datos.'],
+   ej:{t:'Ejemplo',calc:'=C2*D2     → 120 * 2 = 240 (importe)\n=C2-? \n=(C2+C3)/2 → promedio de dos precios'},
+   ex:[{t:'xl',q:'Calcula el importe del Martillo: su precio por su cantidad (C2 por D2).',how:'Multiplica las dos celdas con *.',sheet:'ventas',start:'=',expect:'=C2*D2',why:'Precio por cantidad = importe.'},
+    {t:'xl',q:'Calcula el promedio de los precios del Martillo y los Clavos usando paréntesis: (C2 + C3) entre 2.',how:'Suma dentro de paréntesis y divide entre 2.',sheet:'ventas',expect:'=(C2+C3)/2',why:'Los paréntesis fuerzan el orden.'},
+    {t:'xl',q:'¿Cuánto es el precio del Taladro (C6) menos el del Foco (C7)?',how:'Resta las dos celdas.',sheet:'ventas',expect:'=C6-C7',why:'980 − 55.'}]},
+  {id:'x3',sec:'Fundamentos',t:'Referencias absolutas ($)',obj:'entender cuándo fijar una celda con $.',p:['Cuando copias una fórmula hacia abajo, las referencias se mueven solas: C2 se vuelve C3, C4... Eso es una referencia relativa y casi siempre es lo que quieres.','Si necesitas que una celda NO se mueva (por ejemplo el IVA en G1), la fijas con el signo $: $G$1. Eso es una referencia absoluta.'],
+   ej:{t:'Ejemplo',calc:'=E2*$G$1   al copiar hacia abajo:\n  fila 3 → =E3*$G$1\n  fila 4 → =E4*$G$1\nE se mueve, $G$1 queda fijo'},
+   ex:[{t:'opt',q:'¿Qué referencia NO se mueve al copiar la fórmula?',how:'El signo $ fija la celda.',opts:['$G$1','G1','G$1 cambia de columna','Ninguna'],why:'$ antes de la letra y el número la fija por completo.'},
+    {t:'opt',q:'Para multiplicar cada importe por una tasa fija en G1 y poder copiar la fórmula, escribes:',how:'Fija solo la celda de la tasa.',opts:['=E2*$G$1','=E2*G1','=$E$2*G1','=E2*E1'],why:'E2 se mueve; $G$1 queda anclado.'},
+    {t:'opt',q:'Al copiar =C2*D2 de la fila 2 a la fila 3 se convierte en:',how:'Las referencias relativas bajan con la fila.',opts:['=C3*D3','=C2*D2','=C4*D4','=$C$2*$D$2'],why:'Ambas bajan una fila.'}]},
+  {id:'x4',sec:'Funciones esenciales',t:'SUMA y PROMEDIO',obj:'totalizar y promediar un rango.',p:['SUMA suma todas las celdas de un rango: =SUMA(E2:E9) da el total de importes. PROMEDIO calcula la media: =PROMEDIO(C2:C9).','Son las dos funciones más usadas. El rango va entre paréntesis.'],
+   ej:{t:'Ejemplo',calc:'=SUMA(E2:E9)       → total vendido\n=PROMEDIO(C2:C9)   → precio promedio\n=SUMA(D2:D9)       → total de piezas'},
+   ex:[{t:'xl',q:'Suma el total de importes de toda la hoja (columna E, filas 2 a 9).',how:'=SUMA(rango).',sheet:'ventas',start:'=SUMA(',expect:'=SUMA(E2:E9)',why:'Suma la columna Importe.'},
+    {t:'xl',q:'Saca el precio promedio de todos los productos (columna C).',how:'=PROMEDIO(C2:C9).',sheet:'ventas',expect:'=PROMEDIO(C2:C9)',why:'PROMEDIO divide la suma entre la cantidad de celdas.'},
+    {t:'xl',q:'¿Cuántas piezas se vendieron en total (columna D)?',how:'Suma la columna Cantidad.',sheet:'ventas',expect:'=SUMA(D2:D9)',why:'Total de unidades.'}]},
+  {id:'x5',sec:'Funciones esenciales',t:'CONTAR, MAX y MIN',obj:'contar y encontrar el mayor y el menor.',p:['CONTAR cuenta cuántas celdas de un rango tienen números: =CONTAR(C2:C9). Para contar celdas con cualquier contenido se usa CONTARA. MAX y MIN dan el valor mayor y menor.','Sirven para "¿cuántos registros hay?", "¿cuál es el más caro?", "¿el más barato?".'],
+   ej:{t:'Ejemplo',calc:'=CONTAR(C2:C9)  → cuántos productos (8)\n=MAX(C2:C9)     → precio más alto (980)\n=MIN(C2:C9)     → precio más bajo (28)'},
+   ex:[{t:'xl',q:'¿Cuántos productos hay? Cuenta los precios de C2 a C9.',how:'=CONTAR(C2:C9).',sheet:'ventas',expect:'=CONTAR(C2:C9)',why:'Cuenta las celdas con número.'},
+    {t:'xl',q:'¿Cuál es el precio más alto? (columna C)',how:'=MAX(C2:C9).',sheet:'ventas',expect:'=MAX(C2:C9)',why:'MAX devuelve el mayor.'},
+    {t:'xl',q:'¿Cuál es la cantidad más baja vendida? (columna D)',how:'=MIN(D2:D9).',sheet:'ventas',expect:'=MIN(D2:D9)',why:'MIN devuelve el menor.'}]},
+  {id:'x6',sec:'Funciones esenciales',t:'REDONDEAR',obj:'controlar los decimales de un resultado.',p:['REDONDEAR(valor, decimales) ajusta un número a los decimales que quieras: =REDONDEAR(PROMEDIO(C2:C9), 2) deja dos decimales. Con 0 decimales redondea al entero.','Es clave para precios y reportes limpios. También existen REDONDEAR.MAS y REDONDEAR.MENOS.'],
+   ej:{t:'Ejemplo',calc:'=REDONDEAR(286.375, 2) → 286.38\n=REDONDEAR(286.375, 0) → 286\n=REDONDEAR(PROMEDIO(E2:E9), 1)'},
+   ex:[{t:'xl',q:'Redondea a 1 decimal el promedio de importes (columna E).',how:'Mete el PROMEDIO dentro de REDONDEAR(...,1).',sheet:'ventas',expect:'=REDONDEAR(PROMEDIO(E2:E9),1)',why:'Las funciones se pueden anidar.'},
+    {t:'xl',q:'Redondea el precio promedio (columna C) a 0 decimales.',how:'=REDONDEAR(PROMEDIO(C2:C9),0).',sheet:'ventas',expect:'=REDONDEAR(PROMEDIO(C2:C9),0)',why:'0 decimales = entero.'}]},
+  {id:'x7',sec:'Lógica y condiciones',t:'La función SI',obj:'devolver un resultado u otro según una condición.',p:['SI(condición, valor_si_verdadero, valor_si_falso) decide. =SI(C2>100, "Caro", "Barato") escribe "Caro" cuando el precio pasa de 100 y "Barato" si no.','La condición usa comparadores: > < >= <= = <>. Los textos van entre comillas.'],
+   ej:{t:'Ejemplo',calc:'=SI(C2>100,"Caro","Barato")      → "Caro"\n=SI(D2>=3,"Surtido","Poco")      → según cantidad\n=SI(E2>500,"Revisar","")         → marca importes altos'},
+   ex:[{t:'xl',q:'Para el Martillo (C2), escribe "Caro" si su precio pasa de 100 y "Barato" si no.',how:'=SI(C2>100,"Caro","Barato").',sheet:'ventas',expect:'=SI(C2>100,"Caro","Barato")',why:'120 > 100 → "Caro".'},
+    {t:'xl',q:'Para los Clavos (fila 3): "Surtido" si la cantidad (D3) es 10 o más, si no "Normal".',how:'=SI(D3>=10,"Surtido","Normal").',sheet:'ventas',expect:'=SI(D3>=10,"Surtido","Normal")',why:'50 ≥ 10 → "Surtido".'},
+    {t:'opt',q:'En =SI(condición, A, B), ¿cuándo devuelve B?',how:'B es el tercer argumento.',opts:['Cuando la condición es falsa','Cuando es verdadera','Siempre','Nunca'],why:'B es el valor si la condición no se cumple.'}]},
+  {id:'x8',sec:'Lógica y condiciones',t:'Y, O y SI anidado',obj:'combinar varias condiciones.',p:['Y(cond1, cond2) es verdadero solo si se cumplen todas; O(cond1, cond2) con que se cumpla una basta. Se meten dentro de SI: =SI(Y(C2>100, D2>0), "Caro y hay", "").','Para más de dos salidas se anidan varios SI, uno dentro de otro.'],
+   ej:{t:'Ejemplo',calc:'=SI(Y(C2>100,D2>=1),"Caro y disponible","")\n=SI(O(B2="Pintura",B2="Electrico"),"Especial","")\n=SI(C2>500,"Alto",SI(C2>100,"Medio","Bajo"))'},
+   ex:[{t:'xl',q:'Para el Taladro (fila 6): "Caro y disponible" si el precio C6 pasa de 500 Y la cantidad D6 es al menos 1; si no, "".',how:'=SI(Y(C6>500,D6>=1),"Caro y disponible","").',sheet:'ventas',expect:'=SI(Y(C6>500,D6>=1),"Caro y disponible","")',why:'Y exige que se cumplan las dos.'},
+    {t:'xl',q:'Clasifica el precio del Martillo (C2) en tres niveles: "Alto" si pasa de 500, si no "Medio" si pasa de 100, si no "Bajo".',how:'Anida: =SI(C2>500,"Alto",SI(C2>100,"Medio","Bajo")).',sheet:'ventas',expect:'=SI(C2>500,"Alto",SI(C2>100,"Medio","Bajo"))',why:'120 → "Medio".'},
+    {t:'opt',q:'La función Y(A, B) es verdadera cuando:',how:'Todas deben cumplirse.',opts:['Se cumplen A y B','Se cumple al menos una','No se cumple ninguna','Siempre'],why:'O(A,B) basta con una; Y exige ambas.'}]},
+  {id:'x9',sec:'Lógica y condiciones',t:'CONTAR.SI y SUMAR.SI',obj:'contar y sumar solo lo que cumple un criterio.',p:['CONTAR.SI(rango, criterio) cuenta las celdas que cumplen: =CONTAR.SI(B2:B9, "Pintura") cuenta los productos de pintura. SUMAR.SI(rango, criterio, rango_suma) suma otra columna según el criterio.','El criterio puede ser texto ("Pintura"), un número, o una comparación entre comillas (">100").'],
+   ej:{t:'Ejemplo',calc:'=CONTAR.SI(B2:B9,"Pintura")              → 3\n=SUMAR.SI(B2:B9,"Herramienta",E2:E9)     → importe de herramientas\n=CONTAR.SI(C2:C9,">100")                 → productos de más de 100'},
+   ex:[{t:'xl',q:'Cuenta cuántos productos son de la categoría "Pintura" (columna B).',how:'=CONTAR.SI(B2:B9,"Pintura").',sheet:'ventas',expect:'=CONTAR.SI(B2:B9,"Pintura")',why:'Cuenta las filas que dicen Pintura.'},
+    {t:'xl',q:'Suma el importe (E) solo de la categoría "Herramienta" (B).',how:'=SUMAR.SI(B2:B9,"Herramienta",E2:E9).',sheet:'ventas',expect:'=SUMAR.SI(B2:B9,"Herramienta",E2:E9)',why:'Suma E donde B es Herramienta.'},
+    {t:'xl',q:'¿Cuántos productos cuestan más de 100 pesos? (columna C)',how:'Criterio entre comillas: ">100".',sheet:'ventas',expect:'=CONTAR.SI(C2:C9,">100")',why:'La comparación va como texto entre comillas.'}]},
+  {id:'x10',sec:'Búsqueda y productividad',t:'BUSCARV',obj:'traer un dato de una tabla a partir de una clave.',p:['BUSCARV(valor_buscado, rango_tabla, número_de_columna) busca un valor en la primera columna del rango y devuelve el dato de la columna indicada. =BUSCARV("Taladro", A2:E9, 3) busca Taladro y trae su precio (la 3a columna del rango).','Es la función estrella para cruzar tablas, como pegar el precio a una lista de pedidos.'],
+   ej:{t:'Ejemplo',calc:'=BUSCARV("Pintura blanca", A2:E9, 3) → 250 (precio)\n=BUSCARV("Brocha 3 pulg", A2:E9, 5) → 135 (importe)\ncolumna 1=Producto, 2=Categoria, 3=Precio, 4=Cantidad, 5=Importe'},
+   ex:[{t:'xl',q:'Busca el precio del "Taladro" en la tabla A2:E9 (el precio es la columna 3 del rango).',how:'=BUSCARV("Taladro",A2:E9,3).',sheet:'ventas',expect:'=BUSCARV("Taladro",A2:E9,3)',why:'Devuelve la columna 3 de la fila encontrada.'},
+    {t:'xl',q:'Trae el importe del "Foco LED" con BUSCARV (el importe es la columna 5).',how:'=BUSCARV("Foco LED",A2:E9,5).',sheet:'ventas',expect:'=BUSCARV("Foco LED",A2:E9,5)',why:'Columna 5 = Importe.'},
+    {t:'opt',q:'¿En qué columna del rango busca BUSCARV el valor?',how:'Siempre mira la primera.',opts:['En la primera columna del rango','En la última','En la que indiques','En todas'],why:'Por eso la clave debe estar en la primera columna.'}]},
+  {id:'x11',sec:'Búsqueda y productividad',t:'Texto: concatenar y transformar',obj:'unir y transformar texto.',p:['El operador & une textos: =A2 & " - " & B2 pega producto y categoría. CONCATENAR hace lo mismo. MAYUSC y MINUSC cambian el tamaño de las letras; LARGO cuenta caracteres.','Sirve para armar etiquetas, claves y descripciones.'],
+   ej:{t:'Ejemplo',calc:'=A2 & " (" & B2 & ")"   → Martillo (Herramienta)\n=MAYUSC(A2)             → MARTILLO\n=LARGO(A2)              → número de letras'},
+   ex:[{t:'xl',q:'Une el producto y su categoría del Martillo así: Producto - Categoria, usando A2, " - " y B2.',how:'=A2&" - "&B2.',sheet:'ventas',expect:'=A2&" - "&B2',why:'& pega los textos.'},
+    {t:'xl',q:'Convierte a mayúsculas el nombre del Martillo (A2).',how:'=MAYUSC(A2).',sheet:'ventas',expect:'=MAYUSC(A2)',why:'MAYUSC transforma el texto.'}]},
+  {id:'x12',sec:'Búsqueda y productividad',t:'Tablas dinámicas (teoría)',obj:'saber cuándo usar una tabla dinámica.',p:['Una tabla dinámica resume miles de filas sin escribir fórmulas: arrastras un campo a filas (por ejemplo Categoría), otro a valores (Importe) y te da el total por categoría al instante. Puedes cambiar el resumen con el mouse.','Son ideales para explorar datos y hacer reportes rápidos. Cuando tengas datos muy grandes, una tabla dinámica es más rápida que llenar de SUMAR.SI.'],
+   ex:[{t:'opt',q:'Una tabla dinámica sirve sobre todo para:',how:'Resumir muchos datos rápido.',opts:['Resumir y agrupar grandes cantidades de datos sin fórmulas','Cambiar colores','Imprimir','Proteger celdas'],why:'Agrupa y totaliza arrastrando campos.'},
+    {t:'opt',q:'Para ver el total de importe por categoría en una tabla dinámica pondrías:',how:'Un campo en filas y otro en valores.',opts:['Categoría en filas e Importe en valores','Todo en valores','Nada','Solo un filtro'],why:'Filas = Categoría, Valores = suma de Importe.'},
+    {t:'opt',q:'Frente a llenar muchas celdas con SUMAR.SI, una tabla dinámica es:','how':'Más ágil para explorar.',opts:['Más rápida de armar y de cambiar','Más lenta','Igual','Imposible'],why:'Se reconfigura arrastrando campos.'}]}],
+ exam:[]};
+/* --- Banco de examen Excel (≈100 preguntas) --- */
+const XL_EXAM=[
+ ['¿Con qué símbolo empieza toda fórmula en Excel?','=','+','@','#','El signo igual inicia la fórmula.'],
+ ['¿Qué celda es la columna C, fila 4?','C4','4C','D4','C3','Letra de columna y número de fila.'],
+ ['¿Cómo se escribe el rango de C2 a C9?','C2:C9','C2-C9','C2;C9','C2,C9','Los rangos usan dos puntos.'],
+ ['¿Qué hace =SUMA(E2:E9)?','Suma ese rango','Cuenta celdas','Promedia','Ordena','SUMA totaliza.'],
+ ['¿Qué devuelve =PROMEDIO(C2:C9)?','La media de esos valores','La suma','El máximo','El conteo','PROMEDIO = media.'],
+ ['¿Qué función cuenta celdas con números?','CONTAR','CONTARA','SUMA','SI','CONTAR cuenta números.'],
+ ['¿Qué función cuenta celdas con cualquier contenido?','CONTARA','CONTAR','SUMA','MAX','CONTARA incluye texto.'],
+ ['¿Qué devuelve =MAX(C2:C9)?','El valor más alto','El más bajo','El promedio','El total','MAX = máximo.'],
+ ['¿Qué devuelve =MIN(D2:D9)?','El valor más bajo','El más alto','La suma','El conteo','MIN = mínimo.'],
+ ['=C2*D2 calcula:','El producto de dos celdas','La suma','La resta','El promedio','* multiplica.'],
+ ['¿Qué hace el signo $ en $G$1?','Fija la referencia (absoluta)','La borra','La suma','La mueve','$ ancla fila y columna.'],
+ ['Al copiar =C2*D2 a la fila de abajo se vuelve:','=C3*D3','=C2*D2','=C4*D4','=$C$2*$D$2','Referencias relativas bajan.'],
+ ['SI(condición, A, B) devuelve A cuando:','La condición es verdadera','Es falsa','Siempre','Nunca','A es el valor verdadero.'],
+ ['En SI, el valor si es falso es:','El tercer argumento','El primero','El segundo','No existe','SI(cond, verdadero, falso).'],
+ ['Los textos en una fórmula van entre:','Comillas dobles','Paréntesis','Corchetes','Comillas simples','Ej: "Caro".'],
+ ['=CONTAR.SI(B2:B9,"Pintura") cuenta:','Las celdas que dicen Pintura','Todas','Las vacías','Los números','Cuenta por criterio.'],
+ ['=SUMAR.SI(B2:B9,"Herramienta",E2:E9) suma:','El importe de las herramientas','Todo','Nada','Las cantidades','Suma E según B.'],
+ ['BUSCARV busca el valor en:','La primera columna del rango','La última','Cualquiera','La fila 1','Por eso la clave va primero.'],
+ ['El tercer argumento de BUSCARV es:','El número de columna a devolver','El criterio','El rango','Nada','Indica qué columna traer.'],
+ ['El operador & sirve para:','Unir (concatenar) texto','Sumar','Restar','Comparar','"a"&"b" → "ab".'],
+ ['=MAYUSC("hola") devuelve:','HOLA','hola','Hola','ola','Pasa a mayúsculas.'],
+ ['=REDONDEAR(3.456,1) da:','3.5','3.4','3','3.46','Un decimal.'],
+ ['=REDONDEAR(286.7,0) da:','287','286','286.7','280','Al entero.'],
+ ['¿Qué función da el promedio solo de lo que cumple un criterio?','PROMEDIO.SI','PROMEDIO','CONTAR.SI','SUMA','Promedio condicional.'],
+ ['Y(A, B) es verdadero cuando:','Se cumplen ambas','Se cumple una','Ninguna','Siempre','Y exige todas.'],
+ ['O(A, B) es verdadero cuando:','Se cumple al menos una','Se cumplen ambas','Ninguna','Nunca','O basta con una.'],
+ ['Para 3 resultados distintos según el valor se usa:','SI anidado','Un solo SI','SUMA','CONTAR','SI dentro de otro SI.'],
+ ['Una tabla dinámica sirve para:','Resumir grandes datos sin fórmulas','Imprimir','Cambiar colores','Proteger','Agrupa arrastrando campos.'],
+ ['=CONTAR.SI(C2:C9,">100") cuenta:','Los valores mayores a 100','Todos','Los menores','Los iguales a 100','Criterio entre comillas.'],
+ ['Una referencia relativa, al copiarla:','Se ajusta a la nueva posición','Queda fija','Desaparece','Da error','Se mueve con la celda.'],
+ ['=SUMA(C2:C9)/CONTAR(C2:C9) equivale a:','El promedio','El máximo','La mediana','El total','Suma entre cantidad.'],
+ ['El resultado de =10>5 es:','VERDADERO','FALSO','10','5','Es una comparación.'],
+ ['=LARGO("Martillo") devuelve:','8','7','Martillo','1','Cuenta los caracteres.'],
+ ['Para fijar solo la columna se escribe:','$C1','C$1','$C$1','C1','El $ antes de la letra fija la columna.'],
+ ['=PROMEDIO(C2:C9) si el rango está vacío da:','Un error (¡DIV/0!)','0','1','Vacío','No hay valores que promediar.'],
+ ['=SI(E2>500,"Alto","") deja en blanco cuando:','E2 no pasa de 500','E2 pasa de 500','Siempre','Nunca','El falso es "".'],
+ ['¿Cuál suma con una sola condición?','SUMAR.SI','SUMA','CONTAR.SI','BUSCARV','SUMAR.SI(rango,criterio,suma).'],
+ ['¿Cuál NO es función de Excel?','ORDENARV','BUSCARV','SUMAR.SI','PROMEDIO','ORDENARV no existe así.'],
+ ['El criterio ">=100" en CONTAR.SI significa:','Mayor o igual a 100','Solo 100','Menor a 100','Texto 100','Comparación en texto.'],
+ ['=C2&" pesos" con C2=120 da:','120 pesos','C2 pesos','120','pesos','& une número y texto.'],
+ ['El orden de operaciones respeta:','Paréntesis primero','De izquierda a derecha siempre','Suma primero','Nada','() tiene prioridad.'],
+ ['=POTENCIA(2,3) o =2^3 dan:','8','6','9','5','Dos elevado a la tres.'],
+ ['La función para el valor de en medio es:','MEDIANA','PROMEDIO','MODA','MAX','Mediana = valor central.'],
+ ['=ENTERO(7.9) devuelve:','7','8','7.9','0','Quita los decimales hacia abajo.'],
+ ['=ABS(-40) devuelve:','40','-40','0','4','Valor absoluto.'],
+ ['Para contar cuántas celdas están vacías se usa:','CONTAR.BLANCO','CONTAR','CONTARA','SUMA','Cuenta vacías.'],
+ ['Si escribes un nombre de producto sin comillas en una fórmula, Excel:','Lo toma como nombre de celda/rango y falla','Lo corrige','Lo ignora','Lo suma','El texto necesita comillas.'],
+ ['¿Qué hace SI.ERROR(formula, "")?','Devuelve "" si la fórmula da error','Siempre da error','Suma','Ordena','Atrapa errores.'],
+ ['=BUSCARV("X",A2:E9,2) devuelve, de la fila de X:','La segunda columna del rango','La primera','La última','Nada','El índice es relativo al rango.'],
+ ['Para que BUSCARV encuentre coincidencia exacta, la clave debe estar en:','La primera columna del rango','Cualquier columna','La última','La fila de títulos','BUSCARV mira la primera columna.'],
+ ['=SUMA(E2:E9) cambia solo cuando:','Cambian los datos del rango','Nunca','Cada minuto','Al imprimir','Las fórmulas se recalculan.'],
+ ['El resultado de =SI(5>3,"Sí","No") es:','Sí','No','5','VERDADERO','5>3 es verdadero.'],
+ ['=CONTARA(A1:A9) en una columna con 9 celdas llenas da:','9','8','0','1','Cuenta todo lo no vacío.'],
+ ['Para sumar importes mayores a 200 usas:','=SUMAR.SI(E2:E9,">200")','=SUMA(E2:E9)','=CONTAR.SI','=MAX','Suma condicional sobre el propio rango.'],
+ ['=REDONDEAR.MAS(2.1,0) da:','3','2','2.1','0','Redondea hacia arriba.'],
+ ['=REDONDEAR.MENOS(2.9,0) da:','2','3','2.9','0','Redondea hacia abajo.'],
+ ['La coma (o punto y coma) en una función separa:','Los argumentos','Los decimales','Las filas','Las hojas','Cada argumento va separado.'],
+ ['=MIN(C2:C9) con precios 28..980 da:','28','980','504','0','El menor.'],
+ ['=MAX(D2:D9) de cantidades da:','La mayor cantidad','El precio','El total','El promedio','MAX sobre cantidades.'],
+ ['Una fórmula que usa otra función adentro se llama:','Función anidada','Fórmula simple','Macro','Rango','Una dentro de otra.'],
+ ['=SI(Y(C2>100,D2>1),"OK","") da "OK" cuando:','Se cumplen las dos condiciones','Una sola','Ninguna','Siempre','Y exige ambas.'],
+ ['Para el total de piezas por vendedor "Ana" usas SUMAR.SI sobre:','La columna Vendedor como criterio y Cantidad como suma','Solo Cantidad','Solo Vendedor','Importe','Criterio en F, suma en D.'],
+ ['=CONTAR.SI(F2:F9,"Ana") cuenta:','Las ventas de Ana','Todas','Las de pintura','Los importes','Cuenta por vendedor.'],
+ ['El símbolo para dividir es:','/','\\\\','÷','%','=C2/D2.'],
+ ['=10% en una celda vale:','0.1','10','1','100','El % divide entre 100.'],
+ ['Para extraer las 3 primeras letras de A2 usas:','=IZQUIERDA(A2,3)','=DERECHA(A2,3)','=LARGO(A2)','=MAYUSC(A2)','IZQUIERDA toma del inicio.'],
+ ['=DERECHA("Martillo",2) da:','lo','Ma','rt','to','Las 2 últimas letras.'],
+ ['Un error #N/D en BUSCARV significa:','No encontró el valor','División por cero','Falta paréntesis','Texto muy largo','No hay coincidencia.'],
+ ['El error ¡DIV/0! aparece cuando:','Se divide entre cero o rango vacío','Falta comilla','Hay texto','Sobra un paréntesis','División indefinida.'],
+ ['=SUMA(C2:C9) y =C2+C3+...+C9:','Dan el mismo resultado','Son distintos','SUMA es menos exacta','No se puede','SUMA es el atajo del rango.'],
+ ['Para un reporte por categoría con muchos datos conviene:','Una tabla dinámica','Escribir todo a mano','Una macro siempre','No hacer nada','Resume rápido.'],
+ ['En =SI(C2>500,"Alto",SI(C2>100,"Medio","Bajo")) un precio de 120 da:','Medio','Alto','Bajo','Error','120>100 pero no >500.'],
+ ['=PROMEDIO.SI(B2:B9,"Pintura",C2:C9) calcula:','El precio promedio de pintura','El total','El conteo','El máximo','Promedio condicional.'],
+ ['Para fijar un rango de tabla en BUSCARV al copiar la fórmula conviene:','Usar referencias absolutas ($A$2:$E$9)','Dejarlo relativo','Quitar el rango','Usar texto','Así el rango no se mueve.'],
+ ['=CONCATENAR(A2," ",B2) hace lo mismo que:','=A2&" "&B2','=SUMA','=A2+B2','=SI','Concatena con &.'],
+ ['El resultado de =SI(3<>3,"Dif","Igual") es:','Igual','Dif','VERDADERO','Error','3 no es distinto de 3.'],
+ ['Para contar productos de la categoría Electrico:','=CONTAR.SI(B2:B9,"Electrico")','=SUMA(B2:B9)','=CONTAR(B2:B9)','=MAX','Cuenta por texto.'],
+ ['=SUMA(E2:E9)-SUMA(C2:C9) mezcla:','Dos sumas de rangos distintos','Un solo rango','Texto','Nada','Se pueden combinar funciones.'],
+ ['El autollenado (arrastrar la esquina) sirve para:','Copiar la fórmula ajustando referencias','Borrar','Imprimir','Ordenar','Copia relativa hacia abajo.'],
+ ['Una celda que muestra ##### indica:','La columna es muy angosta para el número','Un error de fórmula','Texto oculto','Virus','Solo hay que ensanchar.'],
+ ['Para el importe total de ventas de "Luis":','=SUMAR.SI(F2:F9,"Luis",E2:E9)','=SUMA(E2:E9)','=CONTAR.SI','=BUSCARV','Criterio vendedor, suma importe.'],
+ ['=SI(E2>=1000,"Grande","Normal") marca "Grande" cuando:','El importe es 1000 o más','Es menor a 1000','Siempre','Nunca','>= incluye 1000.'],
+ ['La función MEDIANA frente a PROMEDIO:','Es menos afectada por valores extremos','Es igual','Siempre mayor','No existe','La mediana resiste atípicos.'],
+ ['Para quitar decimales mostrando un entero exacto se usa:','REDONDEAR(...,0)','ENTERO siempre','TEXTO','LARGO','Redondea a 0 decimales.'],
+ ['El resultado de =2+3*4 es:','14','20','24','9','Primero la multiplicación.'],
+ ['El resultado de =(2+3)*4 es:','20','14','24','9','Los paréntesis primero.'],
+ ['Para encadenar condiciones "Pintura O Electrico" en SI usas:','O(B2="Pintura",B2="Electrico")','Y(...)','NO(...)','SUMA','O acepta cualquiera.'],
+ ['Si una fórmula da un número con muchos decimales, lo limpias con:','REDONDEAR','MAYUSC','LARGO','CONTAR','Controla decimales.'],
+ ['BUSCARV solo busca de forma confiable hacia:','La derecha de la columna clave','La izquierda','Arriba','Abajo','Devuelve columnas a la derecha.'],
+ ['Para sumar todo menos usar el mouse por cada celda:','Usa un rango dentro de SUMA','Suma celda por celda','Usa CONTAR','Usa SI','El rango abarca muchas celdas.'],
+ ['Una hoja de cálculo recalcula las fórmulas:','Automáticamente al cambiar datos','Solo al guardar','Nunca','Al imprimir','Por eso son dinámicas.'],
+ ['=SI(CONTAR.SI(B2:B9,"Pintura")>2,"Varias","Pocas") combina:','Una función dentro de un SI','Dos hojas','Un macro','Nada','Anida CONTAR.SI en SI.'],
+ ['El propósito de Excel avanzado para tu trabajo es:','Automatizar cálculos y reportes de datos','Dibujar','Programar apps','Editar video','Hojas de cálculo potentes.'],
+ ['=SUMAR.SI(C2:C9,">=100",E2:E9) suma el importe de productos:','Con precio de 100 o más','Baratos','De pintura','Todos','El criterio aplica a C, suma E.'],
+ ['La diferencia entre CONTAR y CONTARA es:','CONTAR solo números, CONTARA cualquier contenido','Son iguales','CONTARA solo números','CONTAR ordena','Uno incluye texto.'],
+ ['Para una etiqueta "Martillo (Herramienta)" usas:','=A2&" ("&B2&")"','=A2+B2','=SUMA','=SI','Concatenación con paréntesis de texto.'],
+ ['El resultado de =MIN(C2:C9)>0 es:','VERDADERO si el menor es positivo','Siempre FALSO','El valor mínimo','Un error','Compara el mínimo con 0.']];
+COURSES.xl.exam=XL_EXAM.map(([q,...r])=>({q,o:r.slice(0,4),e:r[4]}));
+/* --- Hoja de práctica (laboratorio) --- */
+const XL_SAMPLES=['=SUMA(E2:E9)','=PROMEDIO(C2:C9)','=CONTAR.SI(B2:B9,"Pintura")','=SUMAR.SI(B2:B9,"Herramienta",E2:E9)','=BUSCARV("Taladro",A2:E9,3)','=SI(C2>100,"Caro","Barato")'];
+const XL_CH=[
+ {id:'f1',d:'Calcula el total de importes de la hoja (columna E).',expect:'=SUMA(E2:E9)'},
+ {id:'f2',d:'Cuenta cuántos productos son de categoría "Electrico".',expect:'=CONTAR.SI(B2:B9,"Electrico")'},
+ {id:'f3',d:'Suma el importe (E) solo de los productos de "Pintura" (B).',expect:'=SUMAR.SI(B2:B9,"Pintura",E2:E9)'},
+ {id:'f4',d:'Busca el precio del "Foco LED" con BUSCARV en A2:E9 (columna 3).',expect:'=BUSCARV("Foco LED",A2:E9,3)'}];
+function xlLab(root){const st=cst('xl');st.lab=st.lab||{};const L=st.lab;
+ const out=h('div',{class:'sqlout'});
+ const inp=h('input',{type:'text',class:'code',spellcheck:'false',autocapitalize:'off',autocorrect:'off','aria-label':'Fórmula',value:L.f||XL_SAMPLES[0]});
+ const run=()=>{L.f=inp.value;save();let r;try{r=xlEval(XL_SHEETS.ventas,inp.value);}catch(e){out.replaceChildren(h('p',{class:'lq-bad'},'Error: '+e));return;}
+   out.replaceChildren(h('div',{class:'calc'},'Resultado: '+(typeof r==='number'?Math.round(r*1e6)/1e6:String(r))));
+   for(const c of XL_CH){if(st.ev['lab:'+c.id])continue;try{const want=xlEval(XL_SHEETS.ventas,c.expect);const ok=(typeof want==='number')?Math.abs(xlNum(r)-want)<0.02:String(r).toLowerCase()===String(want).toLowerCase();
+     if(ok&&inp.value.replace(/\s/g,'').toUpperCase()!=='' ){ // require their formula actually matches the challenge target value
+       st.ev['lab:'+c.id]=true;st.xp+=30;save();updateHeader();toast('Reto de Excel completado: +30 XP');renderXlCh(chbox,st);}}catch(e){}}};
+ inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();run();}});
+ const G=XL_VENTAS;const chbox=h('div');renderXlCh(chbox,st);
+ const cols=['','A','B','C','D','E','F'];
+ const grid=h('table',{class:'xlgrid'},h('thead',null,h('tr',null,cols.map(c=>h('th',null,c)))),
+   h('tbody',null,G.map((row,ri)=>h('tr',null,[h('th',null,String(ri+1)),...row.map(cell=>h('td',{class:typeof cell==='number'?'xr':''},cell==null?'':String(cell)))]))));
+ root.replaceChildren(h('h2',null,'Hoja de práctica'),h('p',{class:'lead'},'Escribe cualquier fórmula (empezando con =) sobre esta hoja de ventas y calcula el resultado. Los datos son ficticios.'),
+  h('div',{class:'xlwrap'},grid),
+  h('label',{class:'lq'},h('span',null,'Fórmula'),inp),h('div',{class:'row'},btn('Calcular',run,'pri'),btn('Ejemplo',()=>{inp.value=XL_SAMPLES[Math.floor(Math.random()*XL_SAMPLES.length)];run();})),out,
+  h('h3',null,'Retos de la hoja'),chbox);
+ run();}
+function renderXlCh(box,st){const dn=XL_CH.filter(c=>st.ev['lab:'+c.id]).length;
+ box.replaceChildren(h('p',{class:'xp'},`${dn} de ${XL_CH.length} retos · +30 XP cada uno`),
+  ...XL_CH.map(c=>h('div',{class:'exb'+(st.ev['lab:'+c.id]?' ok':'')},h('p',{class:'exq'},c.d),st.ev['lab:'+c.id]?h('p',{class:'lq-ok'},'Completado'):h('p',{class:'empty'},'Escribe la fórmula arriba y calcula.'))));}
+
+QB.push(
+{q:"¿Qué transacción crea una orden de fabricación directamente?",o:["CO01","CO02","CO40","MD61"],e:"CO01 crea la orden; CO40 convierte una previsional."},
+{q:"¿Qué transacción cambia una orden de fabricación existente?",o:["CO02","CO01","CO03","CO40"],e:"CO02 la modifica."},
+{q:"¿Para qué sirve la CO40?",o:["Convertir una orden previsional en orden de fabricación","Crear material","Hacer un pedido","Contar inventario"],e:"Pasa de planeada a real."},
+{q:"¿Qué transacción visualiza una lista de materiales?",o:["CS03","CS01","CS02","CA03"],e:"CS03 muestra la BOM."},
+{q:"¿Qué transacción visualiza una hoja de ruta (secuencia de operaciones)?",o:["CA03","CS03","CR03","CO03"],e:"CA03 muestra el routing."},
+{q:"¿Qué lista los puestos de trabajo?",o:["CR03","CA03","CS03","CO03"],e:"CR03 muestra el centro de trabajo."},
+{q:"¿Qué transacción ejecuta la planificación de necesidades (MRP) de un material?",o:["MD02","MD04","MD61","MMBE"],e:"MD02/MD03 corren el MRP individual."},
+{q:"¿Qué muestra la MD04?",o:["La situación actual de stock y necesidades","El balance contable","La lista de clientes","Las órdenes de compra cerradas"],e:"MD04 es la lista de necesidades/stocks."},
+{q:"¿Qué transacción captura el plan independiente de necesidades (pronóstico)?",o:["MD61","MD04","CO01","MIGO"],e:"MD61 ingresa la demanda planeada."},
+{q:"¿Qué notificación de orden confirma cantidades producidas?",o:["CO11N","CO01","CO02","MB31"],e:"CO11N confirma la operación."},
+{q:"¿Qué transacción registra la entrada de mercancía de una orden de fabricación?",o:["MB31","MIGO","MB1A","MB1B"],e:"MB31 (o MIGO) hace la entrada del producto terminado."},
+{q:"El estado CRTD de una orden significa:",o:["Creada, aún no liberada","Liberada","Cerrada","Borrada"],e:"CRTD = created."},
+{q:"El estado REL de una orden significa:",o:["Liberada, lista para producir","Creada","Notificada","Cerrada"],e:"REL = released."},
+{q:"¿Qué liquida los costos de una orden al cierre?",o:["KO88","CO88","CO02","MIRO"],e:"KO88 liquida la orden individual."},
+{q:"¿Qué es una lista de materiales (BOM)?",o:["Los componentes que forman un producto","La ruta de operaciones","El centro de trabajo","Una orden de compra"],e:"La BOM lista componentes."},
+{q:"¿Qué es una hoja de ruta?",o:["La secuencia de operaciones y tiempos","La lista de componentes","El stock","El proveedor"],e:"El routing define el proceso."},
+{q:"¿Qué documento genera el MRP cuando falta material fabricado?",o:["Una orden previsional","Una factura","Un pedido de cliente","Una entrada de mercancía"],e:"Planned order para fabricados."},
+{q:"¿Qué documento propone el MRP para material comprado?",o:["Una solicitud de pedido","Una orden de fabricación","Una factura","Una nota de calidad"],e:"Solicitud de pedido (req)."},
+{q:"El tipo de aprovisionamiento 'E' indica:",o:["Fabricación propia","Compra externa","Consignación","Subcontratación"],e:"E = in-house production."},
+{q:"El tipo de aprovisionamiento 'F' indica:",o:["Aprovisionamiento externo (compra)","Fabricación propia","Traspaso","Consumo"],e:"F = external procurement."},
+{q:"¿Qué transacción crea un pedido de compra?",o:["ME21N","ME51N","ME11","MIGO"],e:"ME21N crea la PO."},
+{q:"¿Qué transacción crea una solicitud de pedido?",o:["ME51N","ME21N","ME53N","MD04"],e:"ME51N crea la requisición."},
+{q:"¿Qué transacción visualiza un pedido de compra?",o:["ME23N","ME21N","ME22N","ME53N"],e:"ME23N visualiza; ME22N modifica."},
+{q:"¿Qué transacción modifica un pedido de compra?",o:["ME22N","ME23N","ME21N","ME51N"],e:"ME22N modifica la PO."},
+{q:"¿Qué transacción crea un registro info de compras?",o:["ME11","ME21N","MK01","ME51N"],e:"ME11 crea el info record."},
+{q:"¿Qué transacción crea un proveedor (datos de compras)?",o:["MK01","ME11","XK01","FK01"],e:"MK01 crea el maestro de proveedor para compras."},
+{q:"¿Qué registra la entrada de mercancía de un pedido?",o:["MIGO","MIRO","ME21N","MB5B"],e:"MIGO hace la GR."},
+{q:"¿Qué registra la factura del proveedor (verificación)?",o:["MIRO","MIGO","FB60","ME21N"],e:"MIRO verifica la factura logística."},
+{q:"El movimiento 101 corresponde a:",o:["Entrada de mercancía por pedido","Salida a producción","Baja por scrap","Traspaso"],e:"101 = GR for PO."},
+{q:"El movimiento 201 corresponde a:",o:["Salida a centro de coste","Entrada por pedido","Traspaso de almacén","Devolución"],e:"201 = consumo a centro de costo."},
+{q:"El movimiento 261 corresponde a:",o:["Salida de material a una orden","Entrada de producto terminado","Inventario físico","Compra"],e:"261 = GI a orden de producción."},
+{q:"El movimiento 311 corresponde a:",o:["Traspaso entre almacenes","Entrada por pedido","Baja","Devolución a proveedor"],e:"311 = traslado de almacén a almacén."},
+{q:"¿Qué transacción muestra el resumen de stock de un material (MMBE)?",o:["MMBE","MD04","MB5B","ME2M"],e:"MMBE = resumen de stocks."},
+{q:"¿Qué informe muestra el stock a una fecha (lista de entradas/salidas)?",o:["MB5B","MMBE","MB51","ME2M"],e:"MB5B da stock a fecha."},
+{q:"¿Qué transacción lista los documentos de material (movimientos)?",o:["MB51","MB5B","MMBE","MIGO"],e:"MB51 lista movimientos."},
+{q:"¿Qué transacción crea un documento de inventario físico?",o:["MI01","MI04","MI07","MI20"],e:"MI01 crea el documento de conteo."},
+{q:"¿Qué transacción captura el conteo del inventario físico?",o:["MI04","MI01","MI07","MI20"],e:"MI04 ingresa el conteo."},
+{q:"¿Qué transacción contabiliza las diferencias de inventario?",o:["MI07","MI01","MI04","MI20"],e:"MI07 contabiliza diferencias."},
+{q:"¿Qué transacción cambia el precio de un material (MR21)?",o:["MR21","MIGO","MIRO","ME21N"],e:"MR21 ajusta el precio."},
+{q:"El control de precio 'S' significa:",o:["Precio estándar","Precio medio variable","Sin precio","Precio manual"],e:"S = standard price."},
+{q:"El control de precio 'V' significa:",o:["Precio medio variable","Precio estándar","Valor cero","Precio fijo"],e:"V = moving average."},
+{q:"¿Qué transacción crea un material (vista única)?",o:["MM01","MM02","MM03","MMBE"],e:"MM01 crea; MM02 modifica; MM03 visualiza."},
+{q:"¿Qué transacción visualiza un material?",o:["MM03","MM01","MM02","MMBE"],e:"MM03 solo lectura."},
+{q:"Un pedido abierto (open PO) es:",o:["Uno con cantidad pendiente de recibir","Uno ya pagado","Uno cancelado","Uno sin proveedor"],e:"Falta entrada o factura."},
+{q:"¿Qué reporte lista pedidos por material (ME2M)?",o:["ME2M","ME2L","ME23N","MB51"],e:"ME2M por material; ME2L por proveedor."},
+{q:"¿Qué reporte lista pedidos por proveedor (ME2L)?",o:["ME2L","ME2M","ME23N","MK03"],e:"ME2L por proveedor."},
+{q:"El punto de pedido (reorder point) dispara:",o:["Una propuesta de reaprovisionamiento","Una factura","Un conteo","Un cierre"],e:"Al bajar del punto, se repone."},
+{q:"El stock de seguridad sirve para:",o:["Cubrir variaciones de demanda y suministro","Pagar al proveedor","Contar el inventario","Fijar el precio"],e:"Es un colchón."},
+{q:"La verificación de 3 vías compara:",o:["Pedido, entrada y factura","Solo pedido y factura","Solo entrada","Cliente y material"],e:"PO + GR + factura."},
+{q:"Un bloqueo de factura en MIRO ocurre cuando:",o:["Hay diferencia de precio o cantidad fuera de tolerancia","Siempre","Nunca","Falta proveedor"],e:"Se bloquea para revisión."},
+{q:"El movimiento 122 corresponde a:",o:["Devolución al proveedor desde la entrada","Entrada normal","Consumo","Traspaso"],e:"122 = devolución de GR."},
+{q:"El movimiento 343 corresponde a:",o:["De stock bloqueado a libre utilización","De libre a bloqueado","Entrada por pedido","Salida a orden"],e:"343 libera stock."},
+{q:"El movimiento 344 corresponde a:",o:["De libre utilización a stock bloqueado","De bloqueado a libre","Entrada","Scrap"],e:"344 bloquea stock."},
+{q:"El movimiento 551 corresponde a:",o:["Baja por desecho (scrap)","Entrada","Traspaso","Devolución"],e:"551 = scrapping."},
+{q:"El tipo de stock 'libre utilización' significa:",o:["Disponible para uso o venta","Retenido en calidad","Bloqueado","En tránsito"],e:"Unrestricted use."},
+{q:"El stock en control de calidad está:",o:["Retenido hasta liberarse","Disponible","Bloqueado para siempre","Vendido"],e:"QI stock."},
+{q:"¿Qué transacción crea un plan de inspección?",o:["QP01","QP02","QP03","QS21"],e:"QP01 crea el plan."},
+{q:"¿Qué transacción crea una característica de inspección maestra (MIC)?",o:["QS21","QP01","QA01","QE51N"],e:"QS21 crea la MIC."},
+{q:"¿Qué transacción visualiza un lote de inspección?",o:["QA03","QA01","QA32","QE51N"],e:"QA03 visualiza el lote."},
+{q:"¿Qué transacción registra resultados de inspección?",o:["QE51N","QA32","QA11","QP01"],e:"QE51N captura resultados."},
+{q:"¿Qué transacción toma la decisión de empleo (UD)?",o:["QA11","QA01","QA03","QE51N"],e:"QA11 = usage decision."},
+{q:"¿Qué transacción trabaja la lista de lotes de inspección (worklist)?",o:["QA32","QA03","QE51N","QA11"],e:"QA32 gestiona lotes."},
+{q:"¿Qué transacción crea un aviso de calidad?",o:["QM01","QM02","QM03","QS21"],e:"QM01 crea la notificación."},
+{q:"Una característica de inspección cuantitativa se mide:",o:["Con un valor numérico y límites","Solo pasa/no pasa","Con texto libre","Con color"],e:"Cuantitativa = numérica."},
+{q:"Una característica cualitativa evalúa:",o:["Atributo (conforme / no conforme)","Un número exacto","Un promedio","Una fecha"],e:"Cualitativa = atributo."},
+{q:"La decisión de empleo (UD) sirve para:",o:["Aceptar o rechazar el lote inspeccionado","Crear el material","Pagar la factura","Contar stock"],e:"Decide el destino del lote."},
+{q:"Al aceptar un lote en QM, el stock pasa normalmente a:",o:["Libre utilización","Bloqueado","Scrap","En tránsito"],e:"De QI a libre uso."},
+{q:"Un lote de inspección se genera típicamente al:",o:["Hacer la entrada de mercancía de un material con QM activo","Crear el proveedor","Pagar","Contar"],e:"GR con perfil de inspección dispara el lote."},
+{q:"El tipo de inspección 01 suele ser:",o:["Inspección de entrada de mercancía","Inspección en producción","Inspección de devolución","Auditoría"],e:"01 = GR inspection."},
+{q:"El AQL en un muestreo define:",o:["El nivel de calidad aceptable","El precio","El proveedor","El almacén"],e:"Acceptable Quality Level."},
+{q:"Un aviso de calidad (QM01) documenta:",o:["Un problema o defecto para darle seguimiento","Una compra","Un conteo","Un pago"],e:"Registra no conformidades."},
+{q:"La hoja de características de inspección vive en:",o:["El plan de inspección","El pedido","La factura","El material únicamente"],e:"El plan contiene las MIC."},
+{q:"Cpk mide:",o:["La capacidad real considerando el centrado","Solo la dispersión","El costo","El tiempo"],e:"Capacidad centrada."},
+{q:"Un Cpk ≥ 1.33 se interpreta como:",o:["Proceso capaz","Proceso incapaz","Proceso detenido","Sin datos"],e:"Criterio común de capacidad."},
+{q:"PPM de cliente mide:",o:["Piezas defectuosas por millón enviadas","El precio","El stock","El tiempo de ciclo"],e:"Parts per million."},
+{q:"El costo de no calidad incluye:",o:["Fallas internas y externas","Solo el precio","El flete","El salario"],e:"COPQ interno + externo."},
+{q:"En SAP, una transacción se ejecuta escribiendo su código en:",o:["El campo de comandos","El correo","Una celda de Excel","El navegador web"],e:"El command field."},
+{q:"El prefijo /n antes de un código de transacción:",o:["Abre la transacción en la misma ventana cerrando la actual","Abre otra sesión","Borra datos","No hace nada"],e:"/n inicia de nuevo."},
+{q:"El prefijo /o antes de un código:",o:["Abre la transacción en una sesión nueva","Cierra SAP","Guarda","Borra"],e:"/o = nueva sesión."},
+{q:"El botón Guardar en SAP equivale a la tecla:",o:["Ctrl+S","F1","Esc","F4"],e:"Ctrl+S contabiliza/guarda."},
+{q:"La ayuda de búsqueda (matchcode) se abre con:",o:["F4","F1","F3","F8"],e:"F4 lista valores posibles."},
+{q:"La ayuda de campo (qué significa) se abre con:",o:["F1","F4","F8","F2"],e:"F1 explica el campo."},
+{q:"Un mandante (client) en SAP es:",o:["Una unidad independiente de datos de negocio","Un cliente de ventas","Un proveedor","Un material"],e:"Client = partición de datos."},
+{q:"Un centro (plant) representa:",o:["Una planta o ubicación de operación","Un proveedor","Un cliente","Una factura"],e:"Plant = ubicación."},
+{q:"Un almacén (storage location) es:",o:["Una subdivisión física del centro","Una planta entera","Un proveedor","Un pedido"],e:"Storage location dentro del plant."},
+{q:"La organización de compras se encarga de:",o:["Negociar y gestionar las compras","Producir","Vender","Contar"],e:"Purchasing org."},
+{q:"El dato maestro de material contiene vistas como:",o:["Ventas, compras, MRP, contabilidad","Solo el precio","Solo el nombre","Solo el stock"],e:"Varias vistas por área."},
+{q:"El número de lote (batch) sirve para:",o:["Rastrear un conjunto de producto con características comunes","Pagar","Comprar","Vender únicamente"],e:"Trazabilidad por lote."},
+{q:"Un documento de material se genera al:",o:["Registrar un movimiento de mercancía","Crear un proveedor","Abrir SAP","Imprimir"],e:"Cada movimiento deja documento."},
+{q:"La trazabilidad por lote es clave para:",o:["Recuperar producto ante un problema de calidad","Fijar precios","Pagar nómina","Diseñar"],e:"Permite rastrear y retirar."},
+{q:"El stock en tránsito aparece cuando:",o:["Se traslada entre centros y aún no llega","Se vende","Se desecha","Se compra local"],e:"Transit stock entre plantas."},
+{q:"La unidad de medida base de un material es:",o:["La unidad en la que se gestiona su stock","El precio","El idioma","El color"],e:"Base UoM."},
+{q:"Un pedido de traslado (STO) mueve material:",o:["Entre dos centros de la empresa","A un cliente externo","A un proveedor","A scrap"],e:"Stock transport order."},
+{q:"El indicador de borrado en un material:",o:["Lo marca para bloqueo/eliminación","Lo elimina al instante","Cambia su precio","Lo vende"],e:"Deletion flag."},
+{q:"El análisis ABC clasifica materiales por:",o:["Su importancia o valor","Su color","Su proveedor","Su almacén"],e:"A = los más importantes."},
+{q:"El lead time (plazo de entrega) es:",o:["El tiempo desde el pedido hasta la disponibilidad","El precio","El stock","El margen"],e:"Tiempo de reaprovisionamiento."},
+{q:"Un consumo registrado contra una orden reduce:",o:["El stock del componente","El efectivo","El pedido de compra","El cliente"],e:"El 261 descuenta componente."},
+{q:"Al notificar producción (CO11N) normalmente:",o:["Se consumen componentes y se avanza la orden","Se crea el proveedor","Se paga la factura","Se cuenta inventario"],e:"Confirma avance y consumos."},
+{q:"Una orden de fabricación cerrada (TECO):",o:["Ya no espera más movimientos y se puede liquidar","Sigue abierta a producción","Se borra","Se vende"],e:"Technically complete."},
+{q:"El MRP, en resumen, equilibra:",o:["La demanda contra el suministro disponible y planeado","El precio contra el costo","El cliente contra el proveedor","La planta contra el almacén"],e:"Material Requirements Planning."});
+COURSES.xl.exam.push(
+{q:"=SUMAR.SI(F2:F9,\"Ana\",D2:D9) calcula:",o:["Las piezas vendidas por Ana","El importe total","El precio","El conteo de filas"],e:"Suma cantidades donde el vendedor es Ana."},
+{q:"Para mostrar dos decimales siempre en un reporte conviene:",o:["Dar formato de número o usar REDONDEAR","Cambiar el idioma","Usar MAYUSC","Borrar decimales a mano"],e:"Formato o REDONDEAR fijan decimales."},
+{q:"=SI(E2>PROMEDIO(E$2:E$9),\"Arriba\",\"Abajo\") compara cada importe contra:",o:["El promedio fijo del rango","Un valor cualquiera","El máximo","Cero"],e:"El $ fija el rango del promedio al copiar."});
+/* =================== Informática (computadoras y celulares) =================== */
+const IT_UNITS=[['bit','bits',1/8],['B','Bytes',1],['KB','Kilobytes',1024],['MB','Megabytes',1024**2],['GB','Gigabytes',1024**3],['TB','Terabytes',1024**4]];
+const IT_ITEMS=[['Foto de celular',3.5*1024**2],['Canción MP3',4*1024**2],['Documento Word',0.3*1024**2],['Película HD',1.4*1024**3],['App típica',0.15*1024**3]];
+const IT_CH=[
+ {id:'u1',t:'Reto de unidades 1',d:'¿Cuántos MB tiene 1 GB? Escríbelo.',ans:['1024']},
+ {id:'u2',t:'Reto de unidades 2',d:'Un respaldo ocupa 2 GB. ¿Cuántos MB son? (usa 1 GB = 1024 MB)',ans:['2048']},
+ {id:'fit',t:'Reto de capacidad',d:'En un USB de 16 GB, ¿aproximadamente cuántas fotos de 4 MB caben? Redondea hacia abajo.',ans:['4096']},
+ {id:'conv',t:'Reto del convertidor',d:'Convierte 1 TB a GB con la herramienta y escribe el resultado.',ans:['1024']}];
+let ITTOOL='conv';
+function itWin(id){const st=cst('it');if(st.ev['lab:'+id])return;st.ev['lab:'+id]=true;st.xp+=30;save();updateHeader();toast('Reto completado: +30 XP');}
+function itChal(tool){const st=cst('it');return IT_CH.filter(c=>tool==='conv'?true:false).map(c=>{const done=!!st.ev['lab:'+c.id];
+  if(done)return h('div',{class:'exb ok'},h('p',{class:'exq'},c.t),h('p',null,c.d),h('p',{class:'lq-ok'},'Completado'));
+  const inp=h('input',{type:'text',inputmode:'decimal',autocomplete:'off','aria-label':'Respuesta'});const fb=h('div',{role:'status'});
+  const go=()=>{const v=inp.value.trim().replace(/,/g,'');if(c.ans.includes(v)){itWin(c.id);itLab($('#it-lab'));}else fb.replaceChildren(h('p',{class:'lq-bad'},'Todavía no. Usa el convertidor y revisa la operación.'));};
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+  return h('div',{class:'exb'},h('p',{class:'exq'},c.t),h('p',null,c.d),h('div',{class:'lq-in'},inp),h('div',{class:'row'},btn('Comprobar',go,'pri')),fb);});}
+function itLab(root){
+  const st=cst('it');st.lab=st.lab||{};const L=st.lab;const dn=IT_CH.filter(c=>st.ev['lab:'+c.id]).length;
+  const body=h('div');
+  root.replaceChildren(h('h2',null,'Laboratorio de informática'),h('p',{class:'lead'},'Convierte unidades de almacenamiento y calcula cuánto cabe en una memoria. Se usa la base de 1024: 1 KB = 1024 B, 1 MB = 1024 KB, y así.'),
+    h('p',{class:'xp'},`${dn} de ${IT_CH.length} retos completados · +30 XP cada uno`),h('div',{class:'meter'},h('i',{style:`width:${dn/IT_CH.length*100}%`})),body);
+  const out=h('div');const num=h('input',{value:L.n||'1',inputmode:'decimal','aria-label':'Cantidad'});
+  const from=h('select',{'aria-label':'De'},IT_UNITS.map(([u,n])=>h('option',{value:u,selected:(L.from||'TB')===u},`${n} (${u})`)));
+  const to=h('select',{'aria-label':'A'},IT_UNITS.map(([u,n])=>h('option',{value:u,selected:(L.to||'GB')===u},`${n} (${u})`)));
+  const conv=()=>{L.n=num.value;L.from=from.value;L.to=to.value;save();const q=parseNum(num.value);const f=IT_UNITS.find(x=>x[0]===from.value)[2],t=IT_UNITS.find(x=>x[0]===to.value)[2];
+    if(!isFinite(q)){out.replaceChildren(h('p',{class:'lq-bad'},'Escribe un número.'));return;}
+    const r=q*f/t;out.replaceChildren(h('p',{class:'kpi-v'},`${fmtN(Math.round(r*1000)/1000)} ${to.value}`),
+      h('div',{class:'lkv'},...IT_ITEMS.map(([n,sz])=>kv(n,fmtN(Math.floor(q*f/sz))+' caben'))),
+      h('div',{class:'calc'},`${fmtN(q)} ${from.value} × ${fmtN(f)} B ÷ ${fmtN(t)} B = ${fmtN(Math.round(r*1000)/1000)} ${to.value}`));};
+  num.oninput=conv;from.onchange=conv;to.onchange=conv;
+  body.append(h('section',{class:'lq-box'},h('h3',null,'Convertidor de almacenamiento'),h('label',{class:'lq'},h('span',null,'Cantidad'),num),h('label',{class:'lq'},h('span',null,'De'),from),h('label',{class:'lq'},h('span',null,'A'),to),out),...itChal('conv'));
+  conv();
+}
+COURSES.it={n:'Informática',badge:'PC',cls:'hub-it',labName:'Laboratorio',lab:itLab,
+ desc:'Entiende tu computadora y tu celular de pies a cabeza: hardware, software, archivos, almacenamiento, internet, correo, seguridad y mantenimiento, con un convertidor para practicar.',
+ ruta:{intro:'Un repaso completo para dominar la computadora y el celular en la vida diaria y el trabajo: qué es cada parte, cómo se guardan los archivos, cómo funciona internet, cómo cuidar tu seguridad y cómo resolver los problemas más comunes tú misma.',fast:'30 a 45 minutos diarios',slow:'20 a 30 minutos diarios',
+  tips:['Practica en tu propio equipo lo que leas: busca dónde está cada cosa en tu computadora y tu celular.','No tengas miedo de explorar los menús de configuración: así se aprende de verdad.','Antes de pedir ayuda, intenta el clásico: reiniciar y revisar la conexión.'],
+  fases:[
+   {t:'Fase 1: La computadora por dentro',items:[['Hardware y software','La diferencia y cómo trabajan juntos.','t1'],['Partes de la computadora','CPU, RAM, almacenamiento, GPU.','t2'],['Almacenamiento y memoria','RAM contra disco; HDD contra SSD.','t3'],['Unidades de información','Bit, byte, KB, MB, GB, TB.','t4']]},
+   {t:'Fase 2: Sistema, archivos y programas',items:[['Sistema operativo','Windows, macOS, Linux.','t5'],['Archivos y carpetas','Rutas, nombres y organización.','t6'],['Extensiones de archivo','.docx, .pdf, .jpg y cómo abrirlas.','t7'],['Instalar y actualizar programas','Apps, drivers y actualizaciones.','t8']]},
+   {t:'Fase 3: Internet y la nube',items:[['Cómo funciona internet','Módem, router, proveedor y WiFi.','t9'],['Navegador y la web','URL, HTTP y HTTPS, buscadores.','t10'],['Correo electrónico','Para, CC, CCO y adjuntos.','t11'],['La nube y los respaldos','Drive, iCloud y copias de seguridad.','t12']]},
+   {t:'Fase 4: Seguridad y celulares',items:[['Seguridad personal','Contraseñas, MFA y phishing.','t13'],['Celulares: iOS y Android','Apps, permisos y almacenamiento.','t14'],['Mantenimiento','Liberar espacio y batería.','t15'],['Resolver problemas','Pasos básicos de diagnóstico.','t16']]}]},
+ lec:[
+  {id:'t1',sec:'La computadora por dentro',t:'Hardware y software',obj:'distinguir el hardware del software y ver cómo se relacionan.',p:['El hardware es todo lo que puedes tocar: la pantalla, el teclado, el procesador, la memoria. El software son los programas e instrucciones que no puedes tocar: el sistema operativo, las apps, los archivos.','El software le dice al hardware qué hacer. Sin software, la computadora es un montón de piezas; sin hardware, el software no tiene dónde correr.'],
+   ej:{t:'Ejemplo',calc:'Hardware: teclado, mouse, disco, RAM, procesador, pantalla\nSoftware: Windows, Word, WhatsApp, un PDF, un juego\nEl sistema operativo es el software que coordina todo el hardware.'},
+   ex:[{t:'opt',q:'¿Cuál es hardware?',how:'Lo que puedes tocar.',opts:['La memoria RAM','Windows','Un archivo PDF','WhatsApp'],why:'La RAM es un componente físico.'},
+    {t:'opt',q:'¿Cuál es software?',how:'Instrucciones, no piezas.',opts:['El sistema operativo','El procesador','La pantalla','El cable HDMI'],why:'El sistema operativo es un programa.'},
+    {t:'opt',q:'El software sirve para:',how:'Piensa quién manda a quién.',opts:['Decirle al hardware qué hacer','Enfriar el equipo','Dar corriente','Conectar cables'],why:'Los programas controlan el hardware.'}]},
+  {id:'t2',sec:'La computadora por dentro',t:'Partes de la computadora',obj:'reconocer CPU, RAM, almacenamiento y tarjeta gráfica.',p:['El CPU (procesador) es el cerebro: hace los cálculos. La RAM es la memoria de trabajo: ahí viven los programas mientras los usas, pero se borra al apagar. El almacenamiento (disco duro o SSD) guarda tus archivos aunque apagues.','La tarjeta gráfica (GPU) dibuja lo que ves, importante para juegos y diseño. La tarjeta madre conecta todo y la fuente da corriente.'],
+   ej:{t:'Analogía del escritorio',calc:'CPU  = el trabajador que hace las cuentas\nRAM  = el escritorio donde tiene abierto lo que usa ahora\nDisco= el archivero donde guarda todo para después\nMás RAM = escritorio más grande = más cosas abiertas sin trabarse'},
+   ex:[{t:'opt',q:'¿Qué parte es el "cerebro" que procesa?',how:'Hace los cálculos.',opts:['El CPU','La RAM','El disco duro','La fuente'],why:'El procesador ejecuta las instrucciones.'},
+    {t:'opt',q:'Si tu PC se traba con muchas pestañas abiertas, te falta sobre todo:',how:'Memoria de trabajo para lo que está abierto.',opts:['RAM','Tinta','Megapíxeles','Cables'],why:'La RAM sostiene lo que tienes abierto a la vez.'},
+    {t:'opt',q:'¿Dónde siguen tus archivos después de apagar?',how:'Memoria que no se borra.',opts:['En el almacenamiento (disco o SSD)','En la RAM','En el CPU','En la pantalla'],why:'La RAM se borra; el disco conserva.'}]},
+  {id:'t3',sec:'La computadora por dentro',t:'Almacenamiento y memoria',obj:'diferenciar RAM de disco y HDD de SSD.',p:['Mucha gente confunde memoria RAM con almacenamiento. La RAM es rápida y temporal (se borra al apagar); el almacenamiento es más lento pero permanente. Son cosas distintas y no se suman.','Hay dos tipos de disco: el HDD (mecánico, con un plato que gira, barato pero lento) y el SSD (sin partes móviles, mucho más rápido). Cambiar un HDD por un SSD es la mejora que más se nota en una PC vieja.'],
+   ej:{t:'Ejemplo',calc:'8 GB de RAM  → lo que puede tener abierto a la vez\n512 GB SSD  → lo que puede guardar en total\nNo se suman: son para cosas diferentes\nSSD vs HDD: el SSD prende y abre programas mucho más rápido'},
+   ex:[{t:'opt',q:'La RAM, al apagar la computadora:',how:'Memoria temporal.',opts:['Se borra','Se conserva','Se multiplica','Se vuelve disco'],why:'La RAM es volátil.'},
+    {t:'opt',q:'¿Qué mejora más el arranque de una PC vieja?',how:'El tipo de disco más rápido.',opts:['Cambiar el disco a SSD','Poner más bocinas','Un mouse nuevo','Una pantalla más grande'],why:'El SSD acelera arranque y apertura de programas.'},
+    {t:'opt',q:'Un HDD se diferencia de un SSD porque el HDD:',how:'Uno tiene partes que giran.',opts:['Tiene un plato mecánico que gira','No guarda datos','Es siempre más rápido','Es software'],why:'El HDD es mecánico; el SSD no tiene partes móviles.'}]},
+  {id:'t4',sec:'La computadora por dentro',t:'Unidades de información',obj:'manejar bit, byte y los múltiplos KB, MB, GB, TB.',p:['La unidad mínima es el bit (0 o 1). Ocho bits forman un byte, que equivale más o menos a una letra. De ahí suben: 1 KB ≈ 1024 bytes, 1 MB ≈ 1024 KB, 1 GB ≈ 1024 MB, 1 TB ≈ 1024 GB.','Sirve para entender cuánto pesa un archivo y cuánto cabe en una memoria. En el laboratorio tienes un convertidor para practicar.'],
+   ej:{t:'Escala',calc:'1 byte  ≈ 1 letra\n1 KB    ≈ un párrafo\n1 MB    ≈ una foto pequeña o un libro de texto\n1 GB    ≈ 250 canciones o media hora de video HD\n1 TB    ≈ 1024 GB (un disco entero)'},
+   ex:[{t:'num',q:'¿Cuántos MB tiene 1 GB? (usa 1024)',how:'1 GB = 1024 MB.',ans:1024,why:'Cada escalón multiplica por 1024.'},
+    {t:'num',q:'Una memoria de 4 GB, ¿cuántos MB son?',how:'4 × 1024.',ans:4096,why:'4 × 1024 = 4096 MB.'},
+    {t:'opt',q:'Ordena de menor a mayor:',how:'Empieza por el más chico.',opts:['KB, MB, GB, TB','TB, GB, MB, KB','MB, KB, GB, TB','GB, MB, TB, KB'],why:'Cada uno es 1024 veces el anterior.'}]},
+  {id:'t5',sec:'Sistema, archivos y programas',t:'El sistema operativo',obj:'saber qué es un sistema operativo y cuáles son los más comunes.',p:['El sistema operativo (SO) es el programa principal que hace funcionar la computadora: administra el hardware, los archivos y las demás apps. Sin él nada corre.','En computadoras los más usados son Windows (el más común), macOS (de las Mac) y Linux (libre y gratuito, muy usado en servidores). En celulares son Android e iOS.'],
+   ej:{t:'Ejemplo',calc:'Computadora:  Windows · macOS · Linux\nCelular:      Android (Samsung, Motorola…) · iOS (iPhone)\nEl SO coordina todo: cuando abres una app, el SO le da memoria y la pone en pantalla.'},
+   ex:[{t:'opt',q:'El sistema operativo sirve para:',how:'Es el software que manda.',opts:['Administrar el hardware y las apps','Solo navegar en internet','Guardar fotos únicamente','Dar corriente'],why:'Es el software base que coordina todo.'},
+    {t:'opt',q:'¿Cuál es un sistema operativo de computadora?',how:'Piensa en los grandes.',opts:['Windows','Word','Chrome','Excel'],why:'Word, Chrome y Excel son programas que corren sobre el SO.'},
+    {t:'opt',q:'El iPhone usa el sistema operativo:',how:'El de Apple en celulares.',opts:['iOS','Android','Windows','Linux'],why:'iOS es exclusivo de Apple.'}]},
+  {id:'t6',sec:'Sistema, archivos y programas',t:'Archivos y carpetas',obj:'organizar archivos en carpetas y entender las rutas.',p:['Un archivo es un documento guardado (una foto, un Word). Las carpetas agrupan archivos para encontrarlos. Una ruta es la dirección del archivo, como C:\\Usuarios\\Esme\\Documentos\\plan.docx.','Buenas prácticas: nombres claros con fecha (2026-11-15 reporte.pdf), carpetas por tema y no amontonar todo en el escritorio.'],
+   ej:{t:'Ejemplo de ruta',calc:'C:\\Usuarios\\Esme\\Documentos\\Trabajo\\reporte.docx\n└unidad┘ └──── carpetas ────┘ └─ archivo ─┘\nEn celular y Mac se usa / en vez de \\'},
+   ex:[{t:'opt',q:'Una carpeta sirve para:',how:'Ordenar.',opts:['Agrupar y organizar archivos','Dar más memoria','Acelerar internet','Cargar la batería'],why:'Las carpetas organizan.'},
+    {t:'opt',q:'En la ruta Documentos\\Trabajo\\reporte.docx, "reporte.docx" es:',how:'Lo último es el documento.',opts:['El archivo','Una carpeta','La unidad','El programa'],why:'Las carpetas quedan antes; el archivo va al final.'},
+    {t:'opt',q:'¿Cuál es un buen nombre de archivo?',how:'Claro y ordenable por fecha.',opts:['2026-11-15 reporte ventas.pdf','jajaja final final2.pdf','documento.pdf','sin nombre'],why:'Con fecha al inicio se ordena solo y se entiende.'}]},
+  {id:'t7',sec:'Sistema, archivos y programas',t:'Extensiones de archivo',obj:'reconocer extensiones y con qué programa se abren.',p:['La extensión son las letras después del punto al final del nombre: indican el tipo de archivo y con qué programa se abre. .docx es Word, .xlsx es Excel, .pdf se abre en casi todo, .jpg y .png son imágenes, .mp3 es audio, .mp4 es video, .zip es un comprimido.','Ojo con la seguridad: un archivo .exe instala programas y un .zip inesperado por correo puede traer virus. Desconfía de lo que no esperabas.'],
+   ej:{t:'Tabla rápida',calc:'.docx → Word        .xlsx → Excel\n.pdf  → lector PDF  .jpg/.png → imagen\n.mp3  → audio       .mp4 → video\n.zip  → comprimido  .exe → instalador (cuidado)'},
+   ex:[{t:'opt',q:'Un archivo .xlsx se abre con:',how:'Hoja de cálculo.',opts:['Excel','Word','Un reproductor de música','El navegador solamente'],why:'.xlsx es de Excel.'},
+    {t:'opt',q:'¿Qué extensión es una imagen?',how:'Foto.',opts:['.png','.docx','.mp3','.zip'],why:'.png y .jpg son imágenes.'},
+    {t:'opt',q:'Recibes un .exe que no esperabas por correo. Lo mejor es:',how:'Puede instalar algo dañino.',opts:['No abrirlo y verificar quién lo envió','Abrirlo de inmediato','Reenviarlo a todos','Cambiarle el nombre y abrirlo'],why:'Un .exe instala programas: solo de fuentes confiables.'}]},
+  {id:'t8',sec:'Sistema, archivos y programas',t:'Instalar y actualizar programas',obj:'instalar apps de forma segura y entender las actualizaciones.',p:['Instala programas solo de fuentes oficiales: la tienda de apps, la página oficial del fabricante. Evita páginas que ofrecen todo "gratis" o "crackeado": ahí viven muchos virus.','Las actualizaciones corrigen errores y tapan fallos de seguridad, por eso conviene mantenerlas al día. Los drivers son el software que deja que el SO hable con un dispositivo (impresora, tarjeta de video).'],
+   ej:{t:'Ejemplo',calc:'Seguro:   App Store, Google Play, sitio oficial\nRiesgoso: "programa_full_gratis.com", enlaces raros\nActualizar = corregir errores y cerrar huecos de seguridad\nDriver = traductor entre el SO y un aparato (p. ej. la impresora)'},
+   ex:[{t:'opt',q:'¿De dónde conviene instalar apps?',how:'Fuentes oficiales.',opts:['Tiendas y sitios oficiales','Cualquier página que lo dé gratis','Enlaces de correos desconocidos','Memorias que te prestan'],why:'Las fuentes oficiales reducen el riesgo de malware.'},
+    {t:'opt',q:'Las actualizaciones sobre todo sirven para:',how:'Seguridad y errores.',opts:['Corregir errores y cerrar fallos de seguridad','Gastar datos nada más','Borrar tus archivos','Hacer la PC más lenta siempre'],why:'Tapan vulnerabilidades y mejoran el programa.'},
+    {t:'opt',q:'Un driver es:',how:'Traductor hacia un aparato.',opts:['El software que comunica el SO con un dispositivo','Un tipo de virus','Una red social','Una batería'],why:'Sin el driver, el aparato no funciona bien.'}]},
+  {id:'t9',sec:'Internet y la nube',t:'Cómo funciona internet',obj:'entender módem, router, proveedor y WiFi.',p:['Internet es una red mundial de computadoras conectadas. Tu proveedor (Telmed, Izzi, etc.) te da la señal. El módem la recibe y el router la reparte, por cable o por WiFi, a tus aparatos.','El WiFi es solo la conexión sin cables dentro de tu casa: no es "el internet", es la última parte del camino. Si el WiFi llega pero no hay internet, el problema suele estar en el proveedor o el módem.'],
+   ej:{t:'El camino de la señal',calc:'Proveedor → Módem → Router → WiFi o cable → tus aparatos\nSi no hay internet: reinicia el módem y el router\n(apágalos 30 segundos y vuelve a encenderlos)'},
+   ex:[{t:'opt',q:'El router sirve para:',how:'Reparte la señal.',opts:['Repartir internet a tus aparatos','Guardar archivos','Procesar cálculos','Cargar el celular'],why:'Distribuye la conexión por WiFi o cable.'},
+    {t:'opt',q:'Tienes señal de WiFi pero no carga nada. Primer paso razonable:',how:'El clásico que resuelve la mayoría.',opts:['Reiniciar el módem y el router','Comprar otra computadora','Formatear el celular','Cambiar de navegador para siempre'],why:'Reiniciar el equipo de red resuelve muchas fallas.'},
+    {t:'opt',q:'El WiFi es:',how:'La parte sin cables.',opts:['La conexión sin cables dentro de tu casa','El proveedor de internet','Un virus','Un tipo de archivo'],why:'Es el último tramo, no el internet completo.'}]},
+  {id:'t10',sec:'Internet y la nube',t:'El navegador y la web',obj:'usar URLs y distinguir HTTP de HTTPS.',p:['El navegador (Chrome, Safari, Edge, Firefox) es el programa para ver páginas web. La URL es la dirección de una página, como https://www.truper.com. Un buscador como Google te ayuda a encontrar páginas.','Fíjate en el candado y en "https": la s es de seguro e indica que la conexión va cifrada. Antes de escribir contraseñas o datos de tarjeta, revisa que diga https y que el dominio sea el correcto.'],
+   ej:{t:'Partes de una URL',calc:'https://www.banco.com.mx/login\n└─┬─┘   └──── dominio ────┘ └ruta┘\nhttps = conexión segura (con candado)\nhttp  = sin cifrar (evita poner datos ahí)'},
+   ex:[{t:'opt',q:'La "s" de https significa que la conexión es:',how:'Seguro.',opts:['Segura (cifrada)','Más rápida','Social','Sin internet'],why:'HTTPS cifra los datos.'},
+    {t:'opt',q:'El navegador es:',how:'El programa para ver webs.',opts:['El programa para ver páginas web','Un buscador únicamente','El sistema operativo','Un antivirus'],why:'Chrome, Safari y Edge son navegadores.'},
+    {t:'opt',q:'Antes de poner tu contraseña en un sitio, verifica:',how:'Candado y dominio.',opts:['Que diga https y el dominio sea correcto','Que tenga colores bonitos','Que cargue rápido','Que tenga muchos anuncios'],why:'El candado y el dominio correcto reducen el riesgo de fraude.'}]},
+  {id:'t11',sec:'Internet y la nube',t:'El correo electrónico',obj:'usar Para, CC, CCO y manejar adjuntos.',p:['En un correo: Para es el destinatario principal; CC (con copia) son otros que deben enterarse; CCO (copia oculta) es igual pero los demás no ven esas direcciones, útil para enviar a muchos sin exponer sus correos.','Un adjunto es un archivo que mandas con el correo (un PDF, una foto). Cuida el tamaño: muchos servicios limitan a 25 MB; para archivos grandes, comparte un enlace de la nube.'],
+   ej:{t:'Ejemplo',calc:'Para:  tu jefe\nCC:    tu equipo (se enteran)\nCCO:   50 clientes (no ven los correos de los demás)\nAdjunto grande (>25 MB) → mejor un enlace de Drive o iCloud'},
+   ex:[{t:'opt',q:'Para mandar a 40 personas sin que vean los correos de las demás, usas:',how:'Copia oculta.',opts:['CCO','CC','Para','Asunto'],why:'CCO oculta las direcciones entre sí.'},
+    {t:'opt',q:'Un adjunto es:',how:'Archivo que viaja con el correo.',opts:['Un archivo que envías junto al correo','El asunto','La firma','Un virus siempre'],why:'Es el archivo agregado al mensaje.'},
+    {t:'opt',q:'Tu archivo pesa 300 MB y el correo no lo acepta. Mejor:',how:'Nube.',opts:['Subirlo a la nube y mandar el enlace','Partirlo en 100 correos','Rendirte','Mandarlo por SMS'],why:'Los enlaces de la nube evitan el límite de tamaño.'}]},
+  {id:'t12',sec:'Internet y la nube',t:'La nube y los respaldos',obj:'entender la nube y mantener copias de seguridad.',p:['La nube es guardar tus archivos en servidores de internet (Google Drive, iCloud, OneDrive, Dropbox) en vez de solo en tu equipo. Así los ves desde cualquier aparato y no los pierdes si se descompone el tuyo.','Un respaldo (copia de seguridad) es tener tus archivos importantes en otro lugar. La regla sencilla: ten al menos dos copias, una de ellas fuera de tu equipo (en la nube o en un disco externo).'],
+   ej:{t:'Ejemplo',calc:'Nube: Drive, iCloud, OneDrive, Dropbox\nRespaldo = copia extra de lo importante\nRegla práctica: 2 copias, 1 fuera de tu equipo\nSi se moja la laptop y todo estaba en la nube: no pierdes nada'},
+   ex:[{t:'opt',q:'La nube te permite sobre todo:',how:'Acceso desde cualquier lado.',opts:['Ver tus archivos desde cualquier aparato','Hacer más rápida la RAM','Cargar la batería','Imprimir sin tinta'],why:'Guardas en internet y accedes desde donde sea.'},
+    {t:'opt',q:'¿Por qué conviene respaldar?',how:'Por si falla el equipo.',opts:['Para no perder tus archivos si se daña el equipo','Para gastar más','Para que pese más','Para nada'],why:'Una copia extra te salva ante robo o falla.'},
+    {t:'opt',q:'Una buena regla de respaldo es:',how:'Varias copias, una afuera.',opts:['Dos copias, una fuera de tu equipo','Una sola copia en el mismo disco','Nunca copiar nada','Guardar todo en el escritorio'],why:'Si falla el equipo, la copia externa se conserva.'}]},
+  {id:'t13',sec:'Seguridad y celulares',t:'Seguridad personal',obj:'proteger tus cuentas con contraseñas fuertes, MFA y cuidado ante el phishing.',p:['Usa contraseñas largas y distintas en cada cuenta; una frase con números y símbolos es fácil de recordar y difícil de adivinar. Un gestor de contraseñas las guarda por ti. Activa la verificación en dos pasos (MFA): un código extra al celular que detiene a quien roba tu contraseña.','El phishing es un engaño: correos o mensajes que fingen ser tu banco o una empresa para que des tus datos. Señales: urgencia, faltas de ortografía, remitente raro y enlaces que no van al sitio oficial. Nadie serio te pide tu contraseña por correo.'],
+   ej:{t:'Ejemplo',calc:'Débil:  "juan123"\nFuerte: "Tacos-Al-Pastor-2026!"\nMFA: contraseña + código al celular\nPhishing: "URGENTE, verifica tu cuenta o se bloquea" + enlace raro → no hagas clic'},
+   ex:[{t:'opt',q:'¿Cuál contraseña es más segura?',how:'Larga y variada.',opts:['Tacos-Al-Pastor-2026!','123456','juan','hola'],why:'Longitud y variedad la hacen difícil de adivinar.'},
+    {t:'opt',q:'La verificación en dos pasos (MFA):',how:'Un paso extra.',opts:['Pide un código además de la contraseña','Quita la contraseña','Hace más lento internet','Es un virus'],why:'Aunque roben tu contraseña, falta el segundo factor.'},
+    {t:'opt',q:'Un correo "urgente" de tu banco pide tu contraseña con un enlace raro. Debes:',how:'Nadie serio pide la contraseña así.',opts:['No dar datos y entrar al sitio oficial por tu cuenta','Responder con la contraseña','Hacer clic de inmediato','Reenviarlo a tus contactos'],why:'Es phishing: el banco nunca pide la contraseña por correo.'}]},
+  {id:'t14',sec:'Seguridad y celulares',t:'Celulares: iOS y Android',obj:'manejar apps, permisos y almacenamiento del celular.',p:['Los celulares usan iOS (iPhone) o Android (Samsung, Motorola, Xiaomi). Las apps se instalan desde la App Store o Google Play. Cada app pide permisos (cámara, ubicación, contactos): da solo los que tengan sentido para lo que hace.','El respaldo del celular va a iCloud (iPhone) o a tu cuenta de Google (Android): activa el respaldo automático de fotos y contactos. Si te quedas sin espacio, borra apps que no uses y fotos repetidas, o sube las fotos a la nube.'],
+   ej:{t:'Ejemplo',calc:'iPhone  → App Store, respaldo en iCloud\nAndroid → Google Play, respaldo en cuenta Google\nUna linterna que pide tus contactos: permiso sospechoso, niégalo\nSin espacio: borra apps sin uso y sube fotos a la nube'},
+   ex:[{t:'opt',q:'En Android las apps se instalan desde:',how:'La tienda oficial de Android.',opts:['Google Play','App Store','iCloud','Windows'],why:'Google Play es la tienda de Android.'},
+    {t:'opt',q:'Una app de linterna pide permiso para ver tus contactos. Lo correcto:',how:'¿Lo necesita para su función?',opts:['Negar el permiso: no lo necesita','Darlo sin pensar','Pagar por ella','Reiniciar el celular'],why:'Una linterna no necesita tus contactos: es señal de abuso.'},
+    {t:'opt',q:'El respaldo de un iPhone normalmente va a:',how:'La nube de Apple.',opts:['iCloud','Google Drive','OneDrive','Un HDD interno'],why:'iCloud respalda el iPhone.'}]},
+  {id:'t15',sec:'Seguridad y celulares',t:'Mantenimiento del equipo',obj:'liberar espacio, cuidar la batería y mantener el equipo ágil.',p:['Para liberar espacio: desinstala apps y programas que no usas, vacía la papelera, borra descargas viejas y sube fotos a la nube. En la PC, cerrar programas que no ocupas libera RAM.','Batería: no hace falta descargarla a 0; lo mejor es mantenerla entre 20 % y 80 % y evitar el calor. Reiniciar de vez en cuando (apagar y encender) resuelve lentitud y pequeños errores acumulados.'],
+   ej:{t:'Checklist',calc:'Espacio:  desinstalar lo que no uso + vaciar papelera + fotos a la nube\nRAM:      cerrar programas abiertos de más\nBatería:  mantener 20–80 %, evitar calor\nLentitud: reiniciar (apagar y encender)'},
+   ex:[{t:'opt',q:'Para liberar espacio en el disco conviene:',how:'Quitar lo que no usas.',opts:['Desinstalar apps que no usas y vaciar la papelera','Abrir más programas','Subir el brillo','Comprar otra pantalla'],why:'Quitar lo que no sirve libera espacio.'},
+    {t:'opt',q:'Para cuidar la batería del celular, lo mejor es:',how:'Ni muy vacía ni muy llena.',opts:['Mantenerla entre 20 % y 80 % y evitar el calor','Descargarla siempre a 0','Cargarla al sol','Dejarla cargando días enteros'],why:'Los extremos y el calor la desgastan.'},
+    {t:'opt',q:'La PC está lenta sin razón clara. Primer paso simple:',how:'El clásico.',opts:['Reiniciarla','Formatearla de inmediato','Tirarla','Quitarle el teclado'],why:'Reiniciar limpia la memoria y resuelve muchos errores.'}]},
+  {id:'t16',sec:'Seguridad y celulares',t:'Resolver problemas',obj:'aplicar pasos básicos de diagnóstico antes de pedir ayuda.',p:['La mayoría de los problemas se resuelven con pasos simples y en orden: 1) reiniciar el aparato; 2) revisar cables y conexión; 3) ver si hay actualizaciones; 4) cerrar y volver a abrir la app; 5) buscar el mensaje de error exacto en internet.','Cuando pidas ayuda, describe bien: qué hacías, qué pasó, qué dice el mensaje de error y qué ya intentaste. Eso hace que te ayuden mucho más rápido.'],
+   ej:{t:'Orden de diagnóstico',calc:'1. Reiniciar\n2. Revisar cables y conexión\n3. Buscar actualizaciones\n4. Cerrar y reabrir la app\n5. Copiar el mensaje de error y buscarlo\nPide ayuda con: qué hacía, qué pasó, el error y qué ya probé'},
+   ex:[{t:'opt',q:'La impresora no imprime. Primer paso razonable:',how:'Lo más básico primero.',opts:['Revisar que esté encendida y conectada, y reiniciar','Comprar otra','Formatear la PC','Cambiar de casa'],why:'Primero lo simple: energía, conexión y reinicio.'},
+    {t:'opt',q:'Al pedir ayuda técnica, lo más útil es dar:',how:'Datos concretos.',opts:['Qué hacías, el mensaje de error y qué ya intentaste','Solo decir "no sirve"','Un reclamo enojado','Nada'],why:'Los detalles permiten diagnosticar rápido.'},
+    {t:'ord',q:'Ordena los pasos básicos para resolver una falla.',how:'De lo más simple a buscar el error.',tokens:['Reiniciar el aparato','Revisar cables y conexión','Buscar actualizaciones','Buscar el mensaje de error']}]}],
+ exam:[]};
+const IT_EXAM=[
+ ['El hardware es:','Lo que puedes tocar','Los programas','Internet','Un archivo','Son las piezas físicas.'],
+ ['El software es:','Los programas e instrucciones','El teclado','La pantalla','El procesador','Son las instrucciones.'],
+ ['¿Cuál es el "cerebro" de la computadora?','El CPU','La RAM','El disco','La fuente','El procesador hace los cálculos.'],
+ ['La RAM al apagar el equipo:','Se borra','Se conserva','Se multiplica','Se vuelve disco','Es memoria volátil.'],
+ ['¿Dónde se conservan tus archivos al apagar?','En el almacenamiento','En la RAM','En el CPU','En la pantalla','El disco o SSD es permanente.'],
+ ['¿Qué mejora más una PC vieja?','Cambiar a SSD','Más bocinas','Mouse nuevo','Otra pantalla','El SSD acelera arranque y apps.'],
+ ['Un SSD, comparado con un HDD, es:','Más rápido y sin partes móviles','Más lento','Igual','Software','El SSD no tiene plato mecánico.'],
+ ['1 GB equivale a:','1024 MB','100 MB','10 MB','1 MB','Cada escalón es ×1024.'],
+ ['1 byte equivale aproximadamente a:','Una letra','Una foto','Una película','Un GB','8 bits ≈ una letra.'],
+ ['Ordena de menor a mayor:','KB, MB, GB, TB','TB, GB, MB, KB','MB, KB, GB, TB','GB, TB, MB, KB','Cada uno es 1024 veces el anterior.'],
+ ['El sistema operativo sirve para:','Administrar hardware y apps','Solo navegar','Solo fotos','Dar corriente','Es el software base.'],
+ ['¿Cuál es un sistema operativo?','Windows','Word','Chrome','Excel','Los demás son programas.'],
+ ['El iPhone usa:','iOS','Android','Windows','Linux','iOS es de Apple.'],
+ ['Android es:','Un sistema operativo de celular','Un navegador','Un antivirus','Una red social','Lo usan Samsung, Motorola, etc.'],
+ ['Una carpeta sirve para:','Organizar archivos','Dar memoria','Acelerar internet','Cargar batería','Agrupa archivos.'],
+ ['En Documentos\\Trabajo\\reporte.docx, el archivo es:','reporte.docx','Trabajo','Documentos','C:','Va al final de la ruta.'],
+ ['Un buen nombre de archivo es:','2026-11-15 reporte.pdf','final final2.pdf','documento.pdf','sin nombre','Con fecha se ordena y se entiende.'],
+ ['Un archivo .xlsx se abre con:','Excel','Word','Un reproductor','Solo el navegador','.xlsx es de Excel.'],
+ ['Un archivo .docx es de:','Word','Excel','PowerPoint','Un video','Documentos de Word.'],
+ ['¿Qué extensión es imagen?','.png','.docx','.mp3','.zip','.png y .jpg son imágenes.'],
+ ['.mp4 es:','Video','Audio','Texto','Imagen','Archivo de video.'],
+ ['.zip es:','Un archivo comprimido','Una imagen','Un video','Un sistema operativo','Agrupa y comprime archivos.'],
+ ['Un .exe inesperado por correo:','No se abre, se verifica','Se abre ya','Se reenvía','Se renombra y se abre','Puede instalar malware.'],
+ ['Conviene instalar apps desde:','Tiendas y sitios oficiales','Cualquier página gratis','Correos desconocidos','Memorias prestadas','Reduce el riesgo de virus.'],
+ ['Las actualizaciones sirven para:','Corregir errores y cerrar fallos','Gastar datos','Borrar archivos','Hacer todo lento','Mejoran seguridad y función.'],
+ ['Un driver es:','Software que comunica el SO con un aparato','Un virus','Una red social','Una batería','Traduce entre SO y dispositivo.'],
+ ['El router sirve para:','Repartir internet','Guardar archivos','Procesar cálculos','Cargar el celular','Distribuye la conexión.'],
+ ['Si hay WiFi pero no internet, primero:','Reiniciar módem y router','Comprar otra PC','Formatear el celular','Cambiar navegador','Reiniciar la red resuelve mucho.'],
+ ['El WiFi es:','La conexión sin cables en casa','El proveedor','Un virus','Un archivo','El último tramo de la red.'],
+ ['La "s" de https significa:','Segura (cifrada)','Rápida','Social','Sin internet','HTTPS cifra los datos.'],
+ ['El navegador es:','El programa para ver webs','Un buscador solo','El SO','Un antivirus','Chrome, Safari, Edge.'],
+ ['Antes de poner tu contraseña, verifica:','Que diga https y el dominio correcto','Que tenga colores','Que cargue rápido','Que tenga anuncios','Candado y dominio correcto.'],
+ ['Para enviar a 40 personas sin que se vean sus correos:','CCO','CC','Para','Asunto','La copia oculta esconde direcciones.'],
+ ['Un adjunto es:','Un archivo que va con el correo','El asunto','La firma','Siempre un virus','Archivo agregado al mensaje.'],
+ ['Un archivo de 300 MB para correo, mejor:','Subirlo a la nube y mandar enlace','Partirlo en 100 correos','Rendirte','Mandarlo por SMS','La nube evita el límite.'],
+ ['La nube permite:','Ver archivos desde cualquier aparato','Acelerar la RAM','Cargar batería','Imprimir sin tinta','Guardas en internet.'],
+ ['Un ejemplo de nube es:','Google Drive','La RAM','El CPU','El teclado','Drive, iCloud, OneDrive.'],
+ ['Respaldar sirve para:','No perder archivos si falla el equipo','Gastar más','Que pese más','Nada','Copia extra de seguridad.'],
+ ['Buena regla de respaldo:','Dos copias, una fuera del equipo','Una sola en el mismo disco','Nunca copiar','Todo en el escritorio','Una copia externa te salva.'],
+ ['La contraseña más segura es:','Tacos-Al-Pastor-2026!','123456','juan','hola','Larga y variada.'],
+ ['La verificación en dos pasos (MFA):','Pide un código además de la contraseña','Quita la contraseña','Hace lento internet','Es un virus','Segundo factor de seguridad.'],
+ ['El phishing es:','Un engaño para robar tus datos','Un tipo de WiFi','Una app buena','Un respaldo','Finge ser alguien de confianza.'],
+ ['Señal típica de phishing:','Urgencia y enlace raro','Buena ortografía','Remitente oficial','Sin enlaces','Presiona para que actúes sin pensar.'],
+ ['En Android las apps se instalan desde:','Google Play','App Store','iCloud','Windows','Play es la tienda de Android.'],
+ ['En iPhone las apps se instalan desde:','App Store','Google Play','OneDrive','Linux','App Store es de Apple.'],
+ ['Una linterna que pide tus contactos:','Permiso sospechoso: negar','Darlo sin pensar','Pagar','Reiniciar','No lo necesita para su función.'],
+ ['El respaldo de un iPhone va a:','iCloud','Google Drive','OneDrive','Un HDD interno','iCloud respalda el iPhone.'],
+ ['Para liberar espacio conviene:','Desinstalar lo que no usas y vaciar papelera','Abrir más apps','Subir el brillo','Otra pantalla','Quitar lo inútil libera espacio.'],
+ ['Para cuidar la batería:','Mantenerla entre 20 % y 80 %','Descargarla a 0 siempre','Cargarla al sol','Dejarla días cargando','Evita extremos y calor.'],
+ ['Si la PC está lenta, primer paso:','Reiniciarla','Formatearla ya','Tirarla','Quitar el teclado','Reiniciar limpia la memoria.'],
+ ['La impresora no imprime, primero:','Revisar energía y conexión, y reiniciar','Comprar otra','Formatear','Mudarte','Lo simple primero.'],
+ ['Al pedir ayuda técnica, lo útil es dar:','Qué hacías, el error y qué probaste','Solo "no sirve"','Un reclamo','Nada','Los detalles aceleran la solución.'],
+ ['La RAM y el almacenamiento:','Son cosas distintas y no se suman','Son lo mismo','Se suman','No existen','Una es temporal, otra permanente.'],
+ ['8 bits forman:','Un byte','Un KB','Un MB','Un GB','1 byte = 8 bits.'],
+ ['La GPU o tarjeta gráfica:','Dibuja lo que ves en pantalla','Guarda archivos','Da corriente','Conecta el WiFi','Importante en juegos y diseño.'],
+ ['La tarjeta madre:','Conecta todos los componentes','Procesa sola','Es software','Da internet','Une CPU, RAM, disco, etc.'],
+ ['4 GB en MB son:','4096','400','40','4','4 × 1024.'],
+ ['Un PDF se caracteriza por:','Abrirse casi en cualquier dispositivo igual','Ser editable como Word siempre','Ser una imagen','Ser audio','Conserva el formato.'],
+ ['macOS es el sistema operativo de:','Las computadoras Mac','Los Samsung','Los router','Las impresoras','macOS es de Apple.'],
+ ['Linux destaca por:','Ser libre y gratuito, común en servidores','Ser de Apple','Ser un navegador','Ser un virus','Software libre.'],
+ ['Un buscador como Google sirve para:','Encontrar páginas web','Ver películas sin internet','Cargar la batería','Imprimir','Ayuda a localizar sitios.'],
+ ['CC en un correo significa:','Con copia (otros se enteran)','Copia oculta','Destinatario principal','Asunto','CC manda copia visible.'],
+ ['Guardar todo solo en el escritorio del equipo es:','Riesgoso: sin respaldo se puede perder','Lo más seguro','Imposible','Obligatorio','Si falla el disco, se pierde.'],
+ ['Una URL es:','La dirección de una página web','Un virus','Un archivo de audio','Una batería','Como https://truper.com.'],
+ ['El módem:','Recibe la señal del proveedor','Guarda tus fotos','Procesa cálculos','Es un navegador','Luego el router la reparte.'],
+ ['Cerrar programas que no usas en la PC:','Libera RAM','Borra el disco','Daña el equipo','Apaga el internet','Deja memoria libre.'],
+ ['Un archivo comprimido (.zip) sirve para:','Juntar y reducir varios archivos','Reproducir música','Navegar','Dar corriente','Agrupa y pesa menos.'],
+ ['El escritorio lleno de iconos:','Conviene organizarlo en carpetas','Hace la PC más rápida','Es obligatorio','Da más RAM','Ordenar facilita encontrar.'],
+ ['Formatear un equipo significa:','Borrar todo y dejarlo como nuevo','Apagarlo un rato','Subir el brillo','Actualizar una app','Borra datos: respalda antes.'],
+ ['Antes de formatear o reinstalar, siempre:','Haz un respaldo','Apaga el WiFi','Sube el brillo','Nada','No pierdas tus archivos.'],
+ ['Un gestor de contraseñas:','Guarda y crea contraseñas seguras','Es un virus','Borra cuentas','Hace lento el equipo','Recuerda las contraseñas por ti.'],
+ ['Conectarte a un WiFi público para tu banco:','Es riesgoso; mejor tus datos móviles','Es lo más seguro','No cambia nada','Es obligatorio','En redes públicas hay más riesgo.'],
+ ['Un antivirus sirve para:','Detectar y bloquear software malicioso','Acelerar internet','Cargar batería','Imprimir','Protege contra malware.'],
+ ['Si recibes un enlace raro de un "premio" que ganaste:','No hacer clic: suele ser fraude','Hacer clic ya','Dar tus datos','Reenviarlo','Los premios sorpresa suelen ser engaño.'],
+ ['El brillo y el WiFi activos todo el tiempo:','Gastan más batería','La cargan','No afectan','Dañan el disco','Apágalos si no los usas.'],
+ ['Un "ícono" o "icono" en el escritorio es:','Un acceso a un programa o archivo','Un virus','Una carpeta de internet','Una batería','Abre el programa o archivo.'],
+ ['Los "megapíxeles" de una cámara miden:','El detalle de la foto','La batería','El WiFi','El peso del teléfono','Más MP, más resolución.'],
+ ['El "modo avión" en el celular:','Apaga las conexiones inalámbricas','Borra las apps','Sube el brillo','Carga más rápido siempre','Corta WiFi, datos y llamadas.'],
+ ['Una actualización del sistema conviene instalarla:','Pronto, por seguridad','Nunca','Solo cada 5 años','Solo si falla todo','Cierra fallos de seguridad.'],
+ ['Un correo de "soporte" con dominio raro que pide tu clave:','Es phishing: no responder','Es confiable','Hay que obedecer','Se reenvía a todos','Dominio raro y pide clave: engaño.']];
+COURSES.it.exam=IT_EXAM.map(([q,...r])=>({q,o:r.slice(0,4),e:r[4]}));
+
 courseInit();
 
 /* ---------- SAP ampliado: teoría, examen y niveles ---------- */
