@@ -1,6 +1,6 @@
 // Service worker: funciona sin internet y se actualiza solo.
 // Al publicar una versión nueva, cambia el número de VERSION.
-const VERSION = 'laboratorio-v6';
+const VERSION = 'laboratorio-v8';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
