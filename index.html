@@ -6107,6 +6107,138 @@ const SAPIA_EXAM=[
  ['Para ti, con base en SAP, aprender IA significa:','Posicionarte donde va el mercado','Perder el tiempo','Un retroceso','Nada útil','Procesos + IA = ventaja.']];
 COURSES.sapia.exam=SAPIA_EXAM.map(([q,...r])=>({q,o:r.slice(0,4),e:r[4]}));
 
+/* ===== SAP a fondo: ejercicios y examen nivel experto ===== */
+const SAPRO_EX={
+ p1:[
+  {t:'opt',q:'Contabilizas una entrada de mercancías (MIGO 101) contra una orden de producción por 100 pzas valoradas a $85. ¿Qué se genera simultáneamente?',how:'Piensa en la integración logística-finanzas.',opts:['Un documento de material y un documento contable: inventario al debe $8,500 contra el abono de la orden','Solo un documento de material, sin ningún efecto contable','Solo un asiento que debes capturar aparte en FB50','Una factura de cliente'],why:'La entrada valorada genera documento material y asiento FI a la vez.'},
+  {t:'opt',q:'El material 1001 no tiene la vista de Contabilidad en el centro 1000. Al intentar MIGO, el sistema:',how:'Sin valoración no hay asiento.',opts:['Falla: sin categoría de valoración no puede valorar ni generar el documento FI','Entra sin valor y lo corriges después','Lo valora en cero y continúa','Crea la vista solo','Avisa pero contabiliza igual'].slice(0,4),why:'La vista Contabilidad es obligatoria para valorar.'},
+  {t:'txt',q:'Clave de 4 letras del tipo de material de un producto terminado.',how:'Fertig = terminado.',ans:['FERT'],why:'FERT = producto terminado.'},
+  {t:'ord',q:'Ordena los documentos del flujo procure-to-pay.',how:'De la necesidad al pago.',tokens:['Solicitud de pedido','Pedido de compra','Entrada de mercancías','Verificación de factura']}],
+ p2:[
+  {t:'opt',q:'En S/4HANA, ¿qué tabla concentra las partidas de FI y CO en un documento universal?',how:'Universal Journal.',opts:['ACDOCA','BSEG','MSEG','MARA'],why:'ACDOCA es el documento universal.'},
+  {t:'opt',q:'El stock se lee del documento de material en S/4HANA mediante:',how:'Se eliminaron tablas agregadas.',opts:['MATDOC con agregación on-the-fly, reemplazando tablas como MARD','MARA','BKPF','Una hoja de Excel'],why:'S/4 simplifica el stock con MATDOC.'},
+  {t:'opt',q:'¿Por qué HANA acelera los reportes?',how:'Dónde y cómo guarda.',opts:['Guarda los datos en memoria y orientados a columnas','Comprime los datos a cero','Usa disco mecánico','No guarda históricos'],why:'In-memory + columnar.'},
+  {t:'opt',q:'"Clean core" en la práctica significa:',how:'Facilitar actualizaciones.',opts:['Poca modificación del estándar; las extensiones van en BTP vía APIs liberadas','Borrar el núcleo de SAP','Modificar las tablas estándar a voluntad','Desactivar el módulo FI'],why:'Núcleo limpio = actualizaciones sin romper.'}],
+ p3:[
+  {t:'opt',q:'¿Un centro (plant) puede estar asignado a dos sociedades (company codes) a la vez?',how:'Regla de asignación.',opts:['No: un centro pertenece a una sola sociedad','Sí, a cuantas se quiera','Sí, pero solo en S/4HANA','Solo si comparten moneda'],why:'Centro → una sociedad.'},
+  {t:'opt',q:'Un almacén (storage location) pertenece directamente a:',how:'Nivel inmediato superior.',opts:['Un centro','Una sociedad','Una organización de ventas','El mandante'],why:'Almacén cuelga de un centro.'},
+  {t:'ord',q:'Ordena de mayor a menor alcance.',how:'De la instalación al sub-lugar.',tokens:['Mandante','Sociedad','Centro','Almacén']},
+  {t:'opt',q:'El balance y el estado de resultados legales se llevan al nivel de:',how:'Entidad legal.',opts:['La sociedad (company code)','El centro','El almacén','El grupo de compras'],why:'La sociedad es la entidad legal.'}],
+ p4:[
+  {t:'opt',q:'ME21N marca "el material no está ampliado para el área de compras". La causa es:',how:'Falta una vista.',opts:['Falta la vista Compras del material en ese centro (se amplía con MM01)','Falta stock del material','El proveedor no existe','El pedido está bloqueado'],why:'Sin vista Compras no se puede comprar.'},
+  {t:'opt',q:'La categoría de valoración (vista Contabilidad) determina:',how:'Enlace con cuentas.',opts:['A qué cuentas de mayor se registra el inventario','El color del material','El proveedor habitual','El takt time'],why:'Define la determinación de cuentas.'},
+  {t:'opt',q:'¿Qué dato maestro define en qué máquinas y con qué tiempos se fabrica?',how:'Operaciones.',opts:['La hoja de ruta','La lista de materiales','El registro info de compras','El pedido de cliente'],why:'La ruta define operaciones y puestos.'},
+  {t:'opt',q:'Control de precios S (estándar) frente a V (medio variable):',how:'Quién absorbe la diferencia.',opts:['S deja fijo el precio y manda diferencias a una cuenta de variación; V recalcula el precio con cada entrada','V deja fijo el precio y S recalcula','Ambos recalculan igual','Ninguno afecta la contabilidad'],why:'Estándar fijo vs medio móvil.'}],
+ p5:[
+  {t:'num',q:'Precio medio (V): 200 pzas valoradas en $2,000. Entra una compra de 100 pzas a $13 c/u. ¿Nuevo precio medio por pza?',unit:'MXN',how:'(valor viejo + valor nuevo) / cantidad total.',ans:11,tol:0.01,why:'(2,000 + 1,300) / 300 = 11.'},
+  {t:'num',q:'Pedido de 500 pzas a $8 (entrada completa). La factura del proveedor llega por $4,350. ¿Saldo en la cuenta puente GR/IR?',unit:'MXN',how:'Factura − valor de la entrada.',ans:350,why:'4,350 − 4,000 = 350.'},
+  {t:'opt',q:'Tolerancia de factura: 5% o máximo $300. Pedido $10,000, factura $10,400. El sistema:',how:'Basta exceder un límite.',opts:['Bloquea la factura: la diferencia ($400) excede el tope absoluto de $300','La paga: 4% es menor que 5%','La rechaza y borra el pedido','La paga y avisa al proveedor'],why:'Supera el límite absoluto, aunque el % no.'},
+  {t:'num',q:'Precio estándar (S) $8. Entra una compra de 100 pzas a $9.50. ¿Cuánto va a la cuenta de diferencias de precio?',unit:'MXN',how:'(precio compra − estándar) × cantidad.',ans:150,why:'(9.50 − 8) × 100 = 150.'}],
+ p6:[
+  {t:'num',q:'BOM del martillo: 1 cabeza $32, 1 mango $18, 1 etiqueta $0.80, 1 caja $3.50. Orden de 200 pzas. ¿Costo de material de la orden?',unit:'MXN',how:'Suma del BOM × cantidad.',ans:10860,why:'54.30 × 200 = 10,860.'},
+  {t:'num',q:'Operación ENS-01: 15 min de preparación + 0.6 min/pza. Orden de 200 pzas, tarifa $4.50/min. ¿Costo de la actividad?',unit:'MXN',how:'(prep + min/pza × pzas) × tarifa.',ans:607.5,tol:0.5,why:'(15 + 120) × 4.50 = 607.50.'},
+  {t:'num',q:'Orden de 1,000 pzas con 4% de merma (scrap) esperada. ¿Piezas buenas planeadas?',unit:'pzas',how:'Cantidad × (1 − merma).',ans:960,why:'1,000 × 0.96 = 960.'},
+  {t:'opt',q:'CO11N no deja notificar la orden 1000003. Lo más probable:',how:'Estatus de la orden.',opts:['La orden no está liberada (CRTD, falta REL)','Falta el cliente','No hay factura','El centro de costo está cerrado'],why:'Sin liberar no se puede notificar.'}],
+ p7:[
+  {t:'opt',q:'Plan de muestreo: muestra 125, criterio Ac=3 / Re=4. Se encuentran 3 defectos. Decisión:',how:'Compara con Ac.',opts:['Aceptar el lote: 3 ≤ Ac (3)','Rechazar el lote','Inspeccionar al 100%','No se puede decidir'],why:'Defectos ≤ Ac → aceptar.'},
+  {t:'num',q:'El cliente devolvió 15 pzas de un embarque de 60,000. ¿PPM de cliente?',unit:'ppm',how:'Devueltas / enviadas × 1,000,000.',ans:250,why:'15 / 60,000 × 1e6 = 250.'},
+  {t:'opt',q:'Un material con clave de inspección 04 entra por MIGO 101 a:',how:'No queda libre de inmediato.',opts:['Stock en control de calidad, hasta la decisión de empleo','Stock de libre utilización','Stock bloqueado permanente','No entra al sistema'],why:'Inspección 04 → stock en calidad.'},
+  {t:'num',q:'Costo de no calidad: fallas internas $80,000 + externas $40,000; ventas $4,000,000. ¿Porcentaje sobre ventas?',unit:'%',how:'(internas + externas) / ventas.',ans:3,tol:0.01,why:'120,000 / 4,000,000 = 3%.'}],
+ p8:[
+  {t:'num',q:'Vendes 60 martillos a $149; su costo estándar es $85. ¿Margen bruto total de la venta?',unit:'MXN',how:'(precio − costo) × cantidad.',ans:3840,why:'(149 − 85) × 60 = 3,840.'},
+  {t:'num',q:'Valor neto $8,940 con IVA 16%. ¿Total de la factura?',unit:'MXN',how:'Neto × 1.16.',ans:10370.4,tol:0.5,why:'8,940 × 1.16 = 10,370.40.'},
+  {t:'opt',q:'VF01 no deja facturar el pedido 10000005. Causa más probable:',how:'Falta un paso del flujo.',opts:['El pedido aún no se entrega (falta la salida de mercancías con VL01N)','Falta el proveedor','No hay orden de producción','Falta la hoja de ruta'],why:'Se factura lo entregado.'},
+  {t:'opt',q:'Crédito del cliente: límite $50,000, saldo $46,000, nuevo pedido con IVA $9,280. El sistema:',how:'Suma saldo + pedido.',opts:['Bloquea por crédito: 46,000 + 9,280 > 50,000','Lo libera sin problema','Reduce el pedido solo','Ignora el límite'],why:'Excede el límite de crédito.'}],
+ p9:[
+  {t:'num',q:'Una prensa operó 600 h con 8 fallas y 20 h totales de reparación. ¿MTBF?',unit:'h',how:'Tiempo funcionando / fallas.',ans:75,why:'600 / 8 = 75 h.'},
+  {t:'num',q:'Con MTBF 75 h y MTTR 2.5 h, ¿disponibilidad inherente?',unit:'%',how:'MTBF / (MTBF + MTTR).',ans:96.77,tol:0.1,why:'75 / 77.5 = 96.77%.'},
+  {t:'opt',q:'EWM frente a la gestión de stock básica de MM:',how:'Nivel de detalle.',opts:['Gestiona ubicaciones finas y estrategias de put-away/picking','Solo suma cantidades','Es contabilidad','Es ventas'],why:'EWM administra el almacén al detalle.'},
+  {t:'opt',q:'El mantenimiento preventivo por uso se programa:',how:'Por contador.',opts:['Cada cierto contador (horas, ciclos o piezas)','Solo por fecha fija','Cuando ya falló','Nunca'],why:'Preventivo por uso = por contador.'}],
+ p10:[
+  {t:'opt',q:'La entrada de mercancía valorada de una compra genera, además del documento material, el asiento:',how:'Inventario contra puente.',opts:['Inventario (debe) contra la cuenta puente GR/IR (haber)','Clientes (debe) contra Ventas (haber)','Bancos (debe) contra Proveedores (haber)','Solo un documento CO'],why:'GR: inventario / GR-IR.'},
+  {t:'num',q:'Factura de venta: Clientes $11,600 al debe; Ventas $10,000 al haber. ¿Cuánto va al haber de IVA trasladado para que cuadre?',unit:'MXN',how:'Debe = Haber.',ans:1600,why:'11,600 − 10,000 = 1,600.'},
+  {t:'opt',q:'La configuración que determina automáticamente las cuentas de inventario en movimientos de mercancías es:',how:'Determinación automática de cuentas.',opts:['OBYC','La hoja de ruta','El registro info','SE16'],why:'OBYC mapea movimientos a cuentas.'},
+  {t:'opt',q:'En S/4HANA, FI y CO comparten:',how:'Documento universal.',opts:['El documento universal en la tabla ACDOCA','La tabla MARA','Ninguna tabla','Una hoja de cálculo'],why:'ACDOCA unifica FI/CO.'}],
+ p11:[
+  {t:'num',q:'Costo estándar $85/pza, orden de 200 pzas. Al cerrar, el costo real acumulado es $18,000. ¿Desviación total (real − estándar)?',unit:'MXN',how:'Real − (estándar × cantidad).',ans:1000,why:'18,000 − 17,000 = 1,000 (desfavorable).'},
+  {t:'num',q:'Gastos indirectos: 12% sobre el material de $5,430. ¿Monto de indirectos?',unit:'MXN',how:'Material × 12%.',ans:651.6,tol:0.1,why:'5,430 × 0.12 = 651.60.'},
+  {t:'num',q:'Costo estándar unitario = material $54.30 + actividades $6.10 + indirectos $3.20. ¿Costo unitario?',unit:'MXN',how:'Suma de los tres.',ans:63.6,tol:0.01,why:'54.30 + 6.10 + 3.20 = 63.60.'},
+  {t:'opt',q:'A fin de mes, ¿qué transacción liquida la orden y envía su desviación a CO/FI?',how:'Liquidación.',opts:['KO88 (liquidación de orden)','CO01','MIGO','VA01'],why:'KO88 liquida la orden.'}],
+ p12:[
+  {t:'opt',q:'Una factura de venta (VF01) impacta en:',how:'El costo ya pegó antes.',opts:['SD (facturación) y FI (clientes, ventas, IVA); el costo pegó en la entrega','Solo SD','Solo FI','Ningún módulo'],why:'Factura = ingreso; costo fue en VL01N.'},
+  {t:'ord',q:'Ordena el flujo order-to-cash.',how:'Del pedido al cobro.',tokens:['Pedido de cliente','Entrega con salida de mercancías','Factura','Cobro']},
+  {t:'opt',q:'No puedes dar entrada a una compra porque el material no tiene vista de Contabilidad. Esto demuestra que:',how:'Dato maestro incompleto.',opts:['Un dato maestro incompleto frena el proceso y su asiento en FI','FI es opcional','El proveedor está mal','Falta instalar Fiori'],why:'La integración exige datos maestros completos.'},
+  {t:'opt',q:'El cierre contable mensual que consolida todo se llama:',how:'Del registro al reporte.',opts:['Record-to-report','Procure-to-pay','Order-to-cash','Hire-to-retire'],why:'Record-to-report = cierre.'}],
+ p13:[
+  {t:'opt',q:'En Fiori, los mosaicos (tiles) que ve un usuario dependen de:',how:'Rol de negocio.',opts:['Su rol: catálogos y grupos asignados','El color del tema','La versión de Excel','El proveedor'],why:'Fiori organiza por rol.'},
+  {t:'opt',q:'Las apps Fiori transaccionales consumen datos del backend mediante:',how:'Protocolo web.',opts:['Servicios OData','Archivos CSV por correo','Capturas de pantalla','Macros de Excel'],why:'OData conecta Fiori con S/4.'},
+  {t:'opt',q:'En S/4HANA, un usuario experto que domina los tcodes:',how:'Coexistencia.',opts:['Puede seguir usándolos: Fiori y SAP GUI coexisten','Ya no puede usar tcodes','Debe reinstalar SAP','Pierde sus autorizaciones'],why:'Los tcodes siguen vigentes.'},
+  {t:'txt',q:'Escribe el tcode para VISUALIZAR un material.',how:'Crear 01, modificar 02, visualizar 03.',ans:['MM03'],why:'MM03 visualiza el material.'}],
+ p14:[
+  {t:'txt',q:'Tabla de datos generales (nivel mandante) del material.',how:'Empieza con MAR.',ans:['MARA'],why:'MARA = maestro general de material.'},
+  {t:'txt',q:'Tabla del material a nivel centro.',how:'MAR + C de centro.',ans:['MARC'],why:'MARC = material por centro.'},
+  {t:'txt',q:'Tabla de las posiciones del pedido de compra.',how:'EK + P de posición.',ans:['EKPO'],why:'EKKO cabecera, EKPO posiciones.'},
+  {t:'opt',q:'Un usuario ve el menú pero no puede ejecutar MIGO. Causa típica:',how:'Permisos.',opts:['Le falta el objeto de autorización/rol para esa transacción y movimiento','El material no existe','El centro está cerrado','Falta internet'],why:'Ver el menú no da permiso de ejecutar.'}],
+ p15:[
+  {t:'opt',q:'Para alguien con experiencia en MM/PP, la ruta realista a 3–6 meses es:',how:'Acorde a tu base.',opts:['Una Associate de logística de S/4HANA (sourcing & procurement o manufactura)','Empezar por una Professional de arquitectura','No certificarse','Solo ver videos sueltos'],why:'Associate de tu área primero.'},
+  {t:'opt',q:'Sobre los códigos de examen (C_TS4…):',how:'No son eternos.',opts:['Cambian por versión anual; verifica el vigente en learning.sap.com','Nunca cambian','No importan','Los define el candidato'],why:'Se actualizan cada versión.'},
+  {t:'opt',q:'El nivel de certificación orientado a arquitectura y diseño es:',how:'Código P_.',opts:['Professional (P_)','Associate (C_)','Trainee','Becario'],why:'Professional es el senior.'},
+  {t:'ord',q:'Ordena un plan de certificación sensato.',how:'Del área al examen.',tokens:['Elegir el área afín a tu experiencia','Tomar el learning journey en learning.sap.com','Practicar con el simulador y exámenes de práctica','Agendar y presentar el examen Associate']}]
+};
+const SAPRO_EXAM2=[
+ ['En S/4HANA, el documento universal de FI y CO es la tabla:','ACDOCA','BSEG','MSEG','MARA','Universal Journal.'],
+ ['El stock en S/4HANA se deriva del documento de material en:','MATDOC','MARD fija','BKPF','EKPO','MATDOC con agregación.'],
+ ['Un centro (plant) se asigna a:','Una sola sociedad','Varias sociedades','Ninguna sociedad','El mandante directo','Centro → una sociedad.'],
+ ['Un almacén pertenece directamente a:','Un centro','Una sociedad','Una org. de ventas','El mandante','Almacén cuelga del centro.'],
+ ['El balance legal se lleva al nivel de:','La sociedad','El centro','El almacén','El grupo de compras','La sociedad es la entidad legal.'],
+ ['ME21N dice "material no ampliado para compras". Falta:','La vista Compras en ese centro','Stock','El cliente','La hoja de ruta','Se amplía con MM01.'],
+ ['La categoría de valoración determina:','Las cuentas de inventario','El color','El proveedor','El takt','Enlaza con la contabilidad.'],
+ ['Control de precios S (estándar):','Fija el precio y manda diferencias a variación','Recalcula con cada entrada','No afecta FI','Es para clientes','Estándar fijo.'],
+ ['Control de precios V (medio variable):','Recalcula el precio con cada entrada','Queda fijo siempre','Solo para FERT','No existe','Precio medio móvil.'],
+ ['Precio medio: 200 pzas a $10 y entran 100 a $13. Nuevo precio:','$11','$13','$10','$11.50','(2000+1300)/300.'],
+ ['Pedido 500 a $8, factura $4,350. Saldo GR/IR:','$350','$0','$4,000','$8,350','4350 − 4000.'],
+ ['Estándar $8, entra compra a $9.50 (100 pzas). A diferencias de precio:','$150','$0','$950','$800','(9.5−8)×100.'],
+ ['BOM $54.30, orden de 200 pzas. Costo de material:','$10,860','$54.30','$5,430','$108.60','54.30×200.'],
+ ['Op.: 15 min prep + 0.6 min/pza × 200, tarifa $4.50/min:','$607.50','$540','$135','$900','(15+120)×4.5.'],
+ ['Orden de 1,000 con 4% de merma. Piezas buenas:','960','1,000','996','40','1000×0.96.'],
+ ['CO11N no deja notificar. Causa típica:','La orden no está liberada (REL)','Falta el cliente','No hay factura','Falta Fiori','Sin liberar no se notifica.'],
+ ['Muestra 125, Ac=3/Re=4, 3 defectos. Decisión:','Aceptar (3 ≤ Ac)','Rechazar','100%','No decidir','Defectos ≤ Ac.'],
+ ['15 devueltas de 60,000. PPM:','250','15','2,500','25','15/60000×1e6.'],
+ ['Material con inspección 04 entra por MIGO 101 a:','Stock en control de calidad','Libre utilización','Bloqueado fijo','No entra','Hasta la decisión de empleo.'],
+ ['Costo de no calidad: 80k internas + 40k externas / ventas 4M:','3%','1.2%','30%','0.3%','120k/4M.'],
+ ['60 martillos a $149, costo $85. Margen total:','$3,840','$8,940','$5,100','$64','(149−85)×60.'],
+ ['Neto $8,940 con IVA 16%. Total:','$10,370.40','$8,940','$1,430.40','$10,000','×1.16.'],
+ ['VF01 no factura el pedido. Falta:','La entrega/salida de mercancías (VL01N)','El proveedor','La orden de producción','La ruta','Se factura lo entregado.'],
+ ['Crédito límite 50k, saldo 46k, pedido con IVA 9,280:','Se bloquea por crédito','Se libera','Se reduce solo','Se ignora','46k+9,280>50k.'],
+ ['Prensa 600 h, 8 fallas, 20 h reparación. MTBF:','75 h','8 h','2.5 h','600 h','600/8.'],
+ ['MTBF 75, MTTR 2.5. Disponibilidad:','96.77%','75%','97.5%','2.5%','75/77.5.'],
+ ['EWM frente a MM básico:','Ubicaciones finas y estrategias de almacén','Solo suma cantidades','Es FI','Es ventas','Gestión fina del almacén.'],
+ ['Entrada de mercancía valorada (compra) genera:','Inventario (debe) / GR-IR (haber)','Clientes / Ventas','Bancos / Proveedores','Solo CO','GR: inventario vs puente.'],
+ ['Factura: Clientes 11,600 debe, Ventas 10,000 haber. IVA al haber:','$1,600','$1,856','$10,000','$0','Para cuadrar.'],
+ ['La determinación automática de cuentas de inventario se configura en:','OBYC','La hoja de ruta','El registro info','SE16','OBYC mapea cuentas.'],
+ ['Costo estándar $85×200 vs real $18,000. Desviación:','+$1,000 desfavorable','$0','−$1,000','$18,000','18,000−17,000.'],
+ ['Indirectos 12% sobre material $5,430:','$651.60','$5,430','$120','$543','×0.12.'],
+ ['Material 54.30 + actividades 6.10 + indirectos 3.20. Unitario:','$63.60','$60.40','$54.30','$57.50','Suma de los tres.'],
+ ['Transacción que liquida la orden a fin de mes:','KO88','CO01','MIGO','VA01','Liquidación de orden.'],
+ ['Una factura de venta (VF01) impacta:','SD y FI','Solo SD','Solo FI','Ninguno','Facturación + contabilidad.'],
+ ['El cierre contable mensual es el flujo:','Record-to-report','Procure-to-pay','Order-to-cash','Hire-to-retire','Del registro al reporte.'],
+ ['Los mosaicos Fiori que ve un usuario dependen de:','Su rol (catálogos/grupos)','El color','Excel','El proveedor','Fiori por rol.'],
+ ['Las apps Fiori consumen datos vía:','Servicios OData','CSV por correo','Capturas','Macros','OData.'],
+ ['En S/4HANA, los tcodes:','Coexisten con Fiori','Ya no funcionan','Se eliminaron','Son ilegales','GUI y Fiori conviven.'],
+ ['Tabla de datos generales del material:','MARA','MARC','MSEG','EKPO','Maestro general.'],
+ ['Tabla del material a nivel centro:','MARC','MARA','BSEG','EKKO','Por centro.'],
+ ['Tabla de posiciones del pedido de compra:','EKPO','EKKO','MARA','MSEG','EKPO posiciones.'],
+ ['Tabla de los movimientos de material:','MSEG / MATDOC','MARA','BSEG','EKPO','Documentos de material.'],
+ ['Un usuario ve el menú pero no ejecuta MIGO:','Le falta el rol/autorización','El material no existe','El centro está cerrado','Falta internet','Autorización ≠ visibilidad.'],
+ ['Ruta realista con experiencia MM/PP (3–6 meses):','Associate de logística S/4HANA','Professional de arquitectura','Ninguna','Solo videos','Associate de tu área.'],
+ ['Los códigos de examen C_TS4…:','Cambian por versión anual','Son eternos','No importan','Los define el candidato','Verifica el vigente.'],
+ ['Nivel de certificación de arquitectura:','Professional (P_)','Associate (C_)','Trainee','Becario','P_ es senior.'],
+ ['Procure-to-pay pertenece a:','MM','SD','CO','PM','Compras.'],
+ ['Order-to-cash pertenece a:','SD','MM','PP','QM','Ventas.'],
+ ['El costo de ventas de una venta se contabiliza en:','La entrega (salida de mercancías 601)','La factura','El pedido','El cobro','601 pega el costo.']];
+COURSES.sapro.lec.forEach(function(L){if(SAPRO_EX[L.id])L.ex=SAPRO_EX[L.id];});
+COURSES.sapro.exam=SAPRO_EXAM2.map(function(a){var q=a[0],r=a.slice(1);return {q:q,o:r.slice(0,4),e:r[4]};});
+
 courseInit();
 
 /* ---------- SAP ampliado: teoría, examen y niveles ---------- */
