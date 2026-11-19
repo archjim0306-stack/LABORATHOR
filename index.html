@@ -6239,6 +6239,470 @@ const SAPRO_EXAM2=[
 COURSES.sapro.lec.forEach(function(L){if(SAPRO_EX[L.id])L.ex=SAPRO_EX[L.id];});
 COURSES.sapro.exam=SAPRO_EXAM2.map(function(a){var q=a[0],r=a.slice(1);return {q:q,o:r.slice(0,4),e:r[4]};});
 
+/* ===== Ingeniería Industrial: ejercicios y examen de básico a experto ===== */
+const II_EX={
+ ii1:[
+  {t:'num',q:'Un operario tarda 0.80 min por pieza (tiempo observado). Lo calificas al 110% y los suplementos son 15%. ¿Tiempo estándar por pieza?',unit:'min',how:'TN = TO × valoración; TE = TN × (1 + suplementos).',ans:1.012,tol:0.005,why:'0.80×1.10=0.88; 0.88×1.15=1.012.'},
+  {t:'num',q:'Con un tiempo estándar de 1.20 min/pza, ¿cuántas piezas estándar se producen en una jornada de 480 min?',unit:'pzas',how:'Jornada / TE.',ans:400,why:'480 / 1.20 = 400.'},
+  {t:'opt',q:'La valoración del ritmo (factor de desempeño) sirve para:',how:'Ajustar a un ritmo normal.',opts:['Llevar el tiempo observado a un ritmo normal de trabajo','Sumar los descansos','Contar los defectos','Medir la temperatura'],why:'Normaliza por el ritmo del operario.'}],
+ ii2:[
+  {t:'num',q:'Un estudio de muestreo del trabajo estima una proporción p=0.20. Para 95% de confianza (Z=1.96) y error ±0.03, ¿qué tamaño de muestra n se necesita?',unit:'obs',how:'n = Z²·p·(1−p) / e².',ans:683,tol:3,why:'1.96²×0.2×0.8 / 0.03² ≈ 683.'},
+  {t:'num',q:'De 500 observaciones aleatorias, 90 encontraron la máquina inactiva. ¿Porcentaje de inactividad?',unit:'%',how:'Inactivas / total.',ans:18,why:'90/500 = 18%.'},
+  {t:'opt',q:'El muestreo del trabajo se basa en:',how:'Observaciones instantáneas y aleatorias.',opts:['Observaciones instantáneas en momentos aleatorios','Cronometrar cada ciclo completo','Encuestas de opinión','Contar piezas al final del día'],why:'Estima proporciones de tiempo con observaciones aleatorias.'}],
+ ii3:[
+  {t:'num',q:'Un proceso dura 120 min en total; solo 42 min agregan valor. ¿Porcentaje de valor agregado?',unit:'%',how:'Tiempo que agrega valor / total.',ans:35,why:'42/120 = 35%.'},
+  {t:'opt',q:'En un diagrama de proceso, el símbolo de flecha representa:',how:'Mover de un lugar a otro.',opts:['Transporte','Operación','Inspección','Almacenamiento'],why:'La flecha es transporte.'},
+  {t:'opt',q:'Las demoras y los almacenamientos en el diagrama suelen ser:',how:'Lo que el cliente no paga.',opts:['Actividades que no agregan valor y hay que reducir','Las más valiosas','Operaciones de inspección','Transportes rápidos'],why:'Son desperdicio a reducir.'}],
+ ii4:[
+  {t:'num',q:'Se requieren 480 unidades en una jornada de 480 min. ¿Takt time?',unit:'min',how:'Tiempo disponible / demanda.',ans:1,why:'480/480 = 1 min por unidad.'},
+  {t:'num',q:'La suma de los tiempos de tarea es 4.2 min y el takt es 1.0 min. ¿Número mínimo teórico de estaciones?',unit:'estaciones',how:'Redondea hacia arriba Σt/takt.',ans:5,why:'⌈4.2/1.0⌉ = 5.'},
+  {t:'num',q:'Con 5 estaciones y un cuello de botella de 1.0 min (Σt=4.2 min), ¿eficiencia de balanceo?',unit:'%',how:'Σt / (N × tiempo de ciclo).',ans:84,tol:0.1,why:'4.2/(5×1.0) = 84%.'}],
+ ii5:[
+  {t:'num',q:'Suavización exponencial con α=0.3. El pronóstico anterior fue 100 y la demanda real 120. ¿Nuevo pronóstico?',unit:'u',how:'F = α·real + (1−α)·pronóstico.',ans:106,why:'0.3×120 + 0.7×100 = 106.'},
+  {t:'num',q:'En 4 periodos los errores absolutos fueron 10, 8, 12 y 6. ¿MAD (desviación media absoluta)?',unit:'u',how:'Promedio de los errores absolutos.',ans:9,why:'(10+8+12+6)/4 = 9.'},
+  {t:'opt',q:'Un α más alto en la suavización exponencial hace el pronóstico:',how:'Peso del dato reciente.',opts:['Más reactivo a los cambios recientes','Más lento y estable','Independiente del dato real','Siempre exacto'],why:'α alto = más peso al dato nuevo.'}],
+ ii6:[
+  {t:'num',q:'Demanda anual 10,000 u, costo de pedido $50, costo de mantener $4/u al año. ¿Cantidad económica de pedido (EOQ)?',unit:'u',how:'EOQ = √(2DS/H).',ans:500,why:'√(2×10,000×50/4) = 500.'},
+  {t:'num',q:'La demanda es 40 u/día y el plazo de entrega 5 días. ¿Punto de reorden (sin stock de seguridad)?',unit:'u',how:'d × L.',ans:200,why:'40×5 = 200.'},
+  {t:'num',q:'Con EOQ de 500 u y demanda anual de 10,000 u, ¿cuántos pedidos al año?',unit:'pedidos',how:'D / EOQ.',ans:20,why:'10,000/500 = 20.'}],
+ ii7:[
+  {t:'opt',q:'En la clasificación ABC, los artículos "A" típicamente son:',how:'Pocos artículos, mucho valor.',opts:['Cerca del 20% de los artículos y 80% del valor','80% de los artículos y 20% del valor','Los más baratos','Los que no rotan'],why:'Pocos artículos concentran la mayor parte del valor.'},
+  {t:'num',q:'Un artículo tiene consumo anual de 2,000 u a $15 c/u. ¿Valor anual de uso?',unit:'MXN',how:'Consumo × costo unitario.',ans:30000,why:'2,000×15 = 30,000.'},
+  {t:'opt',q:'A los artículos "A" conviene:',how:'Control estricto.',opts:['Controlarlos de cerca y revisar su inventario con frecuencia','Dejarlos sin control','Comprarlos una vez al año','Ignorar su costo'],why:'Concentran el valor: control estricto.'}],
+ ii8:[
+  {t:'num',q:'Necesidad bruta 500 u, inventario disponible 120 u y recepciones programadas 80 u. ¿Necesidad neta?',unit:'u',how:'Bruta − disponible − recepciones.',ans:300,why:'500−120−80 = 300.'},
+  {t:'num',q:'Un producto lleva 2 piezas del componente X. Para una orden de 300 productos, ¿necesidad bruta de X?',unit:'u',how:'Cantidad × coeficiente del BOM.',ans:600,why:'300×2 = 600.'},
+  {t:'opt',q:'El MRP necesita, como insumos principales:',how:'Qué, cuánto y qué hay.',opts:['Plan maestro, lista de materiales e inventarios','Solo el pronóstico de ventas','Solo la nómina','El organigrama'],why:'PMP + BOM + inventarios.'}],
+ ii9:[
+  {t:'num',q:'La demanda del mes es 1,200 u y la capacidad a tiempo normal es 1,000 u. ¿Cuántas unidades hay que cubrir con horas extra o subcontratación?',unit:'u',how:'Demanda − capacidad normal.',ans:200,why:'1,200−1,000 = 200.'},
+  {t:'opt',q:'Una estrategia de persecución (chase) en el plan agregado:',how:'Ajusta la producción a la demanda.',opts:['Ajusta la fuerza de trabajo a la demanda de cada periodo','Mantiene producción constante','Nunca usa inventario','Ignora la demanda'],why:'Chase sigue la demanda; level la mantiene plana.'}],
+ ii10:[
+  {t:'opt',q:'La regla SPT (tiempo de proceso más corto primero) minimiza:',how:'Promedio de flujo.',opts:['El tiempo de flujo promedio de los trabajos','El número de máquinas','El costo de material','La calidad'],why:'SPT minimiza el flujo medio.'},
+  {t:'num',q:'Tres trabajos con tiempos 3, 5 y 2 h se secuencian por SPT en una máquina. ¿Tiempo de flujo promedio?',unit:'h',how:'Ordena 2,3,5; promedia los tiempos de terminación.',ans:5.67,tol:0.05,why:'Terminación 2,5,10 → (2+5+10)/3 = 5.67.'}],
+ ii11:[
+  {t:'opt',q:'En un problema de programación lineal, la solución óptima se encuentra en:',how:'Geometría de la región factible.',opts:['Un vértice de la región factible','El centro de la región','Fuera de la región','Siempre en el origen'],why:'El óptimo está en un vértice.'},
+  {t:'num',q:'La función objetivo es Z = 3x + 5y. En el vértice (2, 6), ¿cuánto vale Z?',unit:'',how:'Sustituye x e y.',ans:36,why:'3×2 + 5×6 = 36.'},
+  {t:'opt',q:'Las restricciones de un modelo de PL representan:',how:'Lo que limita.',opts:['Los límites de recursos y requisitos','La ganancia a maximizar','El azar','Nada'],why:'Las restricciones acotan la región factible.'}],
+ ii12:[
+  {t:'num',q:'En un problema de transporte la oferta total es 100 y la demanda total 120. Para balancearlo se agrega una fuente ficticia con capacidad de:',unit:'u',how:'Diferencia entre demanda y oferta.',ans:20,why:'120−100 = 20 (origen ficticio).'},
+  {t:'opt',q:'El modelo de transporte busca:',how:'Costo mínimo de envío.',opts:['Minimizar el costo total de enviar de orígenes a destinos','Maximizar la distancia','Igualar precios','Contratar personal'],why:'Asigna envíos al menor costo.'}],
+ ii13:[
+  {t:'num',q:'Una actividad PERT tiene tiempos optimista a=4, más probable m=6 y pesimista b=14. ¿Tiempo esperado te?',unit:'días',how:'te = (a + 4m + b) / 6.',ans:7,why:'(4+24+14)/6 = 7.'},
+  {t:'num',q:'Con a=4 y b=14, ¿varianza de esa actividad?',unit:'',how:'σ² = ((b−a)/6)².',ans:2.78,tol:0.05,why:'((14−4)/6)² = 2.78.'},
+  {t:'opt',q:'La ruta crítica de un proyecto es:',how:'La más larga.',opts:['La secuencia de actividades más larga, que define la duración total','La más corta','La más barata','La que tiene más holgura'],why:'Determina la duración mínima del proyecto.'}],
+ ii14:[
+  {t:'num',q:'En una fila M/M/1 llegan λ=6 clientes/h y se atienden μ=10/h. ¿Utilización del servidor (ρ)?',unit:'',how:'ρ = λ/μ.',ans:0.6,tol:0.01,why:'6/10 = 0.6.'},
+  {t:'num',q:'Con λ=6/h y μ=10/h, ¿número promedio de clientes en el sistema (L)?',unit:'clientes',how:'L = ρ/(1−ρ).',ans:1.5,tol:0.01,why:'0.6/0.4 = 1.5.'},
+  {t:'num',q:'Con λ=6/h y μ=10/h, ¿tiempo promedio en el sistema (W)?',unit:'h',how:'W = 1/(μ−λ).',ans:0.25,tol:0.01,why:'1/(10−6) = 0.25 h.'}],
+ ii15:[
+  {t:'opt',q:'Una distribución por producto (en línea) conviene cuando:',how:'Volumen y estandarización.',opts:['Hay alto volumen de pocos productos estandarizados','Hay mucha variedad y bajo volumen','No hay demanda','Todo es manual'],why:'Línea = alto volumen, poca variedad.'},
+  {t:'num',q:'Entre dos áreas hay 3 viajes de 10 m y 2 viajes de 15 m al día. ¿Distancia total recorrida?',unit:'m',how:'Σ (viajes × distancia).',ans:60,why:'3×10 + 2×15 = 60.'}],
+ ii16:[
+  {t:'num',q:'Ecuación NIOSH: con LC=23 kg y multiplicadores HM=0.80, VM=0.90, DM=0.90, AM=1.0, FM=0.90, CM=1.0, ¿peso límite recomendado (RWL)?',unit:'kg',how:'RWL = LC×HM×VM×DM×AM×FM×CM.',ans:13.41,tol:0.1,why:'23×0.8×0.9×0.9×0.9 = 13.41 kg.'},
+  {t:'num',q:'Si el trabajador levanta 20 kg y el RWL es 13.41 kg, ¿índice de levantamiento (LI)?',unit:'',how:'LI = peso / RWL.',ans:1.49,tol:0.05,why:'20/13.41 = 1.49.'},
+  {t:'opt',q:'Un índice de levantamiento LI mayor a 1 indica:',how:'Riesgo.',opts:['Riesgo de lesión: hay que rediseñar la tarea','Tarea totalmente segura','Que falta peso','Un error de cálculo'],why:'LI>1 = riesgo creciente.'}],
+ ii17:[
+  {t:'num',q:'Hubo 8 accidentes con incapacidad en 400,000 horas-hombre trabajadas. ¿Índice de frecuencia (por millón de horas)?',unit:'',how:'IF = accidentes × 1,000,000 / horas-hombre.',ans:20,why:'8×1e6/400,000 = 20.'},
+  {t:'opt',q:'En la jerarquía de controles de riesgo, lo más efectivo es:',how:'Quitar el peligro.',opts:['Eliminar el peligro','El equipo de protección personal','Un letrero','Un instructivo'],why:'Eliminación > sustitución > ingeniería > administrativo > EPP.'}],
+ ii18:[
+  {t:'num',q:'Inviertes $10,000 al 10% anual compuesto durante 3 años. ¿Valor futuro?',unit:'MXN',how:'F = P(1+i)ⁿ.',ans:13310,tol:1,why:'10,000×1.1³ = 13,310.'},
+  {t:'num',q:'¿Cuánto debes depositar hoy para tener $13,310 en 3 años al 10% anual?',unit:'MXN',how:'P = F/(1+i)ⁿ.',ans:10000,tol:2,why:'13,310/1.331 = 10,000.'},
+  {t:'opt',q:'El valor del dinero en el tiempo dice que:',how:'Hoy vs mañana.',opts:['Un peso hoy vale más que un peso mañana','El dinero no cambia de valor','El futuro vale más','La tasa no importa'],why:'Por el interés y el riesgo.'}],
+ ii19:[
+  {t:'num',q:'Proyecto: inversión $10,000 y flujos de $4,200 anuales por 3 años, tasa 10%. ¿Valor presente neto (VPN)?',unit:'MXN',how:'VPN = Σ flujo/(1+i)ᵗ − inversión.',ans:444.8,tol:5,why:'4,200×2.4869 − 10,000 ≈ 444.8.'},
+  {t:'num',q:'Inversión $12,000 con flujo anual constante de $4,000. ¿Periodo de recuperación simple?',unit:'años',how:'Inversión / flujo anual.',ans:3,why:'12,000/4,000 = 3.'},
+  {t:'opt',q:'La TIR (tasa interna de retorno) es la tasa que hace que el VPN sea:',how:'Punto de equilibrio financiero.',opts:['Igual a cero','Máximo','Negativo','Igual a la inversión'],why:'VPN = 0 en la TIR.'}],
+ ii20:[
+  {t:'num',q:'Costos fijos $100,000, precio de venta $50 y costo variable $30 por unidad. ¿Punto de equilibrio en unidades?',unit:'u',how:'CF / (precio − costo variable).',ans:5000,why:'100,000/(50−30) = 5,000.'},
+  {t:'num',q:'Un activo de $120,000 con valor residual $20,000 y vida de 5 años. ¿Depreciación anual en línea recta?',unit:'MXN',how:'(costo − residual) / vida.',ans:20000,why:'(120,000−20,000)/5 = 20,000.'},
+  {t:'opt',q:'Por debajo del punto de equilibrio, la empresa:',how:'No cubre costos.',opts:['Opera con pérdida','Gana más','Está en su óptimo','No cambia'],why:'No alcanza a cubrir los costos fijos.'}],
+ ii21:[
+  {t:'opt',q:'Philip Crosby es conocido por el principio de:',how:'Hacerlo bien a la primera.',opts:['Cero defectos','Los 14 puntos','La trilogía de la calidad','El diagrama de espina'],why:'Crosby: cero defectos.'},
+  {t:'opt',q:'La trilogía de Juran incluye:',how:'Tres procesos de gestión.',opts:['Planificación, control y mejora de la calidad','Medir, pesar y contar','Diseño, compra y venta','Just in time'],why:'Planificar, controlar y mejorar.'}],
+ ii22:[
+  {t:'opt',q:'ISO 9001:2015 introdujo con fuerza:',how:'Anticipar problemas.',opts:['El pensamiento basado en riesgos','La eliminación de registros','La certificación obligatoria por ley','El fin de las auditorías'],why:'Enfoque a riesgos y oportunidades.'},
+  {t:'opt',q:'El ciclo que estructura la mejora en ISO 9001 es:',how:'Cuatro etapas.',opts:['PHVA (Planear, Hacer, Verificar, Actuar)','DMAIC solamente','FIFO','5S'],why:'PDCA/PHVA.'}],
+ ii23:[
+  {t:'num',q:'Defectos por tipo: A=120, B=60, C=20. ¿Qué porcentaje del total representa el defecto A?',unit:'%',how:'A / total.',ans:60,why:'120/200 = 60%.'},
+  {t:'opt',q:'El diagrama de Pareto se basa en el principio de que:',how:'Pocas causas, mucho efecto.',opts:['Pocas causas (≈20%) generan la mayoría de los problemas (≈80%)','Todas las causas pesan igual','El 50/50','No hay prioridades'],why:'Regla 80/20.'},
+  {t:'opt',q:'El diagrama de Ishikawa sirve para:',how:'Buscar causas.',opts:['Organizar las posibles causas de un problema','Medir el tiempo','Graficar ventas','Contar inventario'],why:'Causa-efecto (espina de pescado).'}],
+ ii24:[
+  {t:'num',q:'Especificaciones: USL=10.2, LSL=9.8 y σ=0.05. ¿Capacidad potencial Cp?',unit:'',how:'Cp = (USL − LSL) / (6σ).',ans:1.33,tol:0.01,why:'0.4/0.3 = 1.33.'},
+  {t:'num',q:'Con USL=10.2, LSL=9.8, media μ=10.05 y σ=0.05, ¿Cpk?',unit:'',how:'Cpk = min(USL−μ, μ−LSL)/(3σ).',ans:1.0,tol:0.01,why:'min(0.15,0.25)/0.15 = 1.0.'},
+  {t:'opt',q:'Que Cpk sea menor que Cp indica que el proceso:',how:'Centrado.',opts:['Está descentrado respecto al punto medio de las especificaciones','Es perfecto','No tiene variación','Está fuera de control siempre'],why:'La diferencia mide el descentrado.'}],
+ ii25:[
+  {t:'opt',q:'Plan de muestreo simple n=80, Ac=2, Re=3. Se encuentran 3 defectuosas. El lote se:',how:'Compara con Ac/Re.',opts:['Rechaza: 3 ≥ Re','Acepta','Reinspecciona al 50%','Libera parcial'],why:'Defectos ≥ Re → rechazar.'},
+  {t:'opt',q:'El AQL (nivel de calidad aceptable) es:',how:'Peor calidad tolerada en promedio.',opts:['El porcentaje de defectos que se considera aceptable en promedio','El total de piezas','El costo del lote','La muestra'],why:'Define el criterio del plan.'}],
+ ii26:[
+  {t:'num',q:'En un AMEF, un modo de falla tiene Severidad=8, Ocurrencia=4 y Detección=5. ¿Número de prioridad de riesgo (RPN)?',unit:'',how:'RPN = S × O × D.',ans:160,why:'8×4×5 = 160.'},
+  {t:'opt',q:'El RPN sirve para:',how:'Priorizar.',opts:['Priorizar qué modos de falla atacar primero','Calcular el costo','Medir el tiempo de ciclo','Contar piezas'],why:'Jerarquiza los riesgos.'},
+  {t:'opt',q:'La forma más robusta de reducir el riesgo en un AMEF es bajar la:',how:'Mejor prevenir que detectar.',opts:['Ocurrencia (evitar que la falla suceda)','Detección aumentando inspección','Severidad del cliente','Nada'],why:'Prevenir supera a detectar.'}],
+ ii27:[
+  {t:'ord',q:'Ordena las primeras disciplinas de la metodología 8D.',how:'Equipo, problema, contención, causa.',tokens:['D1: Formar el equipo','D2: Describir el problema','D3: Acción de contención','D4: Causa raíz','D5: Acción correctiva']},
+  {t:'opt',q:'La disciplina de contención (D3) busca:',how:'Proteger al cliente mientras investigas.',opts:['Proteger al cliente mientras se halla la causa raíz','Resolver la causa definitiva','Cerrar el caso','Despedir a alguien'],why:'Contención = protección temporal.'}],
+ ii28:[
+  {t:'opt',q:'Entre las "core tools" automotrices (IATF 16949) está:',how:'Planeación de producto.',opts:['APQP (planeación avanzada de la calidad del producto)','El organigrama','El punto de equilibrio','La nómina'],why:'APQP, PPAP, AMEF, SPC y MSA.'},
+  {t:'opt',q:'El PPAP sirve para:',how:'Aprobar piezas antes de producir en serie.',opts:['Aprobar el proceso y la pieza antes de la producción en serie','Pagar a proveedores','Diseñar el empaque','Vender el producto'],why:'Proceso de aprobación de partes.'}],
+ ii29:[
+  {t:'opt',q:'En un estudio R&R, un %R&R de 8% se considera:',how:'Regla <10 / 10-30 / >30.',opts:['Aceptable (menor a 10%)','Inaceptable','Marginal','Imposible'],why:'<10% aceptable.'},
+  {t:'opt',q:'El estudio R&R (repetibilidad y reproducibilidad) mide la variación del:',how:'Sistema de medición.',opts:['Sistema de medición (equipo y operadores)','Proceso de producción','Precio','Inventario'],why:'MSA evalúa el sistema de medición.'}],
+ ii30:[
+  {t:'num',q:'Con un patrón de 10.00 mm, tu instrumento marca 10.05 mm. ¿Error de medición?',unit:'mm',how:'Medido − valor patrón.',ans:0.05,tol:0.001,why:'10.05−10.00 = 0.05 mm.'},
+  {t:'opt',q:'La trazabilidad en metrología significa que:',how:'Cadena de patrones.',opts:['La medición se compara contra patrones nacionales/internacionales por una cadena ininterrumpida','El equipo nunca se calibra','Cada quien usa su criterio','No importa el patrón'],why:'Cadena de comparación con patrones.'}],
+ ii31:[
+  {t:'num',q:'Costos de calidad del mes: prevención $20,000, evaluación $30,000, fallas internas $40,000 y externas $60,000. ¿Costo total de calidad?',unit:'MXN',how:'Suma de las cuatro categorías.',ans:150000,why:'20+30+40+60 = 150,000.'},
+  {t:'opt',q:'Invertir más en prevención normalmente:',how:'Evita fallas costosas.',opts:['Reduce los costos por fallas internas y externas','Aumenta las fallas','No tiene efecto','Sube el precio de venta'],why:'Prevenir sale más barato que fallar.'}],
+ ii32:[
+  {t:'num',q:'Una línea tiene disponibilidad 90%, rendimiento 95% y calidad 99%. ¿OEE?',unit:'%',how:'OEE = D × R × C.',ans:84.6,tol:0.2,why:'0.90×0.95×0.99 = 84.6%.'},
+  {t:'opt',q:'SMED es una técnica Lean para:',how:'Cambios de modelo.',opts:['Reducir el tiempo de cambio de herramienta/modelo','Contar inventario','Contratar personal','Subir precios'],why:'Single-Minute Exchange of Die.'},
+  {t:'opt',q:'Las 5S buscan:',how:'Orden y limpieza.',opts:['Un lugar de trabajo ordenado, limpio y estandarizado','Más inventario','Menos calidad','Más papeleo'],why:'Seiri, Seiton, Seiso, Seiketsu, Shitsuke.'}]
+};
+const II_EXAM=[
+ ['TO=0.90 min, valoración 100%, suplementos 10%. Tiempo estándar:','0.99 min','0.90 min','1.10 min','0.81 min','0.90×1.0×1.10.'],
+ ['En 480 min con TE de 1.5 min/pza se producen:','320 pzas','480 pzas','720 pzas','240 pzas','480/1.5.'],
+ ['Muestreo del trabajo: n = Z²p(1−p)/e². Si p=0.5, Z=2, e=0.05:','400','100','1,600','200','4×0.25/0.0025.'],
+ ['Valor agregado: 50 min de 200 min totales:','25%','50%','75%','40%','50/200.'],
+ ['Takt time con 600 u en 600 min:','1 min','0.6 min','10 min','600 min','600/600.'],
+ ['Σt=9 min, takt 1.5 min. Estaciones mínimas:','6','9','4','15','⌈9/1.5⌉.'],
+ ['Eficiencia de balanceo: Σt=9, 6 estaciones, ciclo 1.5:','100%','90%','84%','60%','9/(6×1.5).'],
+ ['Suavización exp. α=0.4, pronóstico 200, real 150. Nuevo:','180','170','190','150','0.4×150+0.6×200.'],
+ ['MAD de errores 4,6,2,8:','5','20','4','6','(4+6+2+8)/4.'],
+ ['EOQ con D=2,000, S=$10, H=$1:','200','100','2,000','40','√(2·2000·10/1).'],
+ ['Punto de reorden: d=50/día, L=4 días:','200','54','12.5','50','50×4.'],
+ ['Pedidos al año con EOQ 200 y D 2,000:','10','200','20','5','2000/200.'],
+ ['Clase A en ABC:','≈20% de artículos, ≈80% del valor','80% de artículos','Los más baratos','Los que no rotan','Pocos, mucho valor.'],
+ ['Necesidad neta: bruta 400, disponible 150, recepciones 50:','200','400','100','600','400−150−50.'],
+ ['Un producto usa 3 de X; orden 200. Bruta de X:','600','200','66','3','200×3.'],
+ ['Demanda 1,500, capacidad normal 1,200. A cubrir con extra:','300','1,500','1,200','2,700','1500−1200.'],
+ ['SPT minimiza:','El tiempo de flujo promedio','El costo de material','El número de máquinas','La severidad','Flujo medio.'],
+ ['PL: óptimo en:','Un vértice de la región factible','El centro','El origen siempre','Fuera de la región','Programación lineal.'],
+ ['Z=2x+4y en (3,5):','26','14','22','20','2×3+4×5.'],
+ ['Transporte: oferta 80, demanda 100. Fuente ficticia:','20','180','100','80','100−80.'],
+ ['PERT te con a=3, m=5, b=13:','6','5','7','21','(3+20+13)/6.'],
+ ['Varianza PERT con a=3, b=15:','4','2','36','12','((15−3)/6)².'],
+ ['Ruta crítica:','La secuencia más larga del proyecto','La más corta','La más barata','La de más holgura','Define la duración.'],
+ ['M/M/1: λ=4, μ=8. Utilización:','0.5','2','0.25','4','4/8.'],
+ ['M/M/1: λ=4, μ=8. L en el sistema:','1','0.5','2','4','0.5/0.5.'],
+ ['M/M/1: λ=4, μ=8. W (h):','0.25','0.5','1','0.125','1/(8−4).'],
+ ['Distribución en línea conviene con:','Alto volumen de pocos productos','Mucha variedad, bajo volumen','Sin demanda','Todo manual','Línea = volumen.'],
+ ['NIOSH RWL con LC=23 y multiplicadores que suman factor 0.5:','11.5 kg','23 kg','46 kg','0.5 kg','23×0.5.'],
+ ['LI = peso/RWL. Peso 18, RWL 12:','1.5 (riesgo)','0.67','30','6','18/12.'],
+ ['Índice de frecuencia: 10 accidentes en 500,000 h-h:','20','10','50','2','10×1e6/500,000.'],
+ ['Jerarquía de controles, lo más efectivo:','Eliminar el peligro','EPP','Letreros','Capacitación','Eliminación primero.'],
+ ['Valor futuro: $5,000 al 10% por 2 años:','$6,050','$6,000','$5,500','$5,050','5000×1.21.'],
+ ['TIR hace el VPN igual a:','Cero','Máximo','La inversión','Negativo','Definición de TIR.'],
+ ['Recuperación: inversión $9,000, flujo $3,000/año:','3 años','9 años','1 año','27 años','9000/3000.'],
+ ['Punto de equilibrio: CF $60,000, precio $40, CV $25:','4,000 u','1,500 u','2,400 u','6,000 u','60000/15.'],
+ ['Depreciación lineal: $50,000, residual $5,000, 5 años:','$9,000','$10,000','$5,000','$45,000','(50000−5000)/5.'],
+ ['Pareto se basa en:','Pocas causas generan la mayoría de los problemas','Todo pesa igual','50/50','Azar','Regla 80/20.'],
+ ['Cp con USL=12, LSL=8, σ=0.5:','1.33','1.0','2.0','0.75','(12−8)/(6×0.5).'],
+ ['Cpk < Cp significa:','Proceso descentrado','Proceso perfecto','Sin variación','Fuera de control','Descentrado.'],
+ ['RPN con S=9, O=3, D=6:','162','18','54','27','9×3×6.'],
+ ['Reducir riesgo en AMEF, lo más robusto:','Bajar la ocurrencia','Más inspección','Bajar severidad del cliente','Nada','Prevenir.'],
+ ['%R&R de 8% es:','Aceptable','Inaceptable','Marginal','Imposible','<10%.'],
+ ['OEE: D=95%, R=90%, C=98%:','83.8%','95%','90%','98%','0.95×0.90×0.98.'],
+ ['SMED reduce:','El tiempo de cambio de modelo','El inventario','La nómina','El precio','Cambios rápidos.'],
+ ['Crosby propuso:','Cero defectos','Los 14 puntos','La trilogía','El histograma','Crosby.'],
+ ['ISO 9001:2015 enfatiza:','Pensamiento basado en riesgos','Eliminar registros','Certificación legal obligatoria','Fin de auditorías','Riesgos.'],
+ ['Costo total de calidad: prev 10k + eval 15k + int 20k + ext 25k:','$70,000','$45,000','$25,000','$50,000','Suma de las cuatro.'],
+ ['APQP es una core tool de:','Planeación de la calidad del producto','Nómina','Ventas','Compras','Automotriz.'],
+ ['Trazabilidad metrológica:','Cadena de comparación con patrones','No calibrar','Criterio libre','Sin patrón','Cadena a patrones.'],
+ ['5S buscan:','Orden, limpieza y estandarización','Más inventario','Menos calidad','Más papeleo','Lugar de trabajo ordenado.']];
+COURSES.ii.lec.forEach(function(L){if(II_EX[L.id])L.ex=II_EX[L.id];});
+COURSES.ii.exam=II_EXAM.map(function(a){var q=a[0],r=a.slice(1);return {q:q,o:r.slice(0,4),e:r[4]};});
+
+/* ===== Indicadores y KPIs: ejercicios y examen de básico a experto ===== */
+const IND_EX={
+ k1:[
+  {t:'opt',q:'¿Cuál es una meta verdaderamente SMART?',how:'Específica, medible, con fecha.',opts:['Subir el OTIF de 90% a 95% en la línea de martillos antes del 30 de junio','Mejorar las entregas','Trabajar mejor','Bajar problemas con proveedores'],why:'Tiene número, alcance y fecha.'},
+  {t:'opt',q:'Un KPI adelantado (leading) de la entrega a tiempo es:',how:'Algo que ocurre antes y anticipa.',opts:['% de órdenes liberadas con material completo','El OTIF del mes pasado','Las reclamaciones del año','Las ventas del trimestre'],why:'Anticipa el resultado.'},
+  {t:'opt',q:'A un KPI que nadie revisa ni atiende le falta sobre todo:',how:'Quién actúa.',opts:['Un dueño responsable','Más decimales','Otro color','Más gráficas'],why:'Sin dueño no provoca acción.'}],
+ k2:[
+  {t:'num',q:'Disponibilidad 90%, rendimiento 84% y calidad 96%. ¿OEE?',unit:'%',how:'OEE = D × R × C.',ans:72.58,tol:0.2,why:'0.90×0.84×0.96 = 72.6%.'},
+  {t:'num',q:'Se planearon 700 piezas y se produjeron 680. ¿Cumplimiento del plan?',unit:'%',how:'Producidas / planeadas.',ans:97.14,tol:0.1,why:'680/700 = 97.1%.'},
+  {t:'num',q:'De 680 piezas, 650 salieron bien a la primera. ¿FPY?',unit:'%',how:'Buenas a la primera / total.',ans:95.59,tol:0.1,why:'650/680 = 95.6%.'},
+  {t:'num',q:'Tres operaciones en serie con FPY 98%, 95% y 99%. ¿RTY (rendimiento total)?',unit:'%',how:'Multiplica los FPY.',ans:92.17,tol:0.2,why:'0.98×0.95×0.99 = 92.2%.'}],
+ k3:[
+  {t:'num',q:'Se enviaron 12,000 piezas y el cliente rechazó 18. ¿PPM de cliente?',unit:'ppm',how:'Devueltas / enviadas × 1,000,000.',ans:1500,why:'18/12,000×1e6 = 1,500.'},
+  {t:'num',q:'De 680 piezas producidas, 30 fueron desperdicio. ¿Porcentaje de scrap?',unit:'%',how:'Desperdicio / producción.',ans:4.41,tol:0.1,why:'30/680 = 4.4%.'},
+  {t:'num',q:'Costo de no calidad: fallas internas $80,000 + externas $40,000; ventas $4,000,000. ¿Porcentaje?',unit:'%',how:'(internas+externas)/ventas.',ans:3,tol:0.01,why:'120k/4M = 3%.'}],
+ k4:[
+  {t:'num',q:'Costo de ventas anual $24,000,000 e inventario promedio $3,000,000. ¿Rotación de inventario?',unit:'veces',how:'Costo de ventas / inventario promedio.',ans:8,why:'24M/3M = 8.'},
+  {t:'num',q:'Con una rotación de 8, ¿cuántos días de inventario tienes?',unit:'días',how:'365 / rotación.',ans:45.63,tol:0.2,why:'365/8 = 45.6.'},
+  {t:'num',q:'De 400 ubicaciones contadas, 388 coincidieron con el sistema. ¿Exactitud de inventario?',unit:'%',how:'Correctas / contadas.',ans:97,why:'388/400 = 97%.'}],
+ k5:[
+  {t:'num',q:'De 250 pedidos, 226 llegaron a tiempo y completos. ¿OTIF?',unit:'%',how:'A tiempo y completos / total.',ans:90.4,tol:0.1,why:'226/250 = 90.4%.'},
+  {t:'opt',q:'Un pedido llegó a tiempo pero faltó una caja. Para el OTIF cuenta como:',how:'Necesita las dos condiciones.',opts:['Falla (no está completo)','Cumplido','Medio cumplido','No se mide'],why:'In full = completo.'},
+  {t:'opt',q:'El lead time de entrega mide:',how:'Duración del ciclo.',opts:['El tiempo del ciclo, del pedido a la entrega','El número de pedidos','El costo del flete','La calidad'],why:'Tiempo total del pedido a la entrega.'}],
+ k6:[
+  {t:'num',q:'Una prensa funcionó 600 h con 8 fallas. ¿MTBF?',unit:'h',how:'Tiempo funcionando / fallas.',ans:75,why:'600/8 = 75.'},
+  {t:'num',q:'El tiempo total de reparación fue 20 h en 8 fallas. ¿MTTR?',unit:'h',how:'Tiempo de reparación / fallas.',ans:2.5,why:'20/8 = 2.5.'},
+  {t:'num',q:'Con MTBF 75 h y MTTR 2.5 h, ¿disponibilidad del equipo?',unit:'%',how:'MTBF/(MTBF+MTTR).',ans:96.77,tol:0.1,why:'75/77.5 = 96.8%.'}],
+ k7:[
+  {t:'num',q:'Se perdieron 66 días por faltas de 2,200 días programados. ¿Ausentismo?',unit:'%',how:'Faltas / programados.',ans:3,tol:0.01,why:'66/2,200 = 3%.'},
+  {t:'num',q:'Costos totales $1,020,000 para 12,000 piezas. ¿Costo por unidad?',unit:'MXN',how:'Costos / unidades.',ans:85,why:'1,020,000/12,000 = 85.'},
+  {t:'num',q:'Hubo 6 bajas con una plantilla promedio de 120. ¿Rotación de personal?',unit:'%',how:'Bajas / plantilla promedio.',ans:5,why:'6/120 = 5%.'}],
+ k8:[
+  {t:'opt',q:'El mejor tablero para un supervisor de línea muestra:',how:'Lo que controla en el turno.',opts:['OEE, FPY y desperdicio por turno','La utilidad neta anual','El precio de la acción','Las ventas por país'],why:'Mide lo que puede cambiar ese día.'},
+  {t:'ord',q:'Ordena qué hacer cuando un KPI se pone en rojo.',how:'Primero entiende, al final verifica.',tokens:['Revisar el dato y la tendencia','Analizar la causa raíz','Definir acción con responsable y fecha','Verificar el efecto en el KPI']},
+  {t:'opt',q:'Un buen tablero ejecutivo tiene:',how:'Pocos, accionables.',opts:['Pocos KPIs, cada uno con meta, dueño y semáforo','Cuarenta indicadores sin meta','Solo colores','Tablas enormes sin resumen'],why:'5 a 9 KPIs con dueño y meta.'}],
+ i1:[
+  {t:'opt',q:'En una vela japonesa, el cuerpo representa:',how:'Apertura y cierre.',opts:['El rango entre el precio de apertura y el de cierre','El máximo y el mínimo','Solo el volumen','El promedio del día'],why:'Cuerpo = apertura a cierre; mechas = máx/mín.'},
+  {t:'opt',q:'Una vela alcista (normalmente verde) significa que:',how:'Cierre vs apertura.',opts:['El cierre fue mayor que la apertura','El cierre fue menor que la apertura','No hubo movimiento','Bajó el volumen'],why:'Cierra por encima de la apertura.'},
+  {t:'opt',q:'OHLC significa:',how:'Cuatro precios del periodo.',opts:['Apertura, máximo, mínimo y cierre (Open, High, Low, Close)','Solo el cierre','Orden, hora, lote, cantidad','Oferta y demanda'],why:'Los 4 precios de la vela.'}],
+ i2:[
+  {t:'opt',q:'Un nivel de soporte es:',how:'Dónde frena la caída.',opts:['Un precio donde la caída tiende a frenarse por compras','Un precio donde siempre sube','El volumen máximo','La media de 200 días'],why:'Zona donde entra demanda.'},
+  {t:'opt',q:'Una tendencia alcista se define por:',how:'Máximos y mínimos.',opts:['Máximos y mínimos cada vez más altos','Máximos cada vez más bajos','Precios planos','Solo volumen'],why:'Higher highs y higher lows.'},
+  {t:'opt',q:'Cuando el precio rompe una resistencia con fuerza, esa resistencia suele:',how:'Cambio de papel.',opts:['Convertirse en soporte','Desaparecer para siempre','Volverse volumen','No significar nada'],why:'Resistencia rota → nuevo soporte.'}],
+ i3:[
+  {t:'num',q:'Precios de cierre: 10, 12, 14, 16, 18. ¿SMA de 5 periodos?',unit:'',how:'Promedio simple de los 5.',ans:14,why:'(10+12+14+16+18)/5 = 14.'},
+  {t:'opt',q:'La media móvil simple (SMA) da a cada dato del periodo:',how:'Mismo peso.',opts:['El mismo peso','Más peso al reciente','Más peso al antiguo','Peso aleatorio'],why:'Todos pesan igual.'},
+  {t:'opt',q:'Una SMA larga (200) frente a una corta (20):',how:'Suavidad vs reacción.',opts:['Es más suave y reacciona más lento','Reacciona más rápido','Es idéntica','No sirve'],why:'Más periodos = más suave.'}],
+ i4:[
+  {t:'num',q:'Multiplicador de una EMA de 9 periodos: k = 2/(n+1). ¿Cuánto vale k?',unit:'',how:'2/(9+1).',ans:0.2,tol:0.001,why:'2/10 = 0.2.'},
+  {t:'num',q:'EMA con k=0.2: el precio nuevo es 22 y la EMA anterior 20. ¿Nueva EMA?',unit:'',how:'EMA = precio×k + EMA_prev×(1−k).',ans:20.4,tol:0.01,why:'22×0.2 + 20×0.8 = 20.4.'},
+  {t:'opt',q:'La EMA se diferencia de la SMA porque:',how:'Peso del dato reciente.',opts:['Da más peso a los precios recientes','Da más peso a los antiguos','Ignora el precio','Usa el volumen'],why:'Ponderación exponencial al reciente.'}],
+ i5:[
+  {t:'opt',q:'Frente a la SMA, la EMA del mismo periodo:',how:'Reactividad.',opts:['Reacciona antes a los cambios de precio','Reacciona más lento','Es siempre igual','No se puede calcular'],why:'EMA es más reactiva.'},
+  {t:'opt',q:'El costo de que la EMA sea más reactiva es:',how:'Ruido.',opts:['Más señales falsas en mercados laterales','Menos sensibilidad','Nunca falla','Más retraso'],why:'Más reactiva = más ruido.'}],
+ i6:[
+  {t:'opt',q:'Un "cruce dorado" (golden cross) ocurre cuando:',how:'Corta cruza al largo.',opts:['Una media corta cruza por encima de una larga (señal alcista)','La media larga cruza por encima de la corta','El volumen cae','El RSI llega a 100'],why:'Corta sobre larga = alcista.'},
+  {t:'opt',q:'Un "cruce de la muerte" (death cross) sugiere:',how:'Lo contrario.',opts:['Posible tendencia bajista','Tendencia alcista fuerte','Nada','Sobrecompra'],why:'Corta cruza debajo de la larga.'}],
+ i7:[
+  {t:'opt',q:'Entre las medias más usadas para la tendencia de largo plazo está la:',how:'La de referencia institucional.',opts:['EMA/SMA de 200','EMA de 3','SMA de 2','EMA de 1'],why:'La 200 marca la tendencia mayor.'},
+  {t:'opt',q:'Las EMAs de 9 y 20 se usan típicamente para:',how:'Corto plazo.',opts:['Señales de corto plazo','Tendencia de una década','Medir volumen','Calcular dividendos'],why:'Periodos cortos = señales rápidas.'}],
+ i8:[
+  {t:'num',q:'RSI: la ganancia promedio es 2 y la pérdida promedio 1. RS = ganancia/pérdida. Con RSI = 100 − 100/(1+RS), ¿cuánto vale el RSI?',unit:'',how:'RS=2; 100 − 100/3.',ans:66.67,tol:0.3,why:'RS=2 → RSI=66.7.'},
+  {t:'opt',q:'Un RSI por encima de 70 suele interpretarse como:',how:'Zona alta.',opts:['Sobrecompra','Sobreventa','Sin tendencia','Error'],why:'>70 sobrecompra, <30 sobreventa.'},
+  {t:'opt',q:'El RSI es un oscilador que se mueve entre:',how:'Rango fijo.',opts:['0 y 100','−1 y 1','0 y 1','Sin límite'],why:'Acotado de 0 a 100.'}],
+ i9:[
+  {t:'num',q:'La línea MACD es la diferencia de dos EMAs. Si EMA12 = 50.2 y EMA26 = 49.8, ¿valor de la línea MACD?',unit:'',how:'EMA rápida − EMA lenta.',ans:0.4,tol:0.01,why:'50.2 − 49.8 = 0.4.'},
+  {t:'opt',q:'El histograma del MACD representa:',how:'MACD vs señal.',opts:['La diferencia entre la línea MACD y su línea de señal','El volumen','El precio de cierre','El RSI'],why:'Histograma = MACD − señal.'},
+  {t:'opt',q:'Cuando la línea MACD cruza por encima de su señal, se lee como:',how:'Momentum.',opts:['Impulso alcista','Impulso bajista','Sobreventa','Nada'],why:'Cruce alcista del MACD.'}],
+ i10:[
+  {t:'num',q:'Bandas de Bollinger: banda media (SMA) = 100 y desviación estándar σ = 3. ¿Banda superior (media + 2σ)?',unit:'',how:'Media + 2σ.',ans:106,why:'100 + 6 = 106.'},
+  {t:'num',q:'Con media 100 y σ=3, ¿cuál es el ancho entre la banda superior y la inferior (±2σ)?',unit:'',how:'4σ.',ans:12,why:'2σ + 2σ = 12.'},
+  {t:'opt',q:'Que las bandas de Bollinger se estrechen (squeeze) suele anticipar:',how:'Baja volatilidad previa.',opts:['Un posible aumento de volatilidad','Que el precio se detendrá para siempre','Más dividendos','Menos volumen garantizado'],why:'Estrechamiento = volatilidad baja que puede expandirse.'}],
+ i11:[
+  {t:'opt',q:'Un movimiento de precio acompañado de alto volumen es:',how:'Convicción.',opts:['Más confiable que uno con bajo volumen','Siempre falso','Irrelevante','Igual de débil'],why:'El volumen confirma el movimiento.'},
+  {t:'opt',q:'Una subida de precio con volumen decreciente puede indicar:',how:'Falta de fuerza.',opts:['Debilidad en la tendencia','Fuerza máxima','Más compradores','Nada'],why:'Divergencia precio-volumen.'}],
+ i12:[
+  {t:'num',q:'Gestión de riesgo: capital $10,000, arriesgas 2% por operación y tu stop está a $5 por acción. ¿Cuántas acciones compras?',unit:'acciones',how:'(capital×riesgo%) / distancia al stop.',ans:40,why:'200 / 5 = 40.'},
+  {t:'num',q:'Entrada $100, ATR $3, colocas el stop a 2×ATR por debajo. ¿Precio del stop?',unit:'',how:'Entrada − 2×ATR.',ans:94,why:'100 − 6 = 94.'},
+  {t:'opt',q:'El ATR (rango verdadero promedio) mide:',how:'Qué tan amplio se mueve.',opts:['La volatilidad: qué tanto se mueve el precio','La dirección de la tendencia','El volumen total','El dividendo'],why:'ATR = volatilidad, no dirección.'}],
+ i13:[
+  {t:'num',q:'En un backtest de 10 operaciones ganaste 6. ¿Win rate (tasa de acierto)?',unit:'%',how:'Ganadoras / total.',ans:60,why:'6/10 = 60%.'},
+  {t:'num',q:'Esperanza por operación: 60% de acierto con ganancia promedio $150; 40% de fallo con pérdida promedio $100. ¿Esperanza matemática?',unit:'MXN',how:'(p_gana×gana) − (p_pierde×pierde).',ans:50,why:'0.6×150 − 0.4×100 = 50.'},
+  {t:'opt',q:'Un sistema con win rate de 40% puede ser rentable si:',how:'Relación ganancia/pérdida.',opts:['Sus ganancias promedio son bastante mayores que sus pérdidas','Nunca pierde','El win rate sube a 100%','No usa stop'],why:'La esperanza puede ser positiva con buena relación R.'}],
+ i14:[
+  {t:'num',q:'Ganaste $300 en una operación donde arriesgabas $100. ¿Cuántas "R" (múltiplos de riesgo) ganaste?',unit:'R',how:'Ganancia / riesgo inicial.',ans:3,why:'300/100 = 3R.'},
+  {t:'opt',q:'El propósito principal de una bitácora de operaciones es:',how:'Aprender de los datos.',opts:['Revisar tus decisiones y mejorar el sistema con datos','Presumir ganancias','Adivinar el futuro','Calcular impuestos solamente'],why:'La bitácora permite evaluar y mejorar.'},
+  {t:'opt',q:'Antes de usar dinero real, una estrategia debe:',how:'Validarse.',opts:['Probarse con backtesting y reglas claras de riesgo','Usarse directo sin pruebas','Copiarse de redes sociales','Basarse en corazonadas'],why:'Validar reglas y riesgo primero. (Esto es educativo, no asesoría de inversión.)'}]
+};
+const IND_EXAM=[
+ ['Meta SMART:','Subir el OTIF de 90% a 95% antes de junio','Mejorar entregas','Trabajar mejor','Bajar problemas','Número, alcance y fecha.'],
+ ['KPI adelantado de entrega:','% de órdenes liberadas a tiempo','OTIF del mes pasado','Reclamaciones del año','Ventas','Anticipa el resultado.'],
+ ['OEE con D=90%, R=84%, C=96%:','72.6%','90%','84%','96%','Producto de los tres.'],
+ ['Cumplimiento: 680 de 700 planeadas:','97.1%','95%','68%','70%','680/700.'],
+ ['FPY: 650 buenas de 680:','95.6%','65%','98%','96.8%','650/680.'],
+ ['RTY de FPY 98%, 95%, 99%:','92.2%','97.3%','99%','95%','Producto.'],
+ ['PPM: 18 rechazos de 12,000:','1,500','18','150','15,000','18/12000×1e6.'],
+ ['Scrap: 30 de 680 producidas:','4.4%','3%','30%','0.4%','30/680.'],
+ ['Costo de no calidad: 80k+40k / 4M ventas:','3%','1.2%','30%','0.3%','120k/4M.'],
+ ['Rotación: ventas 24M / inventario 3M:','8','3','24','0.125','24/3.'],
+ ['Días de inventario con rotación 8:','45.6','8','365','30','365/8.'],
+ ['Exactitud: 388 de 400 ubicaciones:','97%','388%','12%','98%','388/400.'],
+ ['OTIF: 226 de 250:','90.4%','226%','24%','95%','226/250.'],
+ ['A tiempo pero incompleto, para OTIF:','Falla','Cumplido','Medio','No se mide','Necesita ambas.'],
+ ['MTBF: 600 h / 8 fallas:','75 h','8 h','4,800 h','2.5 h','600/8.'],
+ ['MTTR: 20 h / 8 fallas:','2.5 h','20 h','8 h','75 h','20/8.'],
+ ['Disponibilidad: MTBF 75, MTTR 2.5:','96.8%','75%','97.5%','2.5%','75/77.5.'],
+ ['Ausentismo: 66 de 2,200 días:','3%','66%','33%','0.3%','66/2200.'],
+ ['Costo unitario: 1,020,000 / 12,000:','$85','$120','$1,020','$12','Costos/unidades.'],
+ ['Rotación de personal: 6 bajas / 120:','5%','6%','20%','12%','6/120.'],
+ ['Cuerpo de una vela:','Apertura a cierre','Máximo a mínimo','Solo volumen','Promedio','Cuerpo = open-close.'],
+ ['Vela alcista:','Cierre mayor que apertura','Cierre menor','Sin cambio','Menos volumen','Cierra arriba.'],
+ ['OHLC:','Apertura, máximo, mínimo, cierre','Solo cierre','Orden-hora-lote','Oferta-demanda','4 precios.'],
+ ['Soporte:','Precio donde frena la caída','Donde siempre sube','Volumen máximo','SMA 200','Zona de demanda.'],
+ ['Tendencia alcista:','Máximos y mínimos más altos','Máximos más bajos','Plano','Solo volumen','Higher highs/lows.'],
+ ['SMA de 10,12,14,16,18:','14','16','12','70','Promedio simple.'],
+ ['La SMA pondera los datos:','Todos igual','Más al reciente','Más al antiguo','Al azar','Mismo peso.'],
+ ['Multiplicador EMA de 9 periodos:','0.2','0.9','2','0.11','2/(9+1).'],
+ ['EMA con k=0.2, precio 22, EMA prev 20:','20.4','21','20','22','22×0.2+20×0.8.'],
+ ['La EMA frente a la SMA:','Reacciona antes','Reacciona después','Es igual','No se calcula','Más reactiva.'],
+ ['Golden cross:','Media corta cruza arriba de la larga','La larga arriba de la corta','Cae el volumen','RSI 100','Señal alcista.'],
+ ['La media de largo plazo de referencia:','200','3','2','1','La 200.'],
+ ['RSI con RS=2:','66.7','50','2','100','100−100/3.'],
+ ['RSI > 70:','Sobrecompra','Sobreventa','Neutral','Error','Zona alta.'],
+ ['El RSI se mueve entre:','0 y 100','−1 y 1','0 y 1','Sin límite','Acotado.'],
+ ['Línea MACD con EMA12 50.2 y EMA26 49.8:','0.4','100','49.8','50.2','Diferencia de EMAs.'],
+ ['El histograma MACD es:','MACD menos su señal','El volumen','El cierre','El RSI','MACD−señal.'],
+ ['Banda superior Bollinger: media 100, σ=3 (2σ):','106','103','100','112','100+6.'],
+ ['Ancho de bandas ±2σ con σ=3:','12','6','3','24','4σ.'],
+ ['Un squeeze de Bollinger anticipa:','Posible aumento de volatilidad','Precio detenido','Más dividendos','Menos volumen','Volatilidad por venir.'],
+ ['Movimiento con alto volumen:','Más confiable','Siempre falso','Irrelevante','Débil','El volumen confirma.'],
+ ['ATR mide:','La volatilidad','La dirección','El volumen total','El dividendo','Qué tanto se mueve.'],
+ ['Position sizing: capital 10k, riesgo 2%, stop $5:','40 acciones','200','2,000','5','200/5.'],
+ ['Stop a 2×ATR: entrada 100, ATR 3:','94','97','106','92','100−6.'],
+ ['Win rate: 6 de 10:','60%','6%','40%','10%','6/10.'],
+ ['Esperanza: 60%×150 − 40%×100:','$50','$90','$40','$150','90−40.'],
+ ['Un sistema de 40% de acierto es rentable si:','Las ganancias superan bastante a las pérdidas','Nunca pierde','El win rate es 100%','No usa stop','Buena relación R.'],
+ ['$300 ganados arriesgando $100 son:','3R','0.33R','300R','100R','Ganancia/riesgo.'],
+ ['Antes de dinero real, la estrategia debe:','Probarse con backtesting y reglas de riesgo','Usarse directo','Copiarse de redes','Basarse en corazonadas','Validar primero.'],
+ ['El tablero de un supervisor de línea muestra:','OEE, FPY y scrap por turno','Utilidad neta anual','Precio de la acción','Ventas por país','Lo que controla.']];
+COURSES.ind.lec.forEach(function(L){if(IND_EX[L.id])L.ex=IND_EX[L.id];});
+COURSES.ind.exam=IND_EXAM.map(function(a){var q=a[0],r=a.slice(1);return {q:q,o:r.slice(0,4),e:r[4]};});
+
+/* ===== SAP e IA: ejercicios de básico a experto ===== */
+const SAPIA_EX={
+ g1:[
+  {t:'opt',q:'Un consultor propone "subir los datos de SAP a un chatbot público de internet para que responda dudas del equipo". El problema principal es:',how:'¿Dónde quedan los datos?',opts:['Expone datos confidenciales fuera del entorno gobernado de la empresa','Que el chatbot será muy lento','Que no tiene colores corporativos','Que gasta electricidad'],why:'SAP Business AI mantiene los datos dentro del entorno con permisos y auditoría.'},
+  {t:'opt',q:'Lo que distingue a SAP Business AI de una herramienta de IA genérica es que:',how:'Dentro del proceso, con tus datos y reglas.',opts:['Vive dentro del proceso, usa los datos y permisos de la empresa y deja auditoría','Es más barata siempre','No necesita datos','Funciona sin internet'],why:'Integrada, con datos reales, gobernada y auditable.'},
+  {t:'opt',q:'De los rasgos "relevante, confiable y responsable", el de "confiable" se sostiene técnicamente con:',how:'Permisos y rastro.',opts:['El respeto de las autorizaciones y la trazabilidad de cada acción','Un diseño bonito','La velocidad de respuesta','La cantidad de datos'],why:'Confiable = permisos + auditoría.'}],
+ g2:[
+  {t:'opt',q:'Al crear una requisición, el sistema sugiere automáticamente el proveedor óptimo. ¿Qué tipo de IA es?',how:'Sugerencia dentro de la app.',opts:['IA embebida','IA generativa (Joule)','IA a la medida','No es IA'],why:'Aparece sola dentro del proceso.'},
+  {t:'opt',q:'Tu empresa necesita un modelo entrenado con sus propios datos de garantías para un caso único que el estándar no cubre. Tipo de IA:',how:'Hecha a propósito.',opts:['IA a la medida (construida en BTP)','IA embebida','Joule estándar','Ninguna'],why:'Caso propio → a la medida en BTP.'},
+  {t:'opt',q:'Pedirle en lenguaje natural "dame las ventas de octubre por categoría" y que responda es IA:',how:'Conversas con ella.',opts:['Generativa (Joule)','Embebida','A la medida','Predictiva pura'],why:'Joule es el copiloto generativo.'}],
+ g3:[
+  {t:'opt',q:'Una empresa en ECC quiere aprovechar la IA de SAP al máximo. Lo más sensato primero es:',how:'Preparar el terreno.',opts:['Migrar a S/4HANA y depurar sus datos maestros','Comprar más monitores','Desactivar la contabilidad','Prohibir los reportes'],why:'Datos en tiempo real + limpios = base para la IA.'},
+  {t:'opt',q:'El "clean core" ayuda a la IA porque:',how:'Orden = comprensión.',opts:['Datos y procesos estándar son más fáciles de interpretar y las actualizaciones no la rompen','Elimina la IA','La hace más lenta','No se relaciona'],why:'Menos desorden, mejor IA.'},
+  {t:'opt',q:'"Basura entra, basura sale" implica que, antes de confiar en la IA, hay que:',how:'La base de todo.',opts:['Asegurar la calidad de los datos maestros','Comprar más licencias','Subir el brillo','Cambiar el logo'],why:'Datos buenos → respuestas buenas.'}],
+ g4:[
+  {t:'opt',q:'Joule responde "tienes 3 órdenes atrasadas: 45001, 45010, 45022". Esto es posible porque:',how:'¿Inventa o consulta?',opts:['Consulta los datos reales de la empresa (grounding), no los inventa','Adivina números al azar','Copia de Wikipedia','Usa datos de otra empresa'],why:'Se aterriza en tus datos.'},
+  {t:'opt',q:'Joule entiende que "orden atrasada" se refiere a fechas de entrega gracias a:',how:'Conocimiento del negocio.',opts:['El modelo de datos/knowledge graph de SAP','La suerte','El color de la pantalla','El antivirus'],why:'Comprende el contexto del negocio.'},
+  {t:'opt',q:'La ventaja de Joule frente a navegar menús es:',how:'Acceso directo.',opts:['Llegar a lo que necesitas en lenguaje natural, sin recorrer menús','Que es más lento','Que borra datos','Que no usa permisos'],why:'Lenguaje natural = directo.'}],
+ g5:[
+  {t:'opt',q:'Configuras un asistente de Joule con autonomía total para aprobar pagos grandes sin que nadie revise. Esto viola:',how:'Decisiones críticas.',opts:['El principio de control humano en decisiones críticas','La ley de gravedad','El límite de velocidad','Nada'],why:'Lo crítico se revisa (human-in-the-loop).'},
+  {t:'opt',q:'Un Joule Assistant, al ejecutar un paso del proceso, lo hace:',how:'Permisos y rastro.',opts:['Bajo las autorizaciones del usuario y dejando auditoría','Sin permisos','En secreto','Al azar'],why:'Con autorización y trazabilidad.'},
+  {t:'opt',q:'¿Quién decide cuánta autonomía tiene un asistente?',how:'Según el riesgo.',opts:['La empresa, según el riesgo de cada tarea','Nadie','El proveedor de luz','El cliente final'],why:'Autonomía configurable por la empresa.'}],
+ g6:[
+  {t:'opt',q:'¿Cuál es la mejor instrucción para Joule?',how:'Específica, con datos y formato.',opts:['"Las 10 órdenes más atrasadas del centro 1100, en tabla, con días de retraso"','"órdenes"','"ayúdame"','"algo de ventas"'],why:'Qué, de dónde y cómo.'},
+  {t:'opt',q:'Si la primera respuesta de Joule no es exacta, lo correcto es:',how:'Es una conversación.',opts:['Refinar la instrucción con más detalle','Rendirte','Repetir igual','Apagar el sistema'],why:'Se ajusta conversando.'},
+  {t:'opt',q:'Al usar cualquier copiloto con información del trabajo, NUNCA debes:',how:'Datos sensibles.',opts:['Pegar datos confidenciales en herramientas de IA no autorizadas','Pedir un resumen','Dar contexto de tu área','Pedir una tabla'],why:'Cuida la confidencialidad.'}],
+ g7:[
+  {t:'opt',q:'El sistema prioriza a qué clientes contactar para cobrar según su riesgo de impago. Esto es el asistente de:',how:'Finanzas, cobros.',opts:['Cuentas por cobrar (IA embebida)','Ventas','Producción','Nómina'],why:'Sugerencia embebida en cobros.'},
+  {t:'opt',q:'La IA embebida se caracteriza por:',how:'Dónde aparece.',opts:['Aparecer como sugerencia dentro de la app, sin que la pidas','Ser un programa aparte','Llegar por correo','Imprimirse en papel'],why:'Integrada en el proceso.'},
+  {t:'opt',q:'En la cadena de suministro, clasificar automáticamente el comercio internacional busca:',how:'Menos trabajo manual.',opts:['Reducir el esfuerzo manual de categorizar','Aumentar el papeleo','Vender más','Cambiar el logo'],why:'Automatiza una tarea tediosa.'}],
+ g8:[
+  {t:'opt',q:'Para pronosticar la demanda del próximo trimestre a partir del histórico, usarías:',how:'Estima el futuro con datos.',opts:['IA predictiva (SAP Analytics Cloud / Datasphere)','Joule conversando','Extracción de documentos','Un tcode de compras'],why:'Pronóstico = predictiva.'},
+  {t:'opt',q:'Que una predicción diga "muy probable" significa:',how:'Probabilidad, no certeza.',opts:['Una probabilidad alta, no una garantía','Que es seguro','Que es imposible','Un error'],why:'Son probabilidades.'},
+  {t:'opt',q:'La diferencia entre IA predictiva y Joule es que la predictiva:',how:'Números vs charla.',opts:['Devuelve números o tendencias a partir de datos; Joule conversa','Solo platica','No usa datos','Es un juego'],why:'Pronostica, no dialoga.'}],
+ g9:[
+  {t:'opt',q:'Llegan 500 facturas de proveedor en PDF. Para capturar sus datos sin teclear a mano, usarías:',how:'Leer documentos.',opts:['Extracción inteligente de documentos','Joule para que las invente','IA predictiva','Un asiento manual por factura'],why:'Document Information Extraction.'},
+  {t:'opt',q:'Tras extraer automáticamente los datos de una factura, el paso correcto es:',how:'Control humano.',opts:['Que una persona revise y confirme antes de contabilizar','Pagar sin revisar','Borrarla','Ignorarla'],why:'Se valida antes de confirmar.'},
+  {t:'opt',q:'La extracción de documentos funciona mejor cuando:',how:'Legibilidad.',opts:['Los documentos son legibles y consistentes entre sí','Están borrosos y en formatos muy distintos','Están en papel arrugado','No existen'],why:'Documentos claros y parecidos.'}],
+ g10:[
+  {t:'opt',q:'Una IA que afirma cifras que no existen en los datos está:',how:'Término técnico.',opts:['Alucinando','Auditando','Respaldando','Calculando bien'],why:'"Alucinar" = inventar.'},
+  {t:'opt',q:'El "grounding" hace confiable a la IA de SAP porque:',how:'Datos reales + auditable.',opts:['Responde consultando los datos reales y se puede rastrear de dónde salió cada dato','Inventa con creatividad','Se apaga','Va más rápido'],why:'Aterrizada y auditable.'},
+  {t:'opt',q:'Un chatbot genérico de internet y Joule aterrizado difieren en que:',how:'¿Tus datos o suposiciones?',opts:['Joule usa TUS datos reales; el genérico supone en general','Son idénticos','El genérico es más confiable','Joule no usa datos'],why:'Grounding en tu información.'}],
+ g11:[
+  {t:'opt',q:'El estándar (Joule, embebida) no cubre un caso muy específico de tu empresa. Lo construyes en:',how:'La plataforma de extensión.',opts:['SAP BTP (AI Foundation / AI Core)','El SAP GUI clásico','Una hoja de Excel','El módulo de calidad'],why:'Lo a la medida va en BTP.'},
+  {t:'opt',q:'Construir en BTP respeta el "clean core" porque:',how:'No toca el núcleo.',opts:['La extensión va aparte, sin modificar el núcleo','Reescribe todo SAP','Borra módulos','No se relaciona'],why:'Extiende sin ensuciar el core.'},
+  {t:'opt',q:'No ser programadora no te excluye de aprovechar BTP porque:',how:'Tu aporte.',opts:['Puedes identificar el caso de negocio y coordinar al equipo técnico','BTP no sirve','Hay que programar en ensamblador','No existe'],why:'Entender el caso ya aporta valor.'}],
+ g12:[
+  {t:'opt',q:'Dejar que la IA bloquee clientes automáticamente, sin revisión de nadie, es:',how:'Decisión crítica.',opts:['Mala práctica: las decisiones críticas necesitan control humano','Lo ideal','Obligatorio','Lo más seguro'],why:'Human-in-the-loop en lo crítico.'},
+  {t:'opt',q:'"Transparencia" en IA responsable significa:',how:'Saber cuándo actúa.',opts:['Saber cuándo y cómo interviene la IA','Ocultar la IA','Usar colores llamativos','Ir más rápido'],why:'Claridad sobre su actuación.'},
+  {t:'opt',q:'Gobernar la IA en una empresa incluye:',how:'Reglas y revisión.',opts:['Definir quién la usa, para qué, y revisar que sus sugerencias sean justas','Prenderla y olvidarse','Dejar que decida todo','Esconderla'],why:'Gobierno continuo.'}],
+ g13:[
+  {t:'opt',q:'Con la IA haciendo lo repetitivo, lo que más sube de valor en tu trabajo es:',how:'Lo que la IA no hace sola.',opts:['Interpretar, decidir y supervisar los procesos','Teclear más rápido','Memorizar tcodes','Nada'],why:'El criterio humano gana valor.'},
+  {t:'opt',q:'Tu mayor ventaja frente a la IA, con tu base en SAP e inventarios, es:',how:'Lo que entiendes.',opts:['Entender a fondo los procesos del negocio','Escribir sin ver','Trabajar más horas','El color de tu pantalla'],why:'El conocimiento del proceso es clave.'},
+  {t:'opt',q:'La actitud más inteligente ante la IA en el trabajo es:',how:'Con, no contra.',opts:['Aprender a usarla como una herramienta tuya','Ignorarla','Pelear contra ella','Esconderte'],why:'Te potencia.'}],
+ g14:[
+  {t:'opt',q:'El lugar oficial para estudiar SAP Business AI es:',how:'Portal de SAP.',opts:['learning.sap.com','Un foro al azar','Solo videos sueltos','Ninguno'],why:'Rutas oficiales.'},
+  {t:'opt',q:'Para empezar a aprender la IA de SAP necesitas sobre todo:',how:'¿Equipo caro o conceptos?',opts:['Entender los conceptos; la base es conceptual','Un servidor carísimo','Nada','Programar en C'],why:'Primero los conceptos.'},
+  {t:'opt',q:'Para enterarte de lo más nuevo de SAP Business AI conviene seguir:',how:'El blog oficial.',opts:['news.sap.com (release highlights)','Rumores','Esperar años','Nada'],why:'Ahí publican novedades.'}],
+ g15:[
+  {t:'opt',q:'Sobre las certificaciones de IA en SAP, lo correcto es:',how:'Cambian seguido.',opts:['Revisar el catálogo vigente en learning.sap.com','Confiar en rumores','Ignorarlas','Inventar el código'],why:'Nombres y códigos evolucionan.'},
+  {t:'opt',q:'Una estrategia de certificación sólida es:',how:'Base y luego IA.',opts:['Certificarte primero en tu área fuerte y luego sumar la capa de IA','Empezar por lo más difícil','No certificarte','Solo IA sin procesos'],why:'Cimiento primero.'},
+  {t:'opt',q:'El futuro que describe SAP es la IA como:',how:'Normal, no extra.',opts:['La forma normal de usar SAP, con supervisión humana','Un juguete pasajero','Algo que desaparecerá','Un riesgo a evitar'],why:'Integrada y supervisada.'}]
+};
+COURSES.sapia.lec.forEach(function(L){if(SAPIA_EX[L.id])L.ex=SAPIA_EX[L.id];});
+
+/* ===== Ampliación experta de exámenes: Power BI y Lean Six Sigma ===== */
+EXBANK.pbi.push(
+ {q:'Para "ventas del mismo periodo del año anterior" en DAX usas:',o:['CALCULATE([Ventas], SAMEPERIODLASTYEAR(dCalendario[Fecha]))','SUM(fVentas[Importe])','RELATED(dCalendario[Año])','[Ventas] - 1'],e:'La inteligencia de tiempo necesita una tabla de fechas marcada.'},
+ {q:'Para que funcionen las funciones de inteligencia de tiempo (YTD, año anterior) se requiere:',o:['Una tabla de calendario marcada como tabla de fechas','Ordenar por mes','Una segmentación','Un gráfico de líneas'],e:'Sin tabla de fechas marcada, TOTALYTD y SAMEPERIODLASTYEAR fallan.'},
+ {q:'La "transición de contexto" (context transition) ocurre cuando:',o:['CALCULATE convierte el contexto de fila en contexto de filtro','Se cambia el tipo de una columna','Se crea una relación','Se ordena un visual'],e:'Clave para entender medidas dentro de SUMX o columnas calculadas.'},
+ {q:'El uso de VAR en una medida DAX sirve para:',o:['Guardar un resultado intermedio: más legible y a menudo más rápido','Crear una relación','Cambiar el idioma','Ocultar una columna'],e:'VAR evalúa una vez y reutiliza el valor.'},
+ {q:'ALLEXCEPT(dProducto, dProducto[Categoría]) quita los filtros:',o:['De todas las columnas de dProducto menos Categoría','Solo de Categoría','De la tabla de hechos','De todo el modelo'],e:'Conserva el contexto de Categoría y limpia el resto.'},
+ {q:'TOTALYTD([Ventas], dCalendario[Fecha]) calcula:',o:['El acumulado del año a la fecha','El promedio mensual','El año anterior','El total histórico'],e:'Year-to-date.'},
+ {q:'DISTINCTCOUNT(fVentas[Cliente]) devuelve:',o:['El número de clientes únicos','La suma de ventas','El último cliente','El total de filas'],e:'Cuenta valores distintos.'},
+ {q:'Una relación muchos-a-muchos se modela mejor con:',o:['Una tabla puente (dimensión intermedia)','Filtro bidireccional en la tabla de hechos','Una columna calculada','Un gráfico de dispersión'],e:'La tabla puente evita ambigüedad.'},
+ {q:'El filtrado cruzado bidireccional conviene usarlo:',o:['Con cuidado: puede crear ambigüedad y resultados inesperados','Siempre, en todas las relaciones','Nunca, está prohibido','Solo con medidas implícitas'],e:'Puede romper la dirección natural del modelo estrella.'},
+ {q:'KEEPFILTERS dentro de CALCULATE sirve para:',o:['Conservar los filtros existentes al añadir uno nuevo','Borrar todos los filtros','Ordenar el resultado','Crear una jerarquía'],e:'Interseca en vez de reemplazar el filtro.'},
+ {q:'Un esquema estrella se prefiere al copo de nieve porque:',o:['Es más simple y rápido para DAX','Usa menos columnas de texto','Evita las medidas','Ordena los meses solo'],e:'Menos saltos de relación = mejor rendimiento.'},
+ {q:'RANKX se usa para:',o:['Ordenar/rankear elementos según una medida','Sumar filas','Crear relaciones','Cambiar tipos de dato'],e:'Devuelve la posición en un ranking.'}
+);
+EXBANK.lss.push(
+ {q:'El diagrama SIPOC se construye en la fase de:',o:['Definir','Mejorar','Controlar','Analizar'],e:'SIPOC enmarca el proceso al inicio (Define).'},
+ {q:'El estudio R&R (MSA) evalúa la variación de:',o:['El sistema de medición (equipo y operadores)','El proceso de producción','La demanda','El precio'],e:'Mide si confías en tus mediciones.'},
+ {q:'Un %R&R de 25% se considera:',o:['Marginal (entre 10% y 30%)','Aceptable','Inaceptable','Perfecto'],e:'<10% aceptable, 10-30% marginal, >30% inaceptable.'},
+ {q:'La prueba t (t-test) compara:',o:['Las medias de dos grupos','Las medias de tres o más grupos','Dos varianzas siempre','Proporciones únicamente'],e:'Dos grupos; para 3+ se usa ANOVA.'},
+ {q:'El ANOVA compara:',o:['Las medias de tres o más grupos','Solo dos medias','La forma de la distribución','La correlación'],e:'Análisis de varianza para varios grupos.'},
+ {q:'El mapa de flujo de valor (VSM) distingue sobre todo:',o:['El tiempo que agrega valor del tiempo de espera','El costo de cada máquina','El número de operadores','El layout físico'],e:'Separa valor de desperdicio en el flujo.'},
+ {q:'Los "5 porqués" sirven para:',o:['Llegar a la causa raíz preguntando repetidamente','Priorizar con Pareto','Medir la capacidad','Nivelar la producción'],e:'Profundiza hasta la causa de fondo.'},
+ {q:'Kanban sirve para:',o:['Controlar la producción según la demanda (sistema de jalar)','Calibrar instrumentos','Medir la variación','Documentar la causa raíz'],e:'Señal visual que jala la producción.'},
+ {q:'Heijunka es:',o:['La nivelación de la producción','Un gráfico de control','Una prueba de hipótesis','Un tipo de defecto'],e:'Suaviza volumen y mezcla.'},
+ {q:'Un histograma con cola larga hacia la derecha está:',o:['Sesgado a la derecha (valores altos extremos)','Perfectamente normal','Sesgado a la izquierda','Sin variación'],e:'Asimetría positiva.'},
+ {q:'Un DPMO de aproximadamente 6,210 corresponde a un nivel sigma de:',o:['≈ 4 sigma','≈ 2 sigma','≈ 6 sigma','≈ 1 sigma'],e:'4σ ≈ 6,210 DPMO (con corrimiento de 1.5σ).'},
+ {q:'El tablero A3 (informe A3) sirve para:',o:['Resumir un problema y su solución en una hoja estructurada','Calibrar equipos','Graficar control','Medir el takt'],e:'Herramienta de resolución y comunicación.'}
+);
+
+/* ===== Ampliación experta de exámenes: Programación, Inglés y SolidWorks ===== */
+COURSES.code.exam.push(
+ {q:'Diferencia entre == y === en JavaScript:',o:['=== compara valor y tipo sin conversión; == convierte tipos','Son idénticos','=== es más lento','== compara solo el tipo'],e:'Usa === para evitar sorpresas.'},
+ {q:'let frente a var:',o:['let tiene alcance de bloque; var de función','Son iguales','var es de bloque','let no existe'],e:'let/const evitan fugas de alcance.'},
+ {q:'const significa que:',o:['La variable no se reasigna (un objeto sí puede mutar)','Nada puede cambiar','Es una función','Es global siempre'],e:'No reasignación, no inmutabilidad total.'},
+ {q:'Una función flecha () => {} se distingue porque:',o:['No tiene su propio this','Es más rápida','No acepta argumentos','Siempre es asíncrona'],e:'Toma el this del entorno.'},
+ {q:'array.map() devuelve:',o:['Un nuevo arreglo con los resultados','El mismo arreglo','Un número','undefined'],e:'No muta el original.'},
+ {q:'array.filter() devuelve:',o:['Un nuevo arreglo con los elementos que cumplen la condición','El primero que cumple','Un booleano','El índice'],e:'Filtra por condición.'},
+ {q:'array.reduce() sirve para:',o:['Acumular los elementos en un solo valor','Ordenar','Invertir','Clonar'],e:'Suma, concatena, agrupa, etc.'},
+ {q:'async/await se usa para:',o:['Escribir código asíncrono de forma legible','Acelerar bucles','Crear clases','Definir constantes'],e:'Azúcar sobre promesas.'},
+ {q:'Una Promise representa:',o:['El valor futuro de una operación asíncrona','Un número','Un arreglo','Una clase'],e:'Pendiente, resuelta o rechazada.'},
+ {q:'JSON.parse convierte:',o:['Texto JSON en un objeto','Un objeto en texto','Un número en texto','Un arreglo en objeto'],e:'stringify hace lo inverso.'},
+ {q:'try/catch sirve para:',o:['Capturar y manejar errores','Crear bucles','Definir funciones','Ordenar datos'],e:'Control de errores.'},
+ {q:'Buscar un valor en un arreglo sin ordenar es, en el peor caso:',o:['O(n)','O(1)','O(log n)','O(n²)'],e:'Recorre hasta encontrarlo.'},
+ {q:'Para evitar inyección SQL en tus apps POS:',o:['Usar consultas parametrizadas','Concatenar el texto del usuario','Confiar en el front','Quitar comillas a mano'],e:'Parámetros, nunca concatenar entrada.'},
+ {q:'localStorage guarda:',o:['Texto (strings) en el navegador','Objetos tal cual','Datos en el servidor','Archivos binarios'],e:'Serializa con JSON.stringify.'},
+ {q:'git commit:',o:['Guarda los cambios en el historial local','Los sube al servidor','Borra el repositorio','Crea una rama remota'],e:'push los envía al remoto.'},
+ {q:'El DOM es:',o:['La representación de la página que JS puede manipular','Un lenguaje','Una base de datos','Un servidor'],e:'Document Object Model.'}
+);
+COURSES.en.exam.push(
+ {q:'Choose the correct form: "She ___ to work every day."',o:['goes','go','going','gone'],e:'Present simple, 3rd person adds -s.'},
+ {q:'Past simple of "buy":',o:['bought','buyed','buy','buying'],e:'Irregular verb.'},
+ {q:'"I have worked here ___ 2020."',o:['since','for','from','during'],e:'since + a point in time.'},
+ {q:'Second conditional: "If I ___ time, I would help."',o:['had','have','will have','has'],e:'if + past, would + base.'},
+ {q:'Passive voice: "The report ___ by the team."',o:['was written','wrote','has write','is writing'],e:'be + past participle.'},
+ {q:'Most polite request:',o:['Could you please send me the file?','Send me the file.','I want the file now.','Give file.'],e:'Could you please = polite.'},
+ {q:'"Actually" in English means:',o:['In fact / really','Currently','At the moment','Nowadays'],e:'False cognate: not "actualmente".'},
+ {q:'Comparative/superlative of "good":',o:['better / the best','gooder / goodest','more good / most good','best / better'],e:'Irregular.'},
+ {q:'"You must wear safety glasses" expresses:',o:['Obligation','Possibility','Preference','A request'],e:'must = strong obligation.'},
+ {q:'The phrasal verb "follow up" means:',o:['To check on progress / dar seguimiento','To fall down','To fill a form','To turn off'],e:'Common at work.'},
+ {q:'Present perfect: "I ___ just finished the report."',o:['have','has','had','am'],e:'have + past participle.'},
+ {q:'"Advice" is:',o:['Uncountable (no "advices")','Always plural','A verb only','Countable'],e:'Say "some advice".'},
+ {q:'Formal email closing:',o:['Best regards','See ya','Bye bye','Later'],e:'Professional register.'},
+ {q:'"Sensible" in English means:',o:['Sensato (reasonable)','Sensible (emotional)','Sensitive','Visible'],e:'False cognate.'},
+ {q:'"going to" is used for:',o:['Planned future / intention','Past habits','Finished actions','General truths'],e:'Plans and intentions.'},
+ {q:'Choose correct: "There ___ many problems last week."',o:['were','was','is','are'],e:'Plural + past = were.'}
+);
+COURSES.sw.exam.push(
+ {q:'Un croquis totalmente definido se muestra:',o:['En negro, sin grados de libertad','En azul','En rojo','Invisible'],e:'Negro = definido por cotas y relaciones.'},
+ {q:'La relación de croquis que hace dos líneas de igual longitud es:',o:['Igual','Paralela','Coincidente','Tangente'],e:'Relación "Igual".'},
+ {q:'La operación que quita material girando un perfil alrededor de un eje es:',o:['Corte de revolución','Extrusión','Redondeo','Chaflán'],e:'Revolución de corte.'},
+ {q:'Extruir saliente/base crea:',o:['Material a partir de un croquis','Un plano','Una vista','Una cota'],e:'Añade volumen.'},
+ {q:'En un ensamble, los componentes se posicionan con:',o:['Relaciones de posición (mates)','Cotas de croquis','Redondeos','Patrones'],e:'Mates: coincidente, concéntrica, etc.'},
+ {q:'Un redondeo (fillet) sirve para:',o:['Suavizar aristas','Hacer agujeros','Medir','Ensamblar'],e:'Redondea bordes.'},
+ {q:'La simetría en un croquis:',o:['Refleja entidades respecto a una línea constructiva','Borra entidades','Crea planos','Mide ángulos'],e:'Mantiene la mitad espejada.'},
+ {q:'Un plano de referencia sirve para:',o:['Crear croquis fuera de las caras existentes','Pintar la pieza','Exportar','Medir masa'],e:'Geometría de referencia.'},
+ {q:'El historial de operaciones se ve en:',o:['El árbol de operaciones (FeatureManager)','La barra de menús','El croquis','La vista isométrica'],e:'FeatureManager.'},
+ {q:'GD&T (tolerancias geométricas) sirve para:',o:['Especificar tolerancias de forma y posición','Pintar el modelo','Crear ensambles','Medir masa'],e:'Control dimensional y geométrico.'},
+ {q:'Un patrón lineal:',o:['Repite una operación a lo largo de una dirección','Gira la pieza','Borra material','Crea un plano'],e:'Copias equiespaciadas.'},
+ {q:'El mensaje "croquis sin definir" significa:',o:['Faltan cotas o relaciones','La pieza es muy grande','Falta guardar','Hay demasiadas cotas'],e:'Grados de libertad sin fijar.'},
+ {q:'El diseño para manufactura (DFM) busca:',o:['Diseñar piezas fáciles y económicas de fabricar','Hacer el modelo más pesado','Añadir detalles decorativos','Aumentar tolerancias al azar'],e:'Simplifica y abarata la fabricación.'},
+ {q:'Una vista de dibujo (drawing) se genera a partir de:',o:['El modelo 3D','Una foto','Un croquis suelto','Una hoja de Excel'],e:'El plano 2D deriva del 3D.'},
+ {q:'Una cota de 50 con tolerancia ±0.1 acepta medidas de:',o:['49.9 a 50.1','50 exacto','49 a 51','50.1 a 50.2'],e:'±0.1 alrededor de 50.'}
+);
+
 courseInit();
 
 /* ---------- SAP ampliado: teoría, examen y niveles ---------- */
